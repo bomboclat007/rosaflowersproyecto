@@ -13,3 +13,24 @@
         height: auto !important;
     }
 }
+
+/* Also target Squarespace image blocks and the exported logo filename directly
+   so the central CSS applies even if the image isn't wrapped in
+   .header-title-logo (covers pages exported from Squarespace). */
+.sqs-block-image img,
+.sqs-image img,
+img[src*="logo-240a3531.png"],
+img[srcset*="logo-240a3531.png"] {
+    max-width: 210px !important;
+    height: auto !important;
+}
+
+@media screen and (max-width: 640px) {
+    .sqs-block-image img,
+    .sqs-image img,
+    img[src*="logo-240a3531.png"],
+    img[srcset*="logo-240a3531.png"] {
+        max-width: 56px !important;
+        height: auto !important;
+    }
+}
