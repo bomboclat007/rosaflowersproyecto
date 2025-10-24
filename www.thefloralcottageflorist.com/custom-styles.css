@@ -2,6 +2,10 @@
 /* Logo sizing: increased size (4x larger) across all devices */
 
 /* Selectores muy específicos para el logo */
+img[elementtiming="nbf-header-logo-desktop"],
+img[data-sqsp-image-block-image],
+img[src*="logo-240a3531.png"],
+img[src*="round+logo.png"],
 body img[src*="logo"],
 .header img[src*="logo"],
 .header-inner img[src*="logo"],
@@ -17,23 +21,24 @@ body img[src*="logo"],
 .header__logo img,
 .header__logo-image img,
 .header-logo img {
-    /* Tamaño aumentado 4 veces */
-    width: 100px !important;
-    max-width: 100px !important;
-    min-width: 100px !important;
+    /* Tamaño aumentado significativamente */
+    width: 200px !important;
+    max-width: 200px !important;
+    min-width: 200px !important;
     height: auto !important;
     max-height: none !important;
     min-height: 0 !important;
     object-fit: contain !important;
-    transform: scale(1) !important;
-    -webkit-transform: scale(1) !important;
-    -moz-transform: scale(1) !important;
-    -ms-transform: scale(1) !important;
-    scale: 1 !important;
-    zoom: 1 !important;
+    transform: scale(1.5) !important;
+    -webkit-transform: scale(1.5) !important;
+    -moz-transform: scale(1.5) !important;
+    -ms-transform: scale(1.5) !important;
+    scale: 1.5 !important;
+    zoom: 1.5 !important;
     position: relative !important;
-    display: inline-block !important;
+    display: block !important;
     vertical-align: middle !important;
+    aspect-ratio: auto !important;
 }
 
 /* Contenedores del logo */
@@ -50,17 +55,21 @@ body .logo,
 #header-logo,
 .header__logo,
 .header__logo-image,
-.sqs-block-image {
-    width: 100px !important;
-    min-width: 100px !important;
-    max-width: 100px !important;
+.sqs-block-image,
+[class*="header-logo"],
+[class*="logo-container"],
+.sqs-block-image[data-block-type="2"] {
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
     height: auto !important;
     padding: 0 !important;
     margin: 0 !important;
-    display: inline-block !important;
+    display: block !important;
     position: relative !important;
     overflow: visible !important;
     line-height: 1 !important;
+    transform-origin: left center !important;
 }
 
 /* Also target Squarespace image blocks and the exported logo filename directly
