@@ -1,39 +1,47 @@
 /* Custom global styles for RosaFlowers site */
-/* Logo sizing: consistent 96px across all devices (half of 192px) */
-.header-title-logo a img,
-.header-title-logo img,
-.header-title img,
-img[src*="logo"],
-.sqs-block-image img[src*="logo"],
-/* Selectores específicos para la página de inicio */
+/* Logo sizing: consistent 96px across all devices */
+#header img[src*="logo"],
+.header img[src*="logo"],
+.header-inner img[src*="logo"],
+.site-header img[src*="logo"],
+.header-title img[src*="logo"],
+.header-logo img[src*="logo"],
 .sqs-header-logo img,
-.logo img,
-#header .logo img,
-.header .logo img,
-.header__logo img,
-.site-header .logo img {
-    /* tamaño fijo de 96px (reducido a la mitad de 192px) para consistencia en toda la web */
-    max-width: 96px !important;
+[class*="header"] img[src*="logo"],
+[class*="logo"] img {
+    /* tamaño fijo de 96px */
     width: 96px !important;
+    max-width: 96px !important;
+    min-width: 96px !important;
     height: auto !important;
     max-height: none !important;
-    min-width: 96px !important;
+    min-height: 0 !important;
+    object-fit: contain !important;
     transform: none !important;
     scale: 1 !important;
     zoom: 1 !important;
+    position: relative !important;
+    display: block !important;
 }
 
-/* Asegurar que el contenedor del logo también permita el tamaño */
-.header-title-logo,
-.sqs-header-logo,
-.logo,
+/* Asegurar que los contenedores del logo no restrinjan el tamaño */
 #header .logo,
 .header .logo,
-.header__logo,
-.site-header .logo {
+.header-inner .logo,
+.site-header .logo,
+.header-title .logo,
+.header-logo,
+.sqs-header-logo,
+[class*="header"] .logo,
+[class*="logo"] {
+    width: 96px !important;
     min-width: 96px !important;
-    width: auto !important;
-    max-width: none !important;
+    max-width: 96px !important;
+    height: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    position: relative !important;
 }
 
 /* Also target Squarespace image blocks and the exported logo filename directly
