@@ -1,6 +1,8 @@
 /* Custom global styles for RosaFlowers site */
-/* Logo sizing: consistent 50px across all devices */
-#header img[src*="logo"],
+/* Logo sizing: forced small size across all devices */
+
+/* Selectores muy específicos para el logo */
+body img[src*="logo"],
 .header img[src*="logo"],
 .header-inner img[src*="logo"],
 .site-header img[src*="logo"],
@@ -8,24 +10,34 @@
 .header-logo img[src*="logo"],
 .sqs-header-logo img,
 [class*="header"] img[src*="logo"],
-[class*="logo"] img {
-    /* tamaño fijo de 50px */
-    width: 50px !important;
-    max-width: 50px !important;
-    min-width: 50px !important;
+[class*="logo"] img,
+.sqs-block-image .thumb-image,
+.header-logo-image img,
+#header-logo img,
+.header__logo img,
+.header__logo-image img,
+.header-logo img {
+    /* Forzar tamaño pequeño */
+    width: 25px !important;
+    max-width: 25px !important;
+    min-width: 25px !important;
     height: auto !important;
-    max-height: none !important;
+    max-height: 25px !important;
     min-height: 0 !important;
     object-fit: contain !important;
-    transform: none !important;
-    scale: 1 !important;
-    zoom: 1 !important;
+    transform: scale(0.5) !important;
+    -webkit-transform: scale(0.5) !important;
+    -moz-transform: scale(0.5) !important;
+    -ms-transform: scale(0.5) !important;
+    scale: 0.5 !important;
+    zoom: 0.5 !important;
     position: relative !important;
-    display: block !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
 }
 
-/* Asegurar que los contenedores del logo no restrinjan el tamaño */
-#header .logo,
+/* Contenedores del logo */
+body .logo,
 .header .logo,
 .header-inner .logo,
 .site-header .logo,
@@ -33,15 +45,22 @@
 .header-logo,
 .sqs-header-logo,
 [class*="header"] .logo,
-[class*="logo"] {
-    width: 50px !important;
-    min-width: 50px !important;
-    max-width: 50px !important;
-    height: auto !important;
+[class*="logo"],
+.header-logo-image,
+#header-logo,
+.header__logo,
+.header__logo-image,
+.sqs-block-image {
+    width: 25px !important;
+    min-width: 25px !important;
+    max-width: 25px !important;
+    height: 25px !important;
     padding: 0 !important;
     margin: 0 !important;
-    display: block !important;
+    display: inline-block !important;
     position: relative !important;
+    overflow: visible !important;
+    line-height: 1 !important;
 }
 
 /* Also target Squarespace image blocks and the exported logo filename directly
