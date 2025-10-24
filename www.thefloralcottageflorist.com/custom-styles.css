@@ -1,16 +1,24 @@
 /* Custom global styles for RosaFlowers site */
 /* Logo sizing: desktop 320px, mobile 96px */
-.header-title-logo img {
+.header-title-logo a img,
+.header-title-logo img,
+.header-title img {
     /* aumentado a 320px para mayor visibilidad */
     max-width: 320px !important;
+    width: 320px !important;
     height: auto !important;
+    max-height: none !important;
 }
 
 @media screen and (max-width: 640px) {
-    .header-title-logo img {
+    .header-title-logo a img,
+    .header-title-logo img,
+    .header-title img {
         /* aumentado a 96px para mayor visibilidad en móvil */
         max-width: 96px !important;
+        width: 96px !important;
         height: auto !important;
+        max-height: none !important;
     }
 }
 
