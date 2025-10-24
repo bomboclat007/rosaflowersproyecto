@@ -1,5 +1,5 @@
 /* Custom global styles for RosaFlowers site */
-/* Logo sizing: forced small size across all devices */
+/* Logo sizing: increased size (4x larger) across all devices */
 
 /* Selectores muy específicos para el logo */
 body img[src*="logo"],
@@ -17,20 +17,20 @@ body img[src*="logo"],
 .header__logo img,
 .header__logo-image img,
 .header-logo img {
-    /* Forzar tamaño pequeño */
-    width: 25px !important;
-    max-width: 25px !important;
-    min-width: 25px !important;
+    /* Tamaño aumentado 4 veces */
+    width: 100px !important;
+    max-width: 100px !important;
+    min-width: 100px !important;
     height: auto !important;
-    max-height: 25px !important;
+    max-height: none !important;
     min-height: 0 !important;
     object-fit: contain !important;
-    transform: scale(0.5) !important;
-    -webkit-transform: scale(0.5) !important;
-    -moz-transform: scale(0.5) !important;
-    -ms-transform: scale(0.5) !important;
-    scale: 0.5 !important;
-    zoom: 0.5 !important;
+    transform: scale(1) !important;
+    -webkit-transform: scale(1) !important;
+    -moz-transform: scale(1) !important;
+    -ms-transform: scale(1) !important;
+    scale: 1 !important;
+    zoom: 1 !important;
     position: relative !important;
     display: inline-block !important;
     vertical-align: middle !important;
@@ -51,10 +51,10 @@ body .logo,
 .header__logo,
 .header__logo-image,
 .sqs-block-image {
-    width: 25px !important;
-    min-width: 25px !important;
-    max-width: 25px !important;
-    height: 25px !important;
+    width: 100px !important;
+    min-width: 100px !important;
+    max-width: 100px !important;
+    height: auto !important;
     padding: 0 !important;
     margin: 0 !important;
     display: inline-block !important;
