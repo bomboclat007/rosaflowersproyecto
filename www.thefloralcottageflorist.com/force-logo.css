@@ -2,9 +2,10 @@
 img[elementtiming="nbf-header-logo-desktop"],
 img[src*="logo-240a3531.png"],
 img[src*="round+logo.png"] {
-    width: 300px !important;
-    min-width: 300px !important;
-    max-width: 300px !important;
+    /* reducido ~3x desde 300px -> 100px */
+    width: 100px !important;
+    min-width: 100px !important;
+    max-width: 100px !important;
     height: auto !important;
     max-height: none !important;
     min-height: 0 !important;
@@ -18,7 +19,7 @@ img[src*="round+logo.png"] {
     margin: 0 !important;
     padding: 0 !important;
     object-fit: contain !important;
-    flex: 0 0 300px !important;
+    flex: 0 0 100px !important;
 }
 
 /* Override para contenedores */
@@ -26,22 +27,22 @@ img[src*="round+logo.png"] {
 .header-title-logo a,
 div:has(> img[elementtiming="nbf-header-logo-desktop"]),
 div:has(> img[src*="logo-240a3531.png"]) {
-    width: 300px !important;
-    min-width: 300px !important;
-    max-width: 300px !important;
+    width: 100px !important;
+    min-width: 100px !important;
+    max-width: 100px !important;
     height: auto !important;
     margin: 0 !important;
     padding: 0 !important;
     display: block !important;
-    flex: 0 0 300px !important;
+    flex: 0 0 100px !important;
 }
 
 /* Estilos adicionales para forzar el tamaño */
 @media screen {
     img[elementtiming="nbf-header-logo-desktop"],
     img[src*="logo-240a3531.png"] {
-        width: 300px !important;
-        min-width: 300px !important;
-        max-width: 300px !important;
+        width: 100px !important;
+        min-width: 100px !important;
+        max-width: 100px !important;
     }
 }
