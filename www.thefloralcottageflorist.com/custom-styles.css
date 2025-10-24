@@ -1,5 +1,5 @@
 /* Custom global styles for RosaFlowers site */
-/* Logo sizing: consistent 320px across all devices */
+/* Logo sizing: consistent 192px across all devices (40% smaller than 320px) */
 .header-title-logo a img,
 .header-title-logo img,
 .header-title img,
@@ -12,12 +12,12 @@ img[src*="logo"],
 .header .logo img,
 .header__logo img,
 .site-header .logo img {
-    /* tamaño fijo de 320px para consistencia en toda la web */
-    max-width: 320px !important;
-    width: 320px !important;
+    /* tamaño fijo de 192px (reducido 40% de 320px) para consistencia en toda la web */
+    max-width: 192px !important;
+    width: 192px !important;
     height: auto !important;
     max-height: none !important;
-    min-width: 320px !important;
+    min-width: 192px !important;
     transform: none !important;
     scale: 1 !important;
     zoom: 1 !important;
@@ -31,7 +31,7 @@ img[src*="logo"],
 .header .logo,
 .header__logo,
 .site-header .logo {
-    min-width: 320px !important;
+    min-width: 192px !important;
     width: auto !important;
     max-width: none !important;
 }
