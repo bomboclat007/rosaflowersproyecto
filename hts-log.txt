@@ -1,0 +1,27 @@
+HTTrack3.49-2+htsswf+htsjava launched on Sat, 11 Oct 2025 15:33:13 at https://www.thefloralcottageflorist.com/?fbclid=IwVERTSANWfKBleHRuA2FlbQIxMAABHqW4bLdw59MJgb1cZtd1KCItLBCab4mCq7r0poPiKPX_oQXWNhJQCPnv26-B_aem_KsTjdOV-MuZYVjUQJqoVuw +*.png +*.gif +*.jpg +*.jpeg +*.css +*.js -ad.doubleclick.net/* -mime:application/foobar
+(winhttrack -qwC2%Ps2u1%s%uN0%I0p3DaK0H0%kf2A25000%f#f -F "Mozilla/4.5 (compatible; HTTrack 3.0x; Windows 98)" -%F "<!-- Mirrored from %s%s by HTTrack Website Copier/3.x [XR&CO'2014], %s -->" -%l "en, *" https://www.thefloralcottageflorist.com/?fbclid=IwVERTSANWfKBleHRuA2FlbQIxMAABHqW4bLdw59MJgb1cZtd1KCItLBCab4mCq7r0poPiKPX_oQXWNhJQCPnv26-B_aem_KsTjdOV-MuZYVjUQJqoVuw -O1 "C:\My Web Sites\RosaFlowers" +*.png +*.gif +*.jpg +*.jpeg +*.css +*.js -ad.doubleclick.net/* -mime:application/foobar )
+
+Information, Warnings and Errors reported for this mirror:
+note:	the hts-log.txt file, and hts-cache folder, may contain sensitive information,
+	such as username/password authentication for websites mirrored in this project
+	do not share these files/folders if you want these information to remain private
+
+15:42:27	Error: 	"Not Found" (404) at link https://www.thefloralcottageflorist.com/"/dailyflowers/p/uk0zu6oikmg3s3zmomjh5mn6igmpui-4gyaw-9rtd4/"><em>click (from https://www.thefloralcottageflorist.com/dailyflowers)
+15:42:27	Error: 	"Not Found" (404) at link https://www.thefloralcottageflorist.com/"/dailyflowers/p/uk0zu6oikmg3s3zmomjh5mn6igmpui-4gyaw/"><em>click (from https://www.thefloralcottageflorist.com/dailyflowers)
+15:42:27	Error: 	"Not Found" (404) at link https://www.thefloralcottageflorist.com/"/dailyflowers/p/uk0zu6oikmg3s3zmomjh5mn6igmpui/"><em>click (from https://www.thefloralcottageflorist.com/dailyflowers)
+15:42:27	Error: 	"Not Found" (404) at link https://www.thefloralcottageflorist.com/"/dailyflowers/p/uk0zu6oikmg3s3zmomjh5mn6igmpui-nje65-cfkhy-dmkb7/"><em>click (from https://www.thefloralcottageflorist.com/dailyflowers)
+15:42:27	Error: 	"Not Found" (404) at link https://www.thefloralcottageflorist.com/"/dailyflowers/p/uk0zu6oikmg3s3zmomjh5mn6igmpui-nje65-cfkhy/"><em>click (from https://www.thefloralcottageflorist.com/dailyflowers)
+15:42:27	Error: 	"Not Found" (404) at link https://www.thefloralcottageflorist.com/"/dailyflowers/p/uk0zu6oikmg3s3zmomjh5mn6igmpui-nje65/"><em> (from https://www.thefloralcottageflorist.com/dailyflowers)
+15:45:29	Error: 	"Not Found" (404) at link https://www.thefloralcottageflorist.com/"https://www.honeybook.com/p.png?pid=5e4c013d8338a10017dd83e2\%22>\n<script>\n (from https://www.thefloralcottageflorist.com/events)
+15:45:29	Error: 	"Not Found" (404) at link https://www.honeybook.com/p.png?pid=5e4c013d8338a10017dd83e2 (from https://www.thefloralcottageflorist.com/events)
+15:50:43	Error: 	"Not Found" (404) at link https://www.thefloralcottageflorist.com/real-collection-brides (from https://www.thefloralcottageflorist.com/wedding-event-faq)
+15:50:43	Error: 	"Not Found" (404) at link https://www.thefloralcottageflorist.com/contact-form (from https://www.thefloralcottageflorist.com/wedding-event-faq)
+15:50:43	Error: 	"Not Found" (404) at link https://www.thefloralcottageflorist.com/structures-containers (from https://www.thefloralcottageflorist.com/wedding-event-faq)
+16:00:40	Error: 	"Not Found" (404) at link https://www.thefloralcottageflorist.com/classes/p/fallpumpkins (from https://www.thefloralcottageflorist.com/upcoming-events/2025/9/6/floral-fall-pumpkin-workshop)
+16:00:40	Error: 	"Not Found" (404) at link https://www.thefloralcottageflorist.com/classes/p/flowersandfizz (from https://www.thefloralcottageflorist.com/upcoming-events/2025/8/29/flowers-fizz)
+16:00:40	Error: 	"Not Found" (404) at link https://www.thefloralcottageflorist.com/dailyflowers/p/back-to-school-special (from https://www.thefloralcottageflorist.com/upcoming-events/2025/8/5/back-to-school-special)
+16:00:40	Error: 	"Not Found" (404) at link https://www.thefloralcottageflorist.com/classes/p/parisian-afternoon (from https://www.thefloralcottageflorist.com/upcoming-events/parisian-afternoon-workshop)
+16:00:40	Warning: 	Retry after error -4 (No data (connection closed)) at link https://images.squarespace-cdn.com/content/v1/56aa9020d51cd471ca1987f8/2ac4c63c-81a1-499d-96f9-a8b320d3b3ae/IMG_2056.JPG (from https://www.thefloralcottageflorist.com/alex-bailey)
+
+HTTrack Website Copier/3.49-2 mirror complete in 27 minutes 27 seconds : 2712 links scanned, 2695 files written (1928520471 bytes overall) [1886193949 bytes received at 1145230 bytes/sec], 54767173 bytes transferred using HTTP compression in 239 files, ratio 16%, 7.8 requests per connection
+(15 errors, 1 warnings, 0 messages)

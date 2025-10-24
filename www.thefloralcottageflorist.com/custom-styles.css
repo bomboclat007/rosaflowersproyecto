@@ -1,0 +1,11 @@
+.header-title-logo img {
+    max-width: 71.5px !important;  /* La mitad del tamaño original (143px) */
+    height: auto !important;
+}
+
+@media screen and (max-width: 640px) {
+    .header-title-logo img {
+        max-width: 19px !important;  /* La mitad del tamaño mobile original (38px) */
+        height: auto !important;
+    }
+}

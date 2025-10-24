@@ -1,0 +1,5 @@
+# HTTrack Website Copier Cookie File
+# This file format is compatible with Netscape cookies
+www.thefloralcottageflorist.com	TRUE	/dailyflowers/back-to-school-special	FALSE	1999999999	RecentRedirect	1$1:1760219302:ppFY/ZIrVW4nPJ47lM1y1YqRXDpk5I4kMXxbbNPKlzo=
+www.thefloralcottageflorist.com	TRUE	/	FALSE	1999999999	crumb	BZ6e0RMRIyiWOTVhNDM2MTljODYyYzk1Y2RmZDAyY2E1MjAxYzM1
+
