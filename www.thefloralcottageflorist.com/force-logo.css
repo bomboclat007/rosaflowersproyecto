@@ -2,10 +2,10 @@
 img[elementtiming="nbf-header-logo-desktop"],
 img[src*="logo-240a3531.png"],
 img[src*="round+logo.png"] {
-    /* reducido ~3x desde 300px -> 100px */
-    width: 100px !important;
-    min-width: 100px !important;
-    max-width: 100px !important;
+    /* reducido a 70px (30% menos que 100px) */
+    width: 70px !important;
+    min-width: 70px !important;
+    max-width: 70px !important;
     height: auto !important;
     max-height: none !important;
     min-height: 0 !important;
@@ -27,7 +27,7 @@ img[src*="round+logo.png"] {
 .header-title-logo a,
 div:has(> img[elementtiming="nbf-header-logo-desktop"]),
 div:has(> img[src*="logo-240a3531.png"]) {
-    width: 100px !important;
+    width: 70px !important;
     min-width: 100px !important;
     max-width: 100px !important;
     height: auto !important;

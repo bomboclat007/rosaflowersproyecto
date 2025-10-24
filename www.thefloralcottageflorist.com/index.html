@@ -5415,17 +5415,17 @@ Louisiana located between Baton Rouge and New Orleans." />
         var selectors = ['img[elementtiming="nbf-header-logo-desktop"]','img[src*="logo-240a3531.png"]','img[src*="round+logo.png"]','.header-title-logo img','.header-logo img','.logo img'];
         selectors.forEach(function(sel){
           document.querySelectorAll(sel).forEach(function(img){
-            img.style.setProperty('width','100px','important');
-            img.style.setProperty('max-width','100px','important');
-            img.style.setProperty('min-width','100px','important');
+            img.style.setProperty('width','70px','important');
+            img.style.setProperty('max-width','70px','important');
+            img.style.setProperty('min-width','70px','important');
             img.style.setProperty('height','auto','important');
             img.style.setProperty('max-height','none','important');
             img.style.setProperty('transform','none','important');
             img.style.setProperty('-webkit-transform','none','important');
             var parent = img.closest('.header-title-logo, .header-logo, .logo') || img.parentElement;
             if(parent){
-              parent.style.setProperty('width','100px','important');
-              parent.style.setProperty('max-width','100px','important');
+              parent.style.setProperty('width','70px','important');
+              parent.style.setProperty('max-width','70px','important');
               parent.style.setProperty('display','block','important');
             }
           });
