@@ -1,11 +1,36 @@
+/* Custom global styles for RosaFlowers site */
+/* Logo sizing: desktop 320px, mobile 96px */
 .header-title-logo img {
-    max-width: 71.5px !important;  /* La mitad del tamaño original (143px) */
+    /* aumentado a 320px para mayor visibilidad */
+    max-width: 320px !important;
     height: auto !important;
 }
 
 @media screen and (max-width: 640px) {
     .header-title-logo img {
-        max-width: 19px !important;  /* La mitad del tamaño mobile original (38px) */
+        /* aumentado a 96px para mayor visibilidad en móvil */
+        max-width: 96px !important;
+        height: auto !important;
+    }
+}
+
+/* Also target Squarespace image blocks and the exported logo filename directly
+   so the central CSS applies even if the image isn't wrapped in
+   .header-title-logo (covers pages exported from Squarespace). */
+.sqs-block-image img,
+.sqs-image img,
+img[src*="logo-240a3531.png"],
+img[srcset*="logo-240a3531.png"] {
+    max-width: 320px !important;
+    height: auto !important;
+}
+
+@media screen and (max-width: 640px) {
+    .sqs-block-image img,
+    .sqs-image img,
+    img[src*="logo-240a3531.png"],
+    img[srcset*="logo-240a3531.png"] {
+        max-width: 96px !important;
         height: auto !important;
     }
 }
