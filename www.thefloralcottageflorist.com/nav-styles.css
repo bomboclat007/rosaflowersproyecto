@@ -1,0 +1,41 @@
+/* Estilos para la navegación */
+.header-nav-wrapper,
+.header-nav,
+.header-nav-list {
+    width: 100% !important;
+    max-width: none !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    padding: 0 20px !important;
+}
+
+.header-nav-item {
+    flex: 0 1 auto !important;
+    padding: 0 15px !important;
+    white-space: nowrap !important;
+}
+
+.header-nav-folder-title {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Asegurar que el contenedor del header tenga suficiente espacio */
+.header-display-desktop {
+    padding: 1vw 3vw !important;
+    width: 100% !important;
+}
+
+/* Ajustar el contenedor principal del header */
+.header-announcement-bar-wrapper {
+    width: 100% !important;
+    max-width: none !important;
+}
+
+/* Asegurar que el contenedor del logo no interfiera */
+.header-title-logo {
+    flex: 0 0 auto !important;
+    margin-right: 30px !important;
+}
