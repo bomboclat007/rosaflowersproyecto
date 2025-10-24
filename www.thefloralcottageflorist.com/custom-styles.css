@@ -4,7 +4,14 @@
 .header-title-logo img,
 .header-title img,
 img[src*="logo"],
-.sqs-block-image img[src*="logo"] {
+.sqs-block-image img[src*="logo"],
+/* Selectores específicos para la página de inicio */
+.sqs-header-logo img,
+.logo img,
+#header .logo img,
+.header .logo img,
+.header__logo img,
+.site-header .logo img {
     /* tamaño fijo de 320px para consistencia en toda la web */
     max-width: 320px !important;
     width: 320px !important;
@@ -13,6 +20,20 @@ img[src*="logo"],
     min-width: 320px !important;
     transform: none !important;
     scale: 1 !important;
+    zoom: 1 !important;
+}
+
+/* Asegurar que el contenedor del logo también permita el tamaño */
+.header-title-logo,
+.sqs-header-logo,
+.logo,
+#header .logo,
+.header .logo,
+.header__logo,
+.site-header .logo {
+    min-width: 320px !important;
+    width: auto !important;
+    max-width: none !important;
 }
 
 /* Also target Squarespace image blocks and the exported logo filename directly
