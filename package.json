@@ -8,5 +8,9 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@stripe/stripe-js": "^8.2.0",
+    "stripe": "^19.2.0"
+  }
 }
