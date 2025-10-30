@@ -1,0 +1,261 @@
+.sqs-block[data-definition-name="website.components.donation"] .sqs-donation-block-container {
+  position: relative;
+}
+.sqs-block[data-definition-name="website.components.donation"] .sqs-background-enabled {
+  background-color: var(--donation-block-background-color);
+}
+.sqs-block[data-definition-name="website.components.donation"] .sqs-blockStatus-alert-badge {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+.sqs-block[data-definition-name="website.components.donation"] .dropdownWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.sqs-block[data-definition-name="website.components.donation"] .dropdownSelect {
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
+  cursor: pointer;
+  border: 1px solid #a9a9a9;
+  height: 46px;
+  color: #000000;
+  background-color: #fafafa;
+  width: 100%;
+  height: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  outline-offset: -2px;
+}
+.sqs-block[data-definition-name="website.components.donation"] .accessoryIcon {
+  cursor: pointer;
+  pointer-events: none;
+  position: absolute;
+  right: 10px;
+  height: 12px;
+  width: 18px;
+}
+.sqs-block[data-definition-name="website.components.donation"] .accessoryIcon svg {
+  display: block;
+}
+.sqs-block[data-definition-name="website.components.donation"] .stretch-layout label {
+  width: 100%;
+}
+.sqs-block[data-definition-name="website.components.donation"] .stretch-layout .radio-label {
+  width: inherit;
+}
+.sqs-block[data-definition-name="website.components.donation"] .stretch-layout .currency {
+  flex: 1;
+}
+.sqs-block[data-definition-name="website.components.donation"] .stretch-layout .currency input,
+.sqs-block[data-definition-name="website.components.donation"] .stretch-layout .currency .form-input-effects {
+  max-width: none;
+}
+.sqs-block[data-definition-name="website.components.donation"] .radio .option {
+  display: flex;
+  flex-direction: vertical;
+  align-items: center;
+  justify-content: var(--donationAmountAlignment);
+}
+.sqs-block[data-definition-name="website.components.donation"] .radio label {
+  text-rendering: optimizelegibility;
+  display: inline-flex;
+  align-items: center;
+  -moz-column-gap: 11px;
+       column-gap: 11px;
+  position: relative;
+  text-align: var(--donationAmountTextAlignment);
+}
+.sqs-block[data-definition-name="website.components.donation"] .radio label .radio-label {
+  word-break: break-word;
+}
+.sqs-block[data-definition-name="website.components.donation"] .radio input {
+  opacity: 0;
+}
+.sqs-block[data-definition-name="website.components.donation"] .radio .radio-outline,
+.sqs-block[data-definition-name="website.components.donation"] .radio .radio-mark {
+  height: 17px;
+  width: 17px;
+  position: absolute;
+  left: 0;
+}
+.sqs-block[data-definition-name="website.components.donation"] .radio .radio-mark {
+  background: transparent;
+  box-sizing: border-box;
+  border: solid 1px #000000;
+  border-radius: 50%;
+}
+.sqs-block[data-definition-name="website.components.donation"] .radio .radio-mark:after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  border-radius: 50%;
+  height: 11px;
+  width: 11px;
+  background: #fafafa;
+}
+.sqs-block[data-definition-name="website.components.donation"] .radio input:checked ~ .radio-mark:after {
+  background: #000000;
+}
+.sqs-block[data-definition-name="website.components.donation"] .radio input:focus-visible ~ .radio-outline {
+  outline-color: var(--navigationLinkColor);
+  outline-width: 2px;
+  outline-style: solid;
+  outline-offset: 3px;
+}
+.sqs-block[data-definition-name="website.components.donation"] .sqs-cover-the-fees .sqs-checkbox-label {
+  align-items: center;
+  box-sizing: border-box;
+  display: inline-flex;
+  text-rendering: optimizelegibility;
+  -moz-column-gap: 6px;
+       column-gap: 6px;
+}
+.sqs-block[data-definition-name="website.components.donation"] .sqs-cover-the-fees .sqs-cover-the-fees-checkbox {
+  align-items: center;
+  background-color: #fafafa;
+  box-sizing: border-box;
+  display: inline-flex;
+  height: 16px;
+  width: 16px;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
+  border: 1px solid #a9a9a9;
+}
+.sqs-block[data-definition-name="website.components.donation"] .sqs-cover-the-fees .sqs-cover-the-fees-checkbox::before {
+  content: "";
+  width: 0.65em;
+  height: 0.65em;
+  -webkit-clip-path: polygon(13.29% 49.19%, 3.89% 59.8%, 40.98% 90%, 96.95% 21.23%, 86.94% 13.08%, 85.97% 12.29%, 38.95% 70.07%);
+          clip-path: polygon(13.29% 49.19%, 3.89% 59.8%, 40.98% 90%, 96.95% 21.23%, 86.94% 13.08%, 85.97% 12.29%, 38.95% 70.07%);
+  transform: scale(0);
+  background-color: #fafafa;
+}
+.sqs-block[data-definition-name="website.components.donation"] .sqs-cover-the-fees .sqs-cover-the-fees-checkbox:checked {
+  background-color: #000000;
+  height: 16px;
+  width: 16px;
+}
+.sqs-block[data-definition-name="website.components.donation"] .sqs-cover-the-fees .sqs-cover-the-fees-checkbox:checked::before {
+  transform: scale(1);
+  outline: 1px solid #a9a9a9;
+}
+.sqs-block[data-definition-name="website.components.donation"] .currency .form-input-prefix {
+  position: absolute;
+  left: 0;
+  padding: 10px;
+  color: #6d6d6d;
+  left: 1px;
+  border: solid transparent;
+  border-width: 1px 0;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+}
+.sqs-block[data-definition-name="website.components.donation"] .currency input {
+  background-color: #fafafa;
+  border: 1px solid #a9a9a9;
+  box-sizing: border-box;
+  position: relative;
+  width: 100%;
+  padding: 10px;
+  color: #000000;
+  height: auto;
+}
+.sqs-block[data-definition-name="website.components.donation"] .currency input.hasErrors,
+.sqs-block[data-definition-name="website.components.donation"] .currency input.hasErrors + .form-input-effects > .form-input-effects-border {
+  border: 1px solid #ce2c30 !important;
+  background-color: #ffeae8 !important;
+}
+.sqs-block[data-definition-name="website.components.donation"] .currency input:focus {
+  outline-offset: -2px;
+}
+.sqs-block[data-definition-name="website.components.donation"] .currency input::-webkit-input-placeholder {
+  color: #cfcfcf;
+  font-weight: normal;
+  opacity: 1 !important;
+}
+.sqs-block[data-definition-name="website.components.donation"] .currency input::-moz-placeholder {
+  color: #cfcfcf;
+  font-weight: normal;
+  opacity: 1 !important;
+}
+.sqs-block[data-definition-name="website.components.donation"] .currency input::placeholder {
+  color: #cfcfcf;
+  font-weight: normal;
+  opacity: 1 !important;
+}
+.sqs-block[data-definition-name="website.components.donation"] .form-submit-button:focus {
+  outline-offset: 0px;
+}
+.sqs-block[data-definition-name="website.components.donation"] .form-submit-button:disabled {
+  cursor: not-allowed !important;
+}
+.sqs-block[data-definition-name="website.components.donation"] .title {
+  padding-bottom: 4px;
+}
+.sqs-block[data-definition-name="website.components.donation"] .title .title-container {
+  display: inline-block;
+}
+.sqs-block[data-definition-name="website.components.donation"] .title .label-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1ex;
+  align-items: baseline;
+}
+.sqs-block[data-definition-name="website.components.donation"] .form-field-error {
+  color: #ffffff;
+  background-color: #ce2c30;
+  font-size: 14px;
+  font-weight: 400;
+  padding: 6px 10px;
+  display: flex;
+  gap: 5px;
+  align-items: flex-start;
+  margin-bottom: var(--form-field-spacing-bottom);
+}
+.sqs-block[data-definition-name="website.components.donation"] .form-field-error:empty {
+  display: none;
+}
+.sqs-block[data-definition-name="website.components.donation"] .form-field-error .icon {
+  display: block;
+  margin: auto 0;
+  flex-shrink: 0;
+  transform: scale(0.7);
+}
+.sqs-block[data-definition-name="website.components.donation"] .hidden {
+  display: none !important;
+}
+.sqs-block[data-definition-name="website.components.donation"] .form-button-wrapper--align-stretch button.sqs-editable-button {
+  width: 100% !important;
+}
+.sqs-block[data-definition-name="website.components.donation"] .sqs-donation-block-disclaimer-container .sqs-donation-block-disclaimer-text {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 14px;
+  margin: 22px 0 10px;
+}
+.sqs-block[data-definition-name="website.components.donation"] .sqs-blockStatus-box {
+  min-width: unset;
+}
+.sqs-block[data-definition-name="website.components.donation"] .sqs-donation-block-total-amount__grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+}
+.sqs-block[data-definition-name="website.components.donation"] .sqs-donation-block-total-amount__total-label,
+.sqs-block[data-definition-name="website.components.donation"] .sqs-donation-block-total-amount__total-amount {
+  font-weight: bold;
+}
+.sqs-block[data-definition-name="website.components.donation"] .sqs-donation-block-total-amount__cover-the-fees-lineitem-amount,
+.sqs-block[data-definition-name="website.components.donation"] .sqs-donation-block-total-amount__total-amount {
+  text-align: right;
+}
+
