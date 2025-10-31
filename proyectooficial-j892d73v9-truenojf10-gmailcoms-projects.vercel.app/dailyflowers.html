@@ -2516,7 +2516,46 @@ data-product-list-layout="grid"data-meta-text-alignment="center"data-meta-vertic
           /* Basic styles for the Stripe product cards container */
           #stripe-product-list { display:flex; gap:2vw; flex-wrap:wrap; }
           .stripe-product-card { box-sizing:border-box; }
+          /* Estilos para los filtros de precio */
+          #price-filters {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+          }
+          .price-filter-btn {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+          }
+          .price-filter-btn:hover {
+            background: #f5f5f5;
+          }
+          .price-filter-btn.active {
+            background: #b63f6d;
+            color: white;
+            border-color: #b63f6d;
+          }
+          /* Otros botones deshabilitados */
+          .filter-btn-disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
         </style>
+
+        <!-- Filtros de precio -->
+        <div id="price-filters">
+          <button class="price-filter-btn active" data-min="0" data-max="999999">Todos los precios</button>
+          <button class="price-filter-btn" data-min="0" data-max="50">$0 - $50</button>
+          <button class="price-filter-btn" data-min="51" data-max="100">$51 - $100</button>
+          <button class="price-filter-btn" data-min="101" data-max="999999">$101+</button>
+          <!-- Otros filtros deshabilitados -->
+          <button class="filter-btn-disabled" disabled>Por categoría</button>
+          <button class="filter-btn-disabled" disabled>Por fecha</button>
+        </div>
 
         <div id="stripe-product-list"></div>
         <script>
@@ -2527,6 +2566,42 @@ data-product-list-layout="grid"data-meta-text-alignment="center"data-meta-vertic
           // Force the loader to treat this page as test-mode by default.
           // This makes `/dailyflowers.html` behave like `/dailyflowers.html?stripe_test=1`.
           window.STRIPE_FORCE_TEST = true;
+
+          // Función para filtrar productos por precio
+          function filterProductsByPrice(min, max) {
+            const cards = document.querySelectorAll('.stripe-product-card');
+            cards.forEach(card => {
+              const priceEl = card.querySelector('li');
+              if (!priceEl) return;
+              
+              const priceText = priceEl.textContent.split(' ')[0];
+              const price = parseFloat(priceText.replace('$', ''));
+              
+              if (price >= min && price <= max) {
+                card.style.display = 'block';
+              } else {
+                card.style.display = 'none';
+              }
+            });
+          }
+
+          // Event listener para los botones de filtro
+          document.addEventListener('DOMContentLoaded', function() {
+            const filterBtns = document.querySelectorAll('.price-filter-btn');
+            filterBtns.forEach(btn => {
+              btn.addEventListener('click', function() {
+                // Remover clase active de todos los botones
+                filterBtns.forEach(b => b.classList.remove('active'));
+                // Agregar clase active al botón clickeado
+                this.classList.add('active');
+                
+                // Obtener rango de precios y filtrar
+                const min = parseFloat(this.dataset.min);
+                const max = parseFloat(this.dataset.max);
+                filterProductsByPrice(min, max);
+              });
+            });
+          });
         </script>
         <script src="assets/js/load_products.js"></script>
       </div>
