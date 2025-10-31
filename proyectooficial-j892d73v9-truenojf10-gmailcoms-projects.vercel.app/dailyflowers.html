@@ -38,7 +38,27 @@
 for pick up or delivery in Prairieville, Louisiana." />
 <link rel="preconnect" href="https://images.squarespace-cdn.com/">
 <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aboreto:ital,wght@0,400&amp;family=Rubik:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,700&amp;family=Lexend:ital,wght@0,300;0,700&amp;family=Poppins:ital,wght@0,200;0,400;0,500;0,700;1,400;1,700"><script type="text/javascript" crossorigin="anonymous" defer="true" nomodule="nomodule" src="../assets.squarespace.com/%40sqs/polyfiller/1.6/legacy-2.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aboreto:ital,wght@0,400&amp;family=Rubik:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,700&amp;family=Lexend:ital,wght@0,300;0,700&amp;family=Poppins:ital,wght@0,200;0,400;0,500;0,700;1,400;1,700">
+<!-- Fix mixed-content fonts: force Squarespace fonts to load via HTTPS -->
+<style>
+  @font-face {
+    font-family: 'squarespace-ui-font';
+    src: url('https://assets.squarespace.com/universal/fonts/squarespace-ui-font.woff') format('woff'),
+         url('https://assets.squarespace.com/universal/fonts/squarespace-ui-font.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'social-icon-font';
+    src: url('https://assets.squarespace.com/universal/fonts/social-20141119/social-icon-font.woff') format('woff'),
+         url('https://assets.squarespace.com/universal/fonts/social-20141119/social-icon-font.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+</style>
+<script type="text/javascript" crossorigin="anonymous" defer="true" nomodule="nomodule" src="../assets.squarespace.com/%40sqs/polyfiller/1.6/legacy-2.js"></script>
 <script type="text/javascript" crossorigin="anonymous" defer="true" src="../assets.squarespace.com/%40sqs/polyfiller/1.6/modern-2.js"></script>
 <script type="text/javascript">SQUARESPACE_ROLLUPS = {};</script>
 <script>(function(rollups, name) { if (!rollups[name]) { rollups[name] = {}; } rollups[name].js = ["//assets.squarespace.com/universal/scripts-compressed/extract-css-runtime-1ab684412c892b04-min.en-US.js"]; })(SQUARESPACE_ROLLUPS, 'squarespace-extract_css_runtime');</script>
@@ -2502,8 +2522,8 @@ data-product-list-layout="grid"data-meta-text-alignment="center"data-meta-vertic
         <script>
           // Point the frontend to the deployed API (so the public site can fetch products)
           // Updated to the latest deployment that exposes the /api endpoints
-          // use the project alias so the site will follow the canonical domain
-          window.STRIPE_API_BASE = 'https://proyectooficial.vercel.app/';
+          // use a relative API base so the frontend calls the same origin (avoids CORS)
+          window.STRIPE_API_BASE = '/';
           // Force the loader to treat this page as test-mode by default.
           // This makes `/dailyflowers.html` behave like `/dailyflowers.html?stripe_test=1`.
           window.STRIPE_FORCE_TEST = true;
