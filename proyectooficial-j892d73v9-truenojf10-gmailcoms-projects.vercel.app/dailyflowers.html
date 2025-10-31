@@ -18,6 +18,21 @@
         overflow: hidden !important;
       }
     </style>
+    <!-- Persistent hero-hide style (kept after DOM ready) -->
+    <style id="hero-hide">
+      /* Keep this rule permanent so the hero/banner stays hidden even after initial-hide is removed */
+      [data-section-id="66b10672d2bc4439d6758775"] .section-background,
+      [data-section-id="66b10672d2bc4439d6758775"] .background-image-fx {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        overflow: hidden !important;
+      }
+      /* Also ensure any background-image set on the section wrapper is removed */
+      [data-section-id="66b10672d2bc4439d6758775"] {
+        background-image: none !important;
+      }
+    </style>
     <script>
       (function(){
         function show(){
