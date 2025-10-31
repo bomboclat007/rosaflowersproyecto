@@ -30,6 +30,42 @@
       const container = document.getElementById('stripe-product-list');
       if(!container) return;
       container.innerHTML = '';
+
+      // --- Modal de detalles (creado una vez) ---
+      let productModal = document.getElementById('product-detail-modal');
+      if(!productModal){
+        productModal = document.createElement('div');
+        productModal.id = 'product-detail-modal';
+        productModal.style.position = 'fixed';
+        productModal.style.left = '0';
+        productModal.style.top = '0';
+        productModal.style.width = '100%';
+        productModal.style.height = '100%';
+        productModal.style.display = 'none';
+        productModal.style.alignItems = 'center';
+        productModal.style.justifyContent = 'center';
+        productModal.style.background = 'rgba(0,0,0,0.6)';
+        productModal.style.zIndex = '9999';
+
+        const inner = document.createElement('div');
+        inner.style.background = '#fff';
+        inner.style.padding = '18px';
+        inner.style.borderRadius = '8px';
+        inner.style.width = 'min(800px, 95%)';
+        inner.style.maxHeight = '90%';
+        inner.style.overflow = 'auto';
+        inner.id = 'product-detail-inner';
+
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = 'Cerrar';
+        closeBtn.style.float = 'right';
+        closeBtn.style.marginLeft = '8px';
+        closeBtn.addEventListener('click', ()=>{ productModal.style.display = 'none'; });
+
+        inner.appendChild(closeBtn);
+        productModal.appendChild(inner);
+        document.body.appendChild(productModal);
+      }
       const products = data.products || [];
       if(products.length === 0){
         container.innerHTML = '<p>No products found.</p>';
@@ -54,7 +90,7 @@
         img.style.objectFit = 'cover';
         img.style.borderRadius = '4px';
 
-        const title = document.createElement('h3');
+  const title = document.createElement('h3');
         title.textContent = p.name || 'Unnamed';
         title.style.fontSize = '16px';
         title.style.margin = '8px 0 6px';
@@ -68,6 +104,38 @@
         priceList.style.padding = '0';
         priceList.style.listStyle = 'none';
         priceList.style.margin = '0';
+        // Helper: function to initiate checkout for a given price id and button
+        const doCheckout = async (priceId, btn) => {
+          try{
+            btn.disabled = true;
+            const originalText = btn.textContent;
+            btn.textContent = 'Redirigiendo...';
+            const checkoutCanonical = '/api/create-checkout-session';
+            const checkoutFallback = '/api/create-checkout-session.js';
+            let res = await fetch(checkoutCanonical, {
+              method: 'POST',
+              headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({price_id: priceId, quantity: 1, use_test: isTest})
+            });
+            if(res.status === 404){
+              res = await fetch(checkoutFallback, {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({price_id: priceId, quantity: 1, use_test: isTest})
+              });
+            }
+            if(!res.ok) throw new Error('HTTP '+res.status);
+            const j = await res.json();
+            if(j.url){ window.location = j.url; return; }
+            throw new Error(j.error || 'No redirect URL');
+          }catch(err){
+            console.error('Checkout error', err);
+            btn.disabled = false;
+            btn.textContent = 'Añadir al carrito';
+            alert('Error al iniciar el pago: '+ (err.message||err));
+          }
+        };
+
         (p.prices||[]).forEach(pr=>{
           const li = document.createElement('li');
           const amount = (pr.unit_amount != null) ? (pr.unit_amount/100).toFixed(2) : '—';
@@ -77,7 +145,7 @@
 
           // Add Buy button per price
           const buy = document.createElement('button');
-          buy.textContent = 'Comprar';
+          buy.textContent = 'Añadir al carrito';
           buy.style.marginLeft = '8px';
           buy.style.padding = '6px 10px';
           buy.style.background = '#b63f6d';
@@ -87,42 +155,76 @@
           buy.style.cursor = 'pointer';
           buy.dataset.priceId = pr.id;
 
-          buy.addEventListener('click', async function(){
-            try{
-              buy.disabled = true;
-              buy.textContent = 'Redirigiendo...';
-              // try relative canonical endpoint first, then fallback to .js variant if 404
-              const checkoutCanonical = '/api/create-checkout-session';
-              const checkoutFallback = '/api/create-checkout-session.js';
-              let res = await fetch(checkoutCanonical, {
-                method: 'POST',
-                headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({price_id: pr.id, quantity: 1, use_test: isTest})
-              });
-              if(res.status === 404){
-                res = await fetch(checkoutFallback, {
-                  method: 'POST',
-                  headers: {'Content-Type':'application/json'},
-                  body: JSON.stringify({price_id: pr.id, quantity: 1, use_test: isTest})
-                });
-              }
-              if(!res.ok) throw new Error('HTTP '+res.status);
-              const j = await res.json();
-              if(j.url){
-                window.location = j.url;
-                return;
-              }
-              throw new Error(j.error || 'No redirect URL');
-            }catch(err){
-              console.error('Checkout error', err);
-              buy.disabled = false;
-              buy.textContent = 'Comprar';
-              alert('Error al iniciar el pago: '+ (err.message||err));
-            }
+          buy.addEventListener('click', function(){
+            doCheckout(pr.id, buy);
           });
 
           li.appendChild(buy);
           priceList.appendChild(li);
+        });
+
+        // Abrir modal de detalles cuando se cliquea la imagen
+        img.style.cursor = 'pointer';
+        img.addEventListener('click', function(){
+          try{
+            const inner = document.getElementById('product-detail-inner');
+            if(!inner) return;
+            inner.innerHTML = '';
+
+            const closeBtn2 = document.createElement('button');
+            closeBtn2.textContent = 'Cerrar';
+            closeBtn2.style.float = 'right';
+            closeBtn2.addEventListener('click', ()=>{ productModal.style.display = 'none'; });
+            inner.appendChild(closeBtn2);
+
+            const bigImg = document.createElement('img');
+            bigImg.src = img.src;
+            bigImg.style.width = '100%';
+            bigImg.style.maxHeight = '400px';
+            bigImg.style.objectFit = 'cover';
+            bigImg.style.borderRadius = '6px';
+            inner.appendChild(bigImg);
+
+            const h2 = document.createElement('h2');
+            h2.textContent = p.name || '';
+            inner.appendChild(h2);
+
+            const ddesc = document.createElement('div');
+            ddesc.innerHTML = p.description || '';
+            inner.appendChild(ddesc);
+
+            const priceBox = document.createElement('div');
+            priceBox.style.marginTop = '12px';
+            (p.prices||[]).forEach(pr2=>{
+              const row = document.createElement('div');
+              row.style.display = 'flex';
+              row.style.alignItems = 'center';
+              row.style.marginBottom = '8px';
+
+              const span = document.createElement('span');
+              const amt = (pr2.unit_amount != null) ? (pr2.unit_amount/100).toFixed(2) : '—';
+              span.textContent = `${amt} ${pr2.currency ? pr2.currency.toUpperCase() : ''}`;
+              span.style.fontWeight = '600';
+
+              const addBtn = document.createElement('button');
+              addBtn.textContent = 'Añadir al carrito';
+              addBtn.style.marginLeft = '12px';
+              addBtn.style.padding = '8px 12px';
+              addBtn.style.background = '#b63f6d';
+              addBtn.style.color = '#fff';
+              addBtn.style.border = 'none';
+              addBtn.style.borderRadius = '4px';
+              addBtn.style.cursor = 'pointer';
+              addBtn.addEventListener('click', ()=> doCheckout(pr2.id, addBtn));
+
+              row.appendChild(span);
+              row.appendChild(addBtn);
+              priceBox.appendChild(row);
+            });
+            inner.appendChild(priceBox);
+
+            productModal.style.display = 'flex';
+          }catch(e){ console.error('Modal error', e); }
         });
 
         card.appendChild(img);
