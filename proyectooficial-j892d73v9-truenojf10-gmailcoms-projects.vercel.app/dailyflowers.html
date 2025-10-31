@@ -7,7 +7,17 @@
 <!-- Removed HTTrack metadata -->
 <head>
     <!-- Prevent flash of HTTrack/placeholder content: hide until DOM is ready -->
-    <style id="initial-hide">html{visibility:hidden!important;}</style>
+    <style id="initial-hide">
+      html{visibility:hidden!important;}
+      /* Hide the background/hero image for the products section that creates the "half" image under the header */
+      [data-section-id="66b10672d2bc4439d6758775"] .section-background,
+      [data-section-id="66b10672d2bc4439d6758775"] .background-image-fx {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        overflow: hidden !important;
+      }
+    </style>
     <script>
       (function(){
         function show(){
