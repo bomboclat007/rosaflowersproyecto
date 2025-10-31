@@ -5988,26 +5988,20 @@ Louisiana located between Baton Rouge and New Orleans." />
 
 <script>
 (function(){
-  // Inject Stripe-driven product list on collection pages (non-destructive)
+  // Only inject Stripe products on /dailyflowers.html
   function injectStripeList(){
     try{
       var body = document.body;
       if(!body) return;
-      // Only run on collection pages
-      var isCollection = (body.id && body.id.indexOf('collection-') === 0) || body.classList.contains('collection-type-page');
-      if(!isCollection) return;
+      
+      // Check if we're on dailyflowers page
+      var isDailyFlowers = window.location.pathname.indexOf('/dailyflowers') !== -1;
+      if(!isDailyFlowers) return;
 
-      // Find a sensible content container to attach the Stripe product list to
+      // Rest of injection logic remains unchanged but only runs on dailyflowers
       var content = document.querySelector('.content') || document.querySelector('#siteWrapper') || document.body;
       if(!content) return;
 
-      // Remove common Squarespace product/gallery containers so only Stripe products show
-      var removeSelectors = ['.sqs-gallery', '.products-collection-list', '.product-listing', '.product-collection-list', '.sqs-gallery-design-autogrid', '.summary-list'];
-      removeSelectors.forEach(function(sel){
-        document.querySelectorAll(sel).forEach(function(el){ el.remove(); });
-      });
-
-      // If stripe container already exists, don't recreate
       if(document.getElementById('stripe-product-list')) return;
 
       var wrapper = document.createElement('div');
@@ -6018,10 +6012,8 @@ Louisiana located between Baton Rouge and New Orleans." />
       wrapper.style.justifyContent = 'flex-start';
       wrapper.style.padding = '16px 0';
 
-      // Insert at top of content
       content.insertBefore(wrapper, content.firstChild);
 
-      // Load the existing loader script that fetches /products.json
       var s = document.createElement('script');
       s.src = 'assets/js/load_products.js';
       s.defer = true;
