@@ -12,13 +12,19 @@ module.exports = async function handler(req, res) {
 
   if (req.method === 'POST') {
     try {
-      const { productId } = req.body;
+      // Support both `price_id` (preferred) and legacy `productId` in the request body
+      const { price_id, productId } = req.body || {};
+      const priceToUse = price_id || productId;
+
+      if (!priceToUse) {
+        return res.status(400).json({ error: 'Missing price_id in request body' });
+      }
 
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: [
           {
-            price: productId,
+            price: priceToUse,
             quantity: 1,
           },
         ],

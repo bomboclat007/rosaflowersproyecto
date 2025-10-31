@@ -16,16 +16,30 @@ module.exports = async function handler(req, res) {
         expand: ['data.default_price']
       });
 
-      const formattedProducts = products.data.map(product => ({
-        id: product.id,
-        name: product.name,
-        description: product.description,
-        price: product.default_price ? product.default_price.unit_amount / 100 : 0,
-        currency: product.default_price ? product.default_price.currency : 'usd',
-        image: product.images[0]
-      }));
+      // Format products to include a `prices` array (with Stripe price ids)
+      const formattedProducts = products.data.map(product => {
+        const defaultPrice = product.default_price || null;
+        const prices = [];
+        if (defaultPrice) {
+          prices.push({
+            id: defaultPrice.id,
+            unit_amount: defaultPrice.unit_amount,
+            currency: defaultPrice.currency
+          });
+        }
 
-      res.status(200).json(formattedProducts);
+        return {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          images: product.images || [],
+          prices,
+          default_price_id: defaultPrice ? defaultPrice.id : null
+        };
+      });
+
+      // Return an object with a `products` key so the frontend loader can read `data.products`
+      res.status(200).json({ products: formattedProducts });
     } catch (error) {
       console.error('Error:', error);
       res.status(500).json({ error: 'Error al obtener los productos' });
