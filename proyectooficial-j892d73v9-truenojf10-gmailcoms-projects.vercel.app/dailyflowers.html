@@ -21,6 +21,26 @@
         setTimeout(show, 2000);
       })();
     </script>
+    <script>
+      // Intercept clicks on product links and redirect straight to site index to avoid intermediate HTTrack pages
+      (function(){
+        function handler(e){
+          try{
+            var a = e.target.closest && e.target.closest('a');
+            if(!a) return;
+            // If link points to a product or a mirrored local path, redirect to root instantly
+            var href = a.getAttribute('href') || '';
+            // Patterns to consider local product pages (adjust if your links differ)
+            if(/dailyflowers\/p\//.test(href) || /\/dailyflowers\/p\//.test(href) || /projectooficial/.test(href)){
+              e.preventDefault();
+              // navigate immediately to the site's index
+              window.location.href = '/';
+            }
+          }catch(err){/* ignore */}
+        }
+        document.addEventListener('click', handler, true);
+      })();
+    </script>
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- This is Squarespace. --><!-- thefloralcottageflorist -->
