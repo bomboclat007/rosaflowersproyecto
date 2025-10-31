@@ -6,6 +6,21 @@
 
 <!-- Removed HTTrack metadata -->
 <head>
+    <!-- Prevent flash of HTTrack/placeholder content: hide until DOM is ready -->
+    <style id="initial-hide">html{visibility:hidden!important;}</style>
+    <script>
+      (function(){
+        function show(){
+          try{document.documentElement.style.visibility='';}
+          catch(e){}
+          var s=document.getElementById('initial-hide'); if(s) s.parentNode.removeChild(s);
+        }
+        if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', show);
+        else show();
+        // Safety: in case DOMContentLoaded doesn't fire, unhide after 2s
+        setTimeout(show, 2000);
+      })();
+    </script>
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- This is Squarespace. --><!-- thefloralcottageflorist -->
