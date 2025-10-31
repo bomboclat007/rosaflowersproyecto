@@ -156,12 +156,86 @@
           buy.dataset.priceId = pr.id;
 
           buy.addEventListener('click', function(){
-            doCheckout(pr.id, buy);
+            // Add to the local cart instead of immediate checkout
+            addToCart({
+              productId: p.id || p.name || ('prod_' + (Math.random()*100000|0)),
+              priceId: pr.id,
+              name: p.name || '',
+              image: img.src,
+              unit_amount: pr.unit_amount != null ? pr.unit_amount : null,
+              currency: pr.currency || 'usd',
+              quantity: 1
+            });
           });
 
           li.appendChild(buy);
           priceList.appendChild(li);
         });
+
+        // Cart helper functions
+        function getCart(){
+          try{ return JSON.parse(localStorage.getItem('stripe_cart')||'[]'); }catch(e){return []}
+        }
+        function saveCart(cart){ localStorage.setItem('stripe_cart', JSON.stringify(cart)); updateCartCount(); }
+        function updateCartCount(){
+          try{
+            const cart = getCart();
+            const count = cart.reduce((s,i)=>s+(i.quantity||0),0);
+            // find header cart element
+            const headerCart = document.querySelector('.sqs-custom-cart .Cart-inner');
+            let badge = document.getElementById('cart-count-badge');
+            if(!badge){
+              badge = document.createElement('span');
+              badge.id = 'cart-count-badge';
+              badge.style.marginLeft = '8px';
+              badge.style.background = '#b63f6d';
+              badge.style.color = '#fff';
+              badge.style.padding = '2px 6px';
+              badge.style.borderRadius = '12px';
+              badge.style.fontSize = '13px';
+              badge.style.verticalAlign = 'middle';
+              if(headerCart) headerCart.appendChild(badge);
+            }
+            if(badge) badge.textContent = count>0? String(count): '0';
+            // add class to anchor for non-zero
+            const anchor = document.querySelector('.sqs-custom-cart');
+            if(anchor){
+              if(count>0) anchor.classList.remove('cart-quantity-zero');
+              else anchor.classList.add('cart-quantity-zero');
+            }
+          }catch(e){/* ignore */}
+        }
+
+        function addToCart(item){
+          try{
+            const cart = getCart();
+            const existing = cart.find(x=>x.priceId===item.priceId);
+            if(existing){ existing.quantity = (existing.quantity||1) + (item.quantity||1); }
+            else cart.push(item);
+            saveCart(cart);
+            // small visual feedback
+            const notice = document.createElement('div');
+            notice.textContent = 'Añadido al carrito';
+            notice.style.position = 'fixed';
+            notice.style.right = '18px';
+            notice.style.bottom = '18px';
+            notice.style.background = '#222';
+            notice.style.color = '#fff';
+            notice.style.padding = '10px 14px';
+            notice.style.borderRadius = '6px';
+            notice.style.zIndex = '99999';
+            document.body.appendChild(notice);
+            setTimeout(()=>{ try{ notice.remove(); }catch(e){} }, 1400);
+          }catch(e){ console.error('Cart add error', e); alert('No se pudo añadir el artículo al carrito'); }
+        }
+
+        // expose for console debugging
+        window._getCart = getCart;
+        window._saveCart = saveCart;
+        window._updateCartCount = updateCartCount;
+
+        // ensure header badge is correct on load
+        setTimeout(updateCartCount, 60);
 
         // Abrir modal de detalles cuando se cliquea la imagen
         img.style.cursor = 'pointer';
@@ -215,7 +289,18 @@
               addBtn.style.border = 'none';
               addBtn.style.borderRadius = '4px';
               addBtn.style.cursor = 'pointer';
-              addBtn.addEventListener('click', ()=> doCheckout(pr2.id, addBtn));
+              addBtn.addEventListener('click', ()=> {
+                // add from modal
+                addToCart({
+                  productId: p.id || p.name || ('prod_' + (Math.random()*100000|0)),
+                  priceId: pr2.id,
+                  name: p.name || '',
+                  image: img.src,
+                  unit_amount: pr2.unit_amount != null ? pr2.unit_amount : null,
+                  currency: pr2.currency || 'usd',
+                  quantity: 1
+                });
+              });
 
               row.appendChild(span);
               row.appendChild(addBtn);
