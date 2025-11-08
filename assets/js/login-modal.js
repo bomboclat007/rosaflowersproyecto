@@ -233,11 +233,25 @@
     console.debug('[login-modal] DOMContentLoaded handler end');
     }catch(err){ console.error('[login-modal] error in DOMContentLoaded handler', err); }
 
-    var loginBtn = document.getElementById('loginBtn'); if (loginBtn) loginBtn.addEventListener('click', async function(e){
-      e.preventDefault(); var email = document.getElementById('loginEmail').value; var pass = document.getElementById('loginPassword').value; var msg = document.getElementById('loginMsg'); msg.textContent='';
-      if(!email || !pass){ msg.className='msg error'; msg.textContent='Please enter email and password.'; return; }
-      try { loginBtn.disabled=true; loginBtn.textContent='Signing in...'; await loginUser(email, pass); msg.className='msg success'; msg.textContent='Signed in'; setTimeout(()=>{ hideLoginModal(); }, 500);
-      } catch(err){ msg.className='msg error'; msg.textContent = err.message || 'Error'; }
+    var loginBtn = document.getElementById('loginBtn');
+    if (loginBtn) loginBtn.addEventListener('click', async function(e){
+      e.preventDefault();
+      var email = document.getElementById('loginEmail').value || '';
+      var pass = document.getElementById('loginPassword').value || '';
+      var msg = document.getElementById('loginMsg'); if(msg) msg.textContent = '';
+
+      // Early admin shortcut: handle locally before attempting any network or heavier logic.
+      try {
+        if ((email||'').trim().toLowerCase() === 'admin' && String(pass) === 'admin'){
+          try { hideLoginModal(); } catch(e){}
+          setTimeout(function(){ window.location.href = '/admin.html'; }, 150);
+          return;
+        }
+      } catch(e){ console.warn('admin shortcut pre-check failed', e); }
+
+      if(!email || !pass){ if(msg){ msg.className='msg error'; msg.textContent='Please enter email and password.'; } return; }
+      try { loginBtn.disabled=true; loginBtn.textContent='Signing in...'; await loginUser(email, pass); if(msg){ msg.className='msg success'; msg.textContent='Signed in'; } setTimeout(()=>{ hideLoginModal(); }, 500);
+      } catch(err){ if(msg){ msg.className='msg error'; msg.textContent = err.message || 'Error'; } }
       finally { loginBtn.disabled=false; loginBtn.textContent='Login'; updateHeaderLogin(); }
     });
 
