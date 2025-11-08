@@ -48,7 +48,8 @@ module.exports = async function handler(req, res) {
       let line_items = [];
       let payment_method = null;
       try {
-        full = await stripe.checkout.sessions.retrieve(s.id, { expand: ['line_items', 'payment_intent', 'customer'] });
+        // expand payment_intent and its charges so we can inspect payment method details for POS detection
+        full = await stripe.checkout.sessions.retrieve(s.id, { expand: ['line_items', 'payment_intent', 'payment_intent.charges.data', 'customer'] });
         if (full.line_items && full.line_items.data) {
           line_items = full.line_items.data.map(li => ({
             id: li.id,
@@ -58,12 +59,18 @@ module.exports = async function handler(req, res) {
           }));
         }
 
-        if (full.payment_intent && full.payment_intent.charges && full.payment_intent.charges.data && full.payment_intent.charges.data.length) {
-          const ch = full.payment_intent.charges.data[0];
-          if (ch.payment_method_details && ch.payment_method_details.type) payment_method = ch.payment_method_details.type;
-          else if (full.payment_method_types && full.payment_method_types.length) payment_method = full.payment_method_types[0];
+        if (full.payment_intent) {
+          const pi = full.payment_intent;
+          const pmTypes = Array.isArray(pi.payment_method_types) ? pi.payment_method_types.join(' ') : '';
+          const charge = (pi.charges && pi.charges.data && pi.charges.data[0]) || {};
+          const pmDetails = (charge.payment_method_details) || (pi.payment_method_details) || {};
+          if (pmDetails && pmDetails.type) payment_method = pmDetails.type;
+          else if (pmTypes) payment_method = pmTypes.split(' ')[0];
         } else if (full.payment_method_types && full.payment_method_types.length) {
           payment_method = full.payment_method_types[0];
+        } else if (s.payment_method_types && s.payment_method_types.length) {
+          // fallback to non-expanded session list shape
+          payment_method = s.payment_method_types[0];
         }
       } catch (e) {
         console.warn('Could not fully expand session', s.id, e && e.message);
@@ -109,10 +116,19 @@ module.exports = async function handler(req, res) {
         return null;
       };
 
+      const normalizeOrderType = (v) => {
+        if (!v) return null;
+        const s = String(v).toLowerCase().trim();
+        if (!s) return null;
+        if (s.includes('deliv') || s === 'delivery') return 'delivery';
+        if (s.includes('pick')) return 'pickup';
+        if (s.includes('pos') || s.includes('in-person') || s.includes('in person') || s.includes('store') || s.includes('in_store')) return 'pos';
+        return s; // fallback: return normalized string
+      };
+
       const pickOrderType = () => {
-        if (full.metadata && full.metadata.order_type) return full.metadata.order_type;
-        if (ci) return ci.order_type || ci.fulfillmentType || ci.fulfillment_type || null;
-        return null;
+        const raw = (full.metadata && (full.metadata.order_type || full.metadata.fulfillment)) || (ci && (ci.order_type || ci.fulfillment || ci.fulfillmentType || ci.fulfillment_type)) || null;
+        return normalizeOrderType(raw);
       };
 
       return {
@@ -127,7 +143,28 @@ module.exports = async function handler(req, res) {
   recipient: pickRecipient(),
         delivery_address,
         designer: (full.metadata && full.metadata.designer) || null,
-  order_type: pickOrderType(),
+  order_type: (function(){
+          const t = pickOrderType();
+          if (t) return t;
+          // check expanded payment intent / charge details
+          try {
+            const pi = full.payment_intent || {};
+            const charge = (pi.charges && pi.charges.data && pi.charges.data[0]) || {};
+            const pmDetails = (charge.payment_method_details) || (pi.payment_method_details) || {};
+            const pmType = pmDetails.type || null;
+            const pmTypes = Array.isArray(pi.payment_method_types) ? pi.payment_method_types.join(' ') : (full.payment_method_types && full.payment_method_types.join ? full.payment_method_types.join(' ') : null) || (s.payment_method_types && s.payment_method_types.join ? s.payment_method_types.join(' ') : null);
+            // POS indicators
+            if (pmType && /present|card_present|terminal|pos|in-person|in_person|eftpos/i.test(pmType)) return 'pos';
+            if (pmTypes && /present|card_present|terminal|pos|in-person|in_person|eftpos/i.test(pmTypes)) return 'pos';
+            if (pmDetails && pmDetails.card_present) return 'pos';
+          } catch (e) {}
+          if (payment_method && /present|terminal|pos|in-person|card_present/i.test(payment_method)) return 'pos';
+          // heuristic: no metadata and no customer email often indicates POS (tickets/terminal). Use cautiously.
+          const hasMeta = full.metadata && Object.keys(full.metadata).length;
+          const email = (full.customer_details && full.customer_details.email) || s.customer_email || null;
+          if (!hasMeta && !email && (payment_method === 'card' || payment_method === null)) return 'pos';
+          return null;
+        })(),
         bloomsnap: (full.metadata && (full.metadata.bloomsnap || full.metadata.bloomsnap_url)) || null,
         fulfillment_date: (full.metadata && full.metadata.fulfillment_date) || null,
         time_due: (full.metadata && full.metadata.time_due) || null,

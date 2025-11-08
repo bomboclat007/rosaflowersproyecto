@@ -110,8 +110,9 @@ module.exports = async function handler(req, res) {
     try {
       const sessionObj = event.data.object;
       // Retrieve the full session to get line items, customer details, payment info and product images
+      // expand payment_intent and its charges so we can inspect payment method details for POS/terminal payments
       const session = await stripe.checkout.sessions.retrieve(sessionObj.id, {
-        expand: ['line_items', 'customer_details', 'payment_intent', 'line_items.data.price.product']
+        expand: ['line_items', 'customer_details', 'payment_intent', 'payment_intent.charges.data', 'line_items.data.price.product']
       });
 
       const customer = session.customer_details || {};
@@ -244,7 +245,33 @@ module.exports = async function handler(req, res) {
           };
           const ci = parseCheckoutInfo(session.metadata);
           const recipientFromMeta = (session.metadata && (session.metadata.recipient_name || session.metadata.recipient)) || (ci && ((ci.rFirst || ci.firstName) ? [ci.rFirst || ci.firstName, ci.rLast || ci.lastName].filter(Boolean).join(' ') : (ci.recipientName || ci.recipient))) || null;
-          const orderTypeFromMeta = (session.metadata && session.metadata.order_type) || (ci && (ci.order_type || ci.fulfillmentType || ci.fulfillment_type)) || null;
+
+          const normalizeOrderType = (v) => {
+            if (!v) return null;
+            const s = String(v).toLowerCase().trim();
+            if (!s) return null;
+            if (s.includes('deliv') || s === 'delivery') return 'delivery';
+            if (s.includes('pick')) return 'pickup';
+            if (s.includes('pos') || s.includes('in-person') || s.includes('in person') || s.includes('store') || s.includes('in_store')) return 'pos';
+            return s;
+          };
+
+          let orderTypeFromMeta = normalizeOrderType((session.metadata && (session.metadata.order_type || session.metadata.fulfillment)) || (ci && (ci.order_type || ci.fulfillment || ci.fulfillmentType || ci.fulfillment_type)) || null);
+          // if still not present, infer from payment intent (card_present -> in-person POS)
+          if (!orderTypeFromMeta) {
+            try {
+              const pi = session.payment_intent || {};
+              const pmTypes = Array.isArray(pi.payment_method_types) ? pi.payment_method_types.join(' ') : '';
+              const charge = (pi.charges && pi.charges.data && pi.charges.data[0]) || {};
+              const pmDetails = (charge.payment_method_details) || (pi.payment_method_details) || {};
+              const pmType = pmDetails.type || null;
+              if (pmType && /present|card_present|terminal|pos|in-person|in_person|eftpos/i.test(pmType)) orderTypeFromMeta = 'pos';
+              else if (pmTypes && /present|card_present|terminal|pos|in-person|in_person|eftpos/i.test(pmTypes)) orderTypeFromMeta = 'pos';
+              else if (pmDetails && pmDetails.card_present) orderTypeFromMeta = 'pos';
+            } catch (e) {
+              // ignore
+            }
+          }
 
           const orderRow = {
             id: session.id,

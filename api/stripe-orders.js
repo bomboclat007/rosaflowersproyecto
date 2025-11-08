@@ -24,7 +24,8 @@ module.exports = async function handler(req, res) {
       let line_items = [];
       let payment_method = null;
       try {
-        full = await stripe.checkout.sessions.retrieve(s.id, { expand: ['line_items', 'payment_intent', 'customer'] });
+  // expand payment_intent and its charges so we can inspect payment method details for POS detection
+  full = await stripe.checkout.sessions.retrieve(s.id, { expand: ['line_items', 'payment_intent', 'payment_intent.charges.data', 'customer'] });
 
         if (full.line_items && full.line_items.data) {
           line_items = full.line_items.data.map(li => ({
@@ -87,10 +88,19 @@ module.exports = async function handler(req, res) {
         return null;
       };
 
+      const normalizeOrderType = (v) => {
+        if (!v) return null;
+        const s = String(v).toLowerCase().trim();
+        if (!s) return null;
+        if (s.includes('deliv') || s === 'delivery') return 'delivery';
+        if (s.includes('pick')) return 'pickup';
+        if (s.includes('pos') || s.includes('in-person') || s.includes('in person') || s.includes('store') || s.includes('in_store')) return 'pos';
+        return s;
+      };
+
       const pickOrderType = () => {
-        if (full.metadata && full.metadata.order_type) return full.metadata.order_type;
-        if (ci) return ci.order_type || ci.fulfillmentType || ci.fulfillment_type || null;
-        return null;
+        const raw = (full.metadata && (full.metadata.order_type || full.metadata.fulfillment)) || (ci && (ci.order_type || ci.fulfillment || ci.fulfillmentType || ci.fulfillment_type)) || null;
+        return normalizeOrderType(raw);
       };
 
       return {
@@ -105,7 +115,7 @@ module.exports = async function handler(req, res) {
   recipient: pickRecipient(),
         delivery_address,
         designer: (full.metadata && full.metadata.designer) || null,
-  order_type: pickOrderType(),
+  order_type: (function(){ const t = pickOrderType(); if(t) return t; if(payment_method && /present|terminal|pos|in-person|card_present/i.test(payment_method)) return 'pos'; return null; })(),
         bloomsnap: (full.metadata && (full.metadata.bloomsnap || full.metadata.bloomsnap_url)) || null,
         fulfillment_date: (full.metadata && full.metadata.fulfillment_date) || null,
         time_due: (full.metadata && full.metadata.time_due) || null,

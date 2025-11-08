@@ -30,7 +30,8 @@ module.exports = async function handler(req, res) {
     let count = 0;
     for (const s of sessions.data) {
       try {
-        const full = await stripe.checkout.sessions.retrieve(s.id, { expand: ['line_items', 'payment_intent', 'customer'] });
+  // expand payment_intent and its charges so we can inspect payment method details for POS detection
+  const full = await stripe.checkout.sessions.retrieve(s.id, { expand: ['line_items', 'payment_intent', 'payment_intent.charges.data', 'customer'] });
 
         // build line items
         const items = (full.line_items && full.line_items.data) ? full.line_items.data : [];
@@ -50,7 +51,18 @@ module.exports = async function handler(req, res) {
         };
         const ci = parseCheckoutInfo(full.metadata);
         const recipient = (full.metadata && (full.metadata.recipient_name || full.metadata.recipient)) || (ci && ((ci.rFirst || ci.firstName) ? [ci.rFirst || ci.firstName, ci.rLast || ci.lastName].filter(Boolean).join(' ') : (ci.recipientName || ci.recipient))) || null;
-        const order_type = (full.metadata && full.metadata.order_type) || (ci && (ci.order_type || ci.fulfillmentType || ci.fulfillment_type)) || null;
+
+        const normalizeOrderType = (v) => {
+          if (!v) return null;
+          const s = String(v).toLowerCase().trim();
+          if (!s) return null;
+          if (s.includes('deliv') || s === 'delivery') return 'delivery';
+          if (s.includes('pick')) return 'pickup';
+          if (s.includes('pos') || s.includes('in-person') || s.includes('in person') || s.includes('store') || s.includes('in_store')) return 'pos';
+          return s;
+        };
+
+  const order_type = normalizeOrderType((full.metadata && (full.metadata.order_type || full.metadata.fulfillment)) || (ci && (ci.order_type || ci.fulfillment || ci.fulfillmentType || ci.fulfillment_type)) || null);
 
         const addrObj = (full.shipping || full.shipping_details || (full.customer_details && full.customer_details.address)) || null;
         const addrParts = [];
@@ -65,6 +77,23 @@ module.exports = async function handler(req, res) {
         }
         const delivery_address = addrParts.join(', ');
 
+        // attempt to infer pos from payment intent if metadata doesn't specify
+        let inferredOrderType = order_type;
+        try {
+          const pi = full.payment_intent || {};
+          // payment_method_types is an array on the payment_intent
+          const pmTypes = Array.isArray(pi.payment_method_types) ? pi.payment_method_types.join(' ') : '';
+          const charge = (pi.charges && pi.charges.data && pi.charges.data[0]) || {};
+          const pmDetails = (charge.payment_method_details) || (pi.payment_method_details) || {};
+          const pmType = pmDetails.type || null;
+          // Consider card_present / terminal / similar indicators as POS
+          if (!inferredOrderType) {
+            if (pmType && /present|card_present|terminal|pos|in-person|in_person|eftpos/i.test(pmType)) inferredOrderType = 'pos';
+            else if (pmTypes && /present|card_present|terminal|pos|in-person|in_person|eftpos/i.test(pmTypes)) inferredOrderType = 'pos';
+            else if (pmDetails && pmDetails.card_present) inferredOrderType = 'pos';
+          }
+        } catch (e) { }
+
         const orderRow = {
           id: full.id,
           session_created: full.created || null,
@@ -77,7 +106,7 @@ module.exports = async function handler(req, res) {
           recipient: recipient,
           delivery_address: delivery_address || null,
           designer: (full.metadata && full.metadata.designer) || null,
-          order_type: order_type,
+          order_type: inferredOrderType,
           bloomsnap: (full.metadata && (full.metadata.bloomsnap || full.metadata.bloomsnap_url)) || null,
           fulfillment_date: (full.metadata && full.metadata.fulfillment_date) || null,
           time_due: (full.metadata && full.metadata.time_due) || null,
