@@ -61,6 +61,8 @@
           // prefer first price unit_amount if available
           price: (p.prices && p.prices[0] && typeof p.prices[0].unit_amount === 'number') ? p.prices[0].unit_amount : 0,
           unit_amount: (p.prices && p.prices[0] && typeof p.prices[0].unit_amount === 'number') ? p.prices[0].unit_amount : 0,
+          // keep the price id so we can create a Checkout Session
+          price_id: p.default_price_id || (p.prices && p.prices[0] && p.prices[0].id) || null,
         }));
         if(statusEl) statusEl.textContent = 'Productos cargados desde Stripe.';
         return;
@@ -83,7 +85,39 @@
     if(grid) grid.addEventListener('click', function(e){ const b = e.target.closest('button'); if(!b) return; const id = b.dataset.id; addToCart(id); });
 
     $('#productSearch').addEventListener('input', function(e){ const q = (this.value||'').trim().toLowerCase(); renderProducts(PRODUCTS.filter(p=>p.name.toLowerCase().indexOf(q)!==-1)); });
-    $('#checkoutBtn').addEventListener('click', function(){ if(Object.keys(cart).length===0){ alert('Carrito vacío'); return; } localStorage.setItem('checkout_cart', JSON.stringify(cart)); window.location.href = '/checkout.html'; });
+    $('#checkoutBtn').addEventListener('click', async function(){
+      if(Object.keys(cart).length===0){ alert('Carrito vacío'); return; }
+      // Build items array for the server: { price_id, quantity }
+      const items = Object.values(cart).map(i => ({ price_id: i.price_id || i.default_price_id || i.priceId || i.price, quantity: i.qty }));
+      // Validate price_id presence
+      if (!items.every(it => it.price_id)){
+        alert('Algunos productos no tienen un price_id configurado. Reintenta o usa el panel de Stripe para revisar los precios.');
+        return;
+      }
+
+      const btn = this;
+      const originalText = btn.textContent;
+      btn.disabled = true; btn.textContent = 'Redirigiendo...';
+      try {
+        const res = await fetch('/api/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error creando sesión');
+        // server returns { url }
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          throw new Error('No se recibió url de checkout');
+        }
+      } catch (err) {
+        console.error('Checkout error', err);
+        alert('No se pudo iniciar el pago: ' + (err.message || err));
+        btn.disabled = false; btn.textContent = originalText;
+      }
+    });
     $('#posBack').addEventListener('click', function(){ window.location.href = '/admin.html'; });
     $('#posClear').addEventListener('click', function(){ if(confirm('Limpiar carrito?')){ cart={}; saveCart(); } });
   });
