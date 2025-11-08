@@ -120,6 +120,45 @@
     });
     $('#posBack').addEventListener('click', function(){ window.location.href = '/admin.html'; });
     $('#posClear').addEventListener('click', function(){ if(confirm('Limpiar carrito?')){ cart={}; saveCart(); } });
+
+    // Orders snapshot panel (fetch persisted orders from /api/orders)
+    const ordersLink = document.querySelector("nav ul li a[href='#']");
+    let ordersPoller = null;
+    function createOrdersPanel(){
+      let panel = document.getElementById('ordersPanel');
+      if(panel) return panel;
+      panel = document.createElement('div'); panel.id = 'ordersPanel';
+      panel.style.position = 'fixed'; panel.style.right = '20px'; panel.style.top = '80px'; panel.style.width = '420px'; panel.style.maxHeight = '70vh'; panel.style.overflow = 'auto'; panel.style.background = '#fff'; panel.style.border = '1px solid #ddd'; panel.style.boxShadow='0 6px 18px rgba(0,0,0,0.08)'; panel.style.zIndex = 9999; panel.style.padding='12px';
+      panel.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong>Orders Snapshot</strong><button id='closeOrdersPanel'>Cerrar</button></div><div id='ordersPanelBody' style='font-size:13px;color:#333'></div>`;
+      document.body.appendChild(panel);
+      panel.querySelector('#closeOrdersPanel').addEventListener('click', ()=>{ panel.remove(); if(ordersPoller) { clearInterval(ordersPoller); ordersPoller=null; } });
+      return panel;
+    }
+
+    async function fetchOrdersForPanel(){
+      const body = document.getElementById('ordersPanelBody'); if(!body) return;
+      body.textContent = 'Cargando...';
+      try{
+        // try persisted orders
+        let res = await fetch('/api/orders');
+        if(!res.ok) res = await fetch('/api/stripe-orders');
+        if(!res.ok) throw new Error('No orders');
+        const data = await res.json();
+        const orders = data.orders || [];
+        if(orders.length===0){ body.innerHTML = '<div style="color:#666">No hay órdenes aún.</div>'; return; }
+        body.innerHTML = '';
+        orders.slice(0,20).forEach(o=>{
+          const el = document.createElement('div'); el.style.borderBottom='1px solid #f0f0f0'; el.style.padding='8px 0';
+          const when = o.session_created ? new Date(o.session_created*1000).toLocaleString() : (o.created? new Date(o.created*1000).toLocaleString(): '');
+          el.innerHTML = `<div style='display:flex;justify-content:space-between'><div><strong>${o.id}</strong><div style='font-size:12px;color:#666'>${o.customer_name||o.customer_email||'-'}</div></div><div style='text-align:right'><div style='font-weight:600'>${o.amount_total?('$'+(o.amount_total/100).toFixed(2)):'-'}</div><div style='font-size:12px;color:#666'>${when}</div></div></div><div style='margin-top:6px;font-size:13px;color:#444'>${(o.recipient?('Para: '+o.recipient+' · '):'') + (o.delivery_address? o.delivery_address : '')}</div>`;
+          body.appendChild(el);
+        });
+      }catch(err){ console.error('Orders fetch failed', err); body.textContent='Error cargando órdenes.'; }
+    }
+
+    if(ordersLink){
+      ordersLink.addEventListener('click', function(e){ e.preventDefault(); const panel = createOrdersPanel(); fetchOrdersForPanel(); if(ordersPoller) clearInterval(ordersPoller); ordersPoller = setInterval(fetchOrdersForPanel, 8000); });
+    }
   });
 
 })();

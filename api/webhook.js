@@ -235,6 +235,55 @@ module.exports = async function handler(req, res) {
       console.error('Error handling checkout.session.completed:', err);
       return res.status(500).json({ error: 'Error procesando la orden' });
     }
+      // Persist the order to Supabase pos_orders table if available.
+      if (supabaseAdmin) {
+        try {
+          // Build a plain-text delivery address
+          const addrObj = (session.shipping || session.shipping_details || (session.customer_details && session.customer_details.address)) || null;
+          const addrParts = [];
+          if (addrObj) {
+            if (addrObj.name) addrParts.push(addrObj.name);
+            if (addrObj.line1) addrParts.push(addrObj.line1);
+            if (addrObj.line2) addrParts.push(addrObj.line2);
+            if (addrObj.city) addrParts.push(addrObj.city);
+            if (addrObj.state) addrParts.push(addrObj.state);
+            if (addrObj.postal_code) addrParts.push(addrObj.postal_code);
+            if (addrObj.country) addrParts.push(addrObj.country);
+          }
+          const delivery_address_plain = addrParts.join(', ');
+
+          const orderRow = {
+            id: session.id,
+            session_created: session.created || null,
+            amount_total: session.amount_total || null,
+            currency: session.currency || null,
+            payment_status: session.payment_status || (session.payment_intent && session.payment_intent.status) || null,
+            payment_method: paymentLine || null,
+            customer_name: (customer && customer.name) || null,
+            customer_email: (customer && customer.email) || null,
+            recipient: (session.metadata && (session.metadata.recipient_name || session.metadata.recipient)) || null,
+            delivery_address: delivery_address_plain || null,
+            designer: (session.metadata && session.metadata.designer) || null,
+            order_type: (session.metadata && session.metadata.order_type) || null,
+            bloomsnap: (session.metadata && (session.metadata.bloomsnap || session.metadata.bloomsnap_url)) || null,
+            fulfillment_date: (session.metadata && session.metadata.fulfillment_date) || null,
+            time_due: (session.metadata && session.metadata.time_due) || null,
+            order_status: (session.metadata && session.metadata.order_status) || null,
+            line_items: items.map(li => ({
+              id: li.id,
+              description: li.description || (li.price && li.price.product && li.price.product.name) || null,
+              quantity: li.quantity || 1,
+              amount_total: li.amount_total != null ? li.amount_total : (li.price && li.price.unit_amount ? li.price.unit_amount * (li.quantity || 1) : null)
+            })),
+            metadata: session.metadata || {}
+          };
+
+          // Upsert so repeated webhook events don't create duplicates
+          await supabaseAdmin.from('pos_orders').upsert(orderRow, { onConflict: 'id' });
+        } catch (e) {
+          console.error('Failed to persist order to Supabase pos_orders:', e && e.message ? e.message : e);
+        }
+      }
   }
 
   // Other event types not handled here

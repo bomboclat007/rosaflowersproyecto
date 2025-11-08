@@ -26,29 +26,48 @@
   <div class="orders-container">
     <p class="small-muted">Listado de órdenes registradas en Stripe (últimas 100). Marca la casilla cuando el pedido esté completado.</p>
     <div id="ordersStatus" style="margin-bottom:8px;color:#666">Cargando órdenes...</div>
+    <div style="overflow:auto">
     <table class="orders" id="ordersTable">
       <thead>
         <tr>
           <th class="check">OK</th>
           <th>Order ID</th>
-          <th>Cliente</th>
+          <th>Order Status</th>
+          <th>Payment Status</th>
+          <th>Payment Method</th>
+          <th>Customer</th>
+          <th>Recipient</th>
+          <th>Delivery Address</th>
+          <th>Designer</th>
+          <th>Order Type</th>
+          <th>BloomSnap</th>
+          <th>Fulfillment Date</th>
+          <th>Time Due</th>
+          <th>Order Date</th>
           <th>Total</th>
-          <th>Fecha</th>
           <th>Items</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
+    </div>
   </div>
 
   <script>
-    function formatDate(ts){ const d = new Date(ts*1000); return d.toLocaleString(); }
-    function formatMoney(amount,c){ if(amount==null) return '-'; return (amount/100).toFixed(2) + (c?(' ' + c.toUpperCase()):''); }
+  function formatDate(ts){ if(!ts) return '-'; const d = new Date(ts*1000); return d.toLocaleString(); }
+  function formatMoney(amount,c){ if(amount==null) return '-'; return (amount/100).toFixed(2) + (c?(' ' + c.toUpperCase()):''); }
+
+  function esc(s){ return s? (''+s).replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
 
     async function loadOrders(){
       const status = document.getElementById('ordersStatus');
       try{
-        const res = await fetch('/api/stripe-orders');
+        // Try persisted orders first (from Supabase via /api/orders). Fallback to /api/stripe-orders if not available.
+        let res = await fetch('/api/orders');
+        if(!res.ok) {
+          console.warn('/api/orders failed, falling back to /api/stripe-orders', res.status);
+          res = await fetch('/api/stripe-orders');
+        }
         if(!res.ok) throw new Error('Error fetching orders');
         const data = await res.json();
         const tbody = document.querySelector('#ordersTable tbody'); tbody.innerHTML='';
@@ -58,8 +77,32 @@
           const tr = document.createElement('tr');
           const completedKey = 'order_completed_' + o.id;
           const completed = localStorage.getItem(completedKey) === '1';
-          const itemsHtml = (o.line_items && o.line_items.length) ? o.line_items.map(i=>`${i.quantity}× ${i.description || ''}`).join('<br>') : '';
-          tr.innerHTML = `<td class='check'><input type='checkbox' data-id='${o.id}' ${completed? 'checked':''}></td><td><strong>${o.id}</strong></td><td>${o.customer_name||''}<br><small class='small-muted'>${o.customer_email||''}</small></td><td>${formatMoney(o.amount_total,o.currency)}</td><td>${formatDate(o.created)}</td><td>${itemsHtml}</td>`;
+          const itemsHtml = (o.line_items && o.line_items.length) ? o.line_items.map(i=>`${i.quantity}× ${esc(i.description||'')}`).join('<br>') : '';
+          const delivery = esc(o.delivery_address) || '-';
+          const recipient = esc(o.recipient) || '-';
+          const designer = esc(o.designer) || '-';
+          const orderType = esc(o.order_type) || '-';
+          const bloomsnapHtml = o.bloomsnap ? `<a href="${esc(o.bloomsnap)}" target="_blank">Ver</a>` : '-';
+          const orderStatus = esc(o.order_status) || '-';
+          const paymentMethod = esc(o.payment_method) || '-';
+          tr.innerHTML = `
+            <td class='check'><input type='checkbox' data-id='${esc(o.id)}' ${completed? 'checked':''}></td>
+            <td><strong>${esc(o.id)}</strong></td>
+            <td>${orderStatus}</td>
+            <td>${esc(o.payment_status||'-')}</td>
+            <td>${paymentMethod}</td>
+            <td>${esc(o.customer_name||'-')}<br><small class='small-muted'>${esc(o.customer_email||'-')}</small></td>
+            <td>${recipient}</td>
+            <td>${delivery}</td>
+            <td>${designer}</td>
+            <td>${orderType}</td>
+            <td>${bloomsnapHtml}</td>
+            <td>${esc(o.fulfillment_date||'-')}</td>
+            <td>${esc(o.time_due||'-')}</td>
+            <td>${formatDate(o.created)}</td>
+            <td>${formatMoney(o.amount_total,o.currency)}</td>
+            <td>${itemsHtml}</td>
+          `;
           tbody.appendChild(tr);
         });
         // attach handlers
