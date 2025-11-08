@@ -1,4 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
+const stripeSecret = process.env.STRIPE_SECRET_KEY || require('../config/stripe').STRIPE_SECRET_KEY;
+const stripe = require('stripe')(stripeSecret);
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -13,28 +15,99 @@ module.exports = async function handler(req, res) {
 
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    return res.status(500).json({ error: 'Server misconfigured: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY missing in env' });
+
+  // If Supabase is configured, try to return persisted rows from pos_orders
+  if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const { data, error } = await supabase
+        .from('pos_orders')
+        .select('*')
+        .order('session_created', { ascending: false })
+        .limit(200);
+
+      if (error) {
+        console.error('Error reading pos_orders:', error);
+        // fall through to Stripe fallback below
+      } else {
+        return res.status(200).json({ orders: data || [] });
+      }
+    } catch (err) {
+      console.error('Error in /api/orders supabase branch:', err);
+      // fall through to Stripe fallback
+    }
+  } else {
+    console.warn('SUPABASE not configured; falling back to Stripe for orders');
   }
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
+  // Fallback: if Supabase is not available or returned an error, return Stripe checkout sessions
   try {
-    // Return last 200 orders from pos_orders
-    const { data, error } = await supabase
-      .from('pos_orders')
-      .select('*')
-      .order('session_created', { ascending: false })
-      .limit(200);
+    const sessions = await stripe.checkout.sessions.list({ limit: 100 });
+    const orders = await Promise.all(sessions.data.map(async s => {
+      let full = s;
+      let line_items = [];
+      let payment_method = null;
+      try {
+        full = await stripe.checkout.sessions.retrieve(s.id, { expand: ['line_items', 'payment_intent', 'customer'] });
+        if (full.line_items && full.line_items.data) {
+          line_items = full.line_items.data.map(li => ({
+            id: li.id,
+            description: li.description || (li.price && li.price.product) || '',
+            quantity: li.quantity,
+            amount_total: li.amount_total || null
+          }));
+        }
 
-    if (error) {
-      console.error('Error reading pos_orders:', error);
-      return res.status(500).json({ error: 'Error fetching orders from Supabase' });
-    }
+        if (full.payment_intent && full.payment_intent.charges && full.payment_intent.charges.data && full.payment_intent.charges.data.length) {
+          const ch = full.payment_intent.charges.data[0];
+          if (ch.payment_method_details && ch.payment_method_details.type) payment_method = ch.payment_method_details.type;
+          else if (full.payment_method_types && full.payment_method_types.length) payment_method = full.payment_method_types[0];
+        } else if (full.payment_method_types && full.payment_method_types.length) {
+          payment_method = full.payment_method_types[0];
+        }
+      } catch (e) {
+        console.warn('Could not fully expand session', s.id, e && e.message);
+      }
 
-    return res.status(200).json({ orders: data || [] });
+      let delivery_address = '';
+      const addr = (full.shipping || full.shipping_details || (full.customer_details && full.customer_details.address)) || null;
+      if (addr) {
+        const parts = [];
+        if (addr.name) parts.push(addr.name);
+        if (addr.line1) parts.push(addr.line1);
+        if (addr.line2) parts.push(addr.line2);
+        if (addr.city) parts.push(addr.city);
+        if (addr.state) parts.push(addr.state);
+        if (addr.postal_code) parts.push(addr.postal_code);
+        if (addr.country) parts.push(addr.country);
+        delivery_address = parts.join(', ');
+      }
+
+      return {
+        id: s.id,
+        created: s.created,
+        amount_total: s.amount_total || null,
+        currency: s.currency || null,
+        payment_status: s.payment_status || (full.payment_intent && full.payment_intent.status) || null,
+        payment_method: payment_method || null,
+        customer_email: (full.customer_details && full.customer_details.email) || s.customer_email || null,
+        customer_name: (full.customer_details && full.customer_details.name) || null,
+        recipient: (full.metadata && full.metadata.recipient_name) || null,
+        delivery_address,
+        designer: (full.metadata && full.metadata.designer) || null,
+        order_type: (full.metadata && full.metadata.order_type) || null,
+        bloomsnap: (full.metadata && (full.metadata.bloomsnap || full.metadata.bloomsnap_url)) || null,
+        fulfillment_date: (full.metadata && full.metadata.fulfillment_date) || null,
+        time_due: (full.metadata && full.metadata.time_due) || null,
+        order_status: (full.metadata && full.metadata.order_status) || null,
+        line_items,
+        metadata: full.metadata || {}
+      };
+    }));
+
+    return res.status(200).json({ orders });
   } catch (err) {
-    console.error('Error in /api/orders:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('Error listing stripe orders fallback:', err);
+    return res.status(500).json({ error: 'Error fetching orders' });
   }
 };
