@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin - All Orders</title>
+  <link rel="stylesheet" href="/assets/css/admin.css">
+  <style>
+    .orders-container{max-width:1200px;margin:20px auto;padding:0 18px}
+    table.orders{width:100%;border-collapse:collapse;background:#fff}
+    table.orders th, table.orders td{padding:10px;border-bottom:1px solid #eee;text-align:left}
+    .check{width:24px;text-align:center}
+    .small-muted{color:#666;font-size:13px}
+  </style>
+</head>
+<body>
+  <header class="admin-header">
+    <div style="max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:16px 18px">
+      <h1>All Orders</h1>
+      <div>
+        <button onclick="window.location.href='/admin.html'">Volver</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="orders-container">
+    <p class="small-muted">Listado de órdenes registradas en Stripe (últimas 100). Marca la casilla cuando el pedido esté completado.</p>
+    <div id="ordersStatus" style="margin-bottom:8px;color:#666">Cargando órdenes...</div>
+    <table class="orders" id="ordersTable">
+      <thead>
+        <tr>
+          <th class="check">OK</th>
+          <th>Order ID</th>
+          <th>Cliente</th>
+          <th>Total</th>
+          <th>Fecha</th>
+          <th>Items</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    function formatDate(ts){ const d = new Date(ts*1000); return d.toLocaleString(); }
+    function formatMoney(amount,c){ if(amount==null) return '-'; return (amount/100).toFixed(2) + (c?(' ' + c.toUpperCase()):''); }
+
+    async function loadOrders(){
+      const status = document.getElementById('ordersStatus');
+      try{
+        const res = await fetch('/api/stripe-orders');
+        if(!res.ok) throw new Error('Error fetching orders');
+        const data = await res.json();
+        const tbody = document.querySelector('#ordersTable tbody'); tbody.innerHTML='';
+        if(!data.orders || data.orders.length===0){ status.textContent = 'No se encontraron órdenes.'; return; }
+        status.textContent = '';
+        data.orders.forEach(o=>{
+          const tr = document.createElement('tr');
+          const completedKey = 'order_completed_' + o.id;
+          const completed = localStorage.getItem(completedKey) === '1';
+          const itemsHtml = (o.line_items && o.line_items.length) ? o.line_items.map(i=>`${i.quantity}× ${i.description || ''}`).join('<br>') : '';
+          tr.innerHTML = `<td class='check'><input type='checkbox' data-id='${o.id}' ${completed? 'checked':''}></td><td><strong>${o.id}</strong></td><td>${o.customer_name||''}<br><small class='small-muted'>${o.customer_email||''}</small></td><td>${formatMoney(o.amount_total,o.currency)}</td><td>${formatDate(o.created)}</td><td>${itemsHtml}</td>`;
+          tbody.appendChild(tr);
+        });
+        // attach handlers
+        document.querySelectorAll('#ordersTable input[type=checkbox]').forEach(ch=> ch.addEventListener('change', function(){ const id=this.dataset.id; const key='order_completed_'+id; if(this.checked) localStorage.setItem(key,'1'); else localStorage.removeItem(key); }));
+      }catch(err){
+        document.getElementById('ordersStatus').textContent = 'Error cargando órdenes.';
+        console.error(err);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadOrders);
+  </script>
+</body>
+</html>
