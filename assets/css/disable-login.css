@@ -1,0 +1,14 @@
+.user-accounts-link {
+    pointer-events: none !important;
+    cursor: default !important;
+}
+
+.user-accounts-link:hover {
+    text-decoration: none !important;
+}
+
+/* Deshabilitar también el botón móvil */
+.customerAccountLoginMobile {
+    pointer-events: none !important;
+    cursor: default !important;
+}

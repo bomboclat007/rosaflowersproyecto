@@ -50,7 +50,8 @@
     <link rel="stylesheet" type="text/css" href="../static1.squarespace.com/static/vta/5c5a519771c10ba3470d8101/versioned-assets/1761320932483-K8SZQ0RD368CXZIE5HY9/static.css">
     <link rel="stylesheet" href="assets/css/cart-styles.css">
     <script src="assets/js/cart.js" defer></script>
-  </head>
+      <script src='/assets/js/login.js' defer></script>
+</head>
 
   <body
     id="cart"
@@ -1989,9 +1990,20 @@
         <div class="cart-header">
           <h1>Tu Carrito</h1>
         </div>
-        <div class="cart-items" id="cart-items">
-          <!-- Los items del carrito se insertarán aquí dinámicamente -->
-        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Precio</th>
+              <th>Cantidad</th>
+              <th>Subtotal</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="cart-items">
+            <!-- Los items del carrito se insertarán aquí dinámicamente -->
+          </tbody>
+        </table>
         <div class="cart-summary">
           <div class="cart-total">
             <span>Total</span>
@@ -2607,18 +2619,12 @@
 
         var clearBtn = document.createElement('button'); clearBtn.textContent='Vaciar carrito'; clearBtn.style.marginRight='12px'; clearBtn.addEventListener('click', function(){ if(confirm('Vaciar el carrito?')){ saveCart([]); } });
         var checkoutBtn = document.createElement('button'); checkoutBtn.textContent='Pagar'; checkoutBtn.style.background='#b63f6d'; checkoutBtn.style.color='#fff'; checkoutBtn.style.border='none'; checkoutBtn.style.padding='10px 16px'; checkoutBtn.style.borderRadius='6px'; checkoutBtn.style.cursor='pointer';
-        checkoutBtn.addEventListener('click', async function(){
+        checkoutBtn.addEventListener('click', function(){
           try{
             checkoutBtn.disabled = true; checkoutBtn.textContent='Redirigiendo...';
-            var items = cart.map(function(it){ return {price_id: it.priceId, quantity: it.quantity||1}; });
-            var isTest = window.location.search.indexOf('stripe_test=1')!==-1 || !!window.STRIPE_FORCE_TEST;
-            var res = await fetch('/api/create-checkout-session', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({items: items, use_test: isTest})});
-            if(res.status===404){ res = await fetch('/api/create-checkout-session.js', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({items: items, use_test: isTest})}); }
-            if(!res.ok) throw new Error('HTTP '+res.status);
-            var j = await res.json();
-            if(j.url){ window.location = j.url; return; }
-            throw new Error(j.error || 'No redirect URL');
-          }catch(err){ console.error('Checkout error', err); alert('No se pudo iniciar el pago: '+(err.message||err)); checkoutBtn.disabled=false; checkoutBtn.textContent='Pagar'; }
+            // El carrito ya está en localStorage (stripe_cart). Redirigimos al formulario (checkout) para completar datos antes del pago.
+            window.location.href = '/checkout.html';
+          }catch(err){ console.error('Checkout redirect error', err); alert('No se pudo iniciar el proceso: '+(err.message||err)); checkoutBtn.disabled=false; checkoutBtn.textContent='Pagar'; }
         });
 
         foot.appendChild(clearBtn); foot.appendChild(checkoutBtn);
@@ -2637,3 +2643,4 @@
 
 <!-- Mirrored from proyectooficial-j892d73v9-truenojf10-gmailcoms-projects.vercel.app/cart.html by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 30 Oct 2025 22:30:14 GMT -->
 </html>
+

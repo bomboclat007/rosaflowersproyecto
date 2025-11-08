@@ -59,6 +59,7 @@
             background-color: #45a049;
         }
     </style>
+    <script src='/assets/js/login.js' defer></script>
 </head>
 <body>
     <div id="products-container" class="products-grid"></div>
@@ -92,29 +93,16 @@
             }
         }
 
-        async function checkout(priceId) {
+        function checkout(priceId) {
             try {
-                const response = await fetch('/api/create-checkout-session', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        priceId: priceId,
-                    }),
-                });
-
-                const session = await response.json();
-                const result = await stripe.redirectToCheckout({
-                    sessionId: session.id
-                });
-
-                if (result.error) {
-                    alert(result.error.message);
-                }
+                // Save to local cart and redirect to questionnaire/checkout page
+                const existing = JSON.parse(localStorage.getItem('stripe_cart') || '[]');
+                existing.push({ priceId: priceId, quantity: 1 });
+                localStorage.setItem('stripe_cart', JSON.stringify(existing));
+                window.location.href = '/checkout.html';
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error initiating checkout. Please try again.');
+                alert('Error iniciando el proceso. Por favor inténtalo de nuevo.');
             }
         }
 
@@ -122,3 +110,4 @@
     </script>
 </body>
 </html>
+

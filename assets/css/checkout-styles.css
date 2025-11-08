@@ -1,0 +1,31 @@
+/* Estilos básicos para la página de checkout (versión simple, responsive) */
+:root{--accent:#1f4ea1;--primary:#b63f6d;--muted:#6b7280}
+body{font-family: Poppins, Arial, sans-serif;background:#f5f6f8;color:#222;margin:0}
+.checkout-wrapper{max-width:980px;margin:32px auto;padding:16px}
+h1{font-size:1.75rem;margin-bottom:16px}
+.section{margin-bottom:18px}
+.card{background:#fff;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.06);padding:18px}
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.section-header .step{background:var(--primary);color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.section-body label{display:block;margin-bottom:10px;font-size:0.95rem}
+.section-body input[type=text],.section-body input[type=email],.section-body input[type=tel],.section-body select,.section-body textarea{width:100%;padding:10px;border:1px solid #e6e9ee;border-radius:6px;font-size:0.95rem}
+.row{display:flex;gap:12px}
+.row label{flex:1}
+.phone-row{display:flex;gap:8px}
+.phone-row select{width:140px}
+.phone-row input{flex:1}
+.checkbox{display:flex;align-items:center;gap:8px}
+.actions{margin-top:12px;text-align:right}
+.primary{background:var(--primary);color:#fff;border-radius:6px;padding:10px 16px;border:none;cursor:pointer}
+.primary.big{padding:12px 22px;font-size:1.05rem}
+.fulfill-tabs{display:flex;gap:8px;margin-bottom:12px}
+.fulfill-tabs .tab{flex:1;padding:12px;border:1px solid #e3e6eb;border-radius:6px;background:#fff;cursor:pointer}
+.fulfill-tabs .tab.active{background:#eaf1ff;border-color:var(--accent);color:var(--accent);}
+.pickup-options{display:flex;flex-direction:column;gap:8px}
+.pickopt{padding:12px;border-radius:6px;border:1px solid #e8e8e8;background:#fff;text-align:left}
+.pickopt .date{display:block;color:var(--muted);font-size:0.9rem}
+.gift-options{display:flex;flex-direction:column;gap:8px}
+.gift{display:flex;align-items:center;gap:8px;padding:12px;border:1px solid #eceff2;border-radius:6px}
+.gift .tag{margin-left:auto;color:var(--muted)}
+.gift .new{background:var(--accent);color:#fff;padding:4px 8px;border-radius:12px;font-size:0.75rem}
+@media(max-width:768px){.row{flex-direction:column}.actions{text-align:center}}

@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Checkout — The Floral Cottage</title>
+    <link rel="stylesheet" href="assets/css/checkout-styles.css">
+    <script>
+      // Pequeño script para prefilar datos desde localStorage si existen
+      function getCart() { try { return JSON.parse(localStorage.getItem('stripe_cart')||'[]'); } catch(e){return [];} }
+      function prefillUser() {
+        // Intentamos leer algunos valores si ya existen
+        const cart = getCart();
+        // Aquí se podrían rellenar campos en base al carrito si se desea
+      }
+      document.addEventListener('DOMContentLoaded', function(){ prefillUser(); });
+    </script>
+      <script src='/assets/js/login.js' defer></script>
+</head>
+  <body>
+    <main class="checkout-wrapper">
+      <h1>Checkout</h1>
+
+      <section class="section card info-section">
+        <div class="section-header"><span class="step">1</span><h2>Your Information</h2></div>
+        <div class="section-body">
+          <label>First Name<input type="text" id="firstName" placeholder="First Name"></label>
+          <label>Last Name<input type="text" id="lastName" placeholder="Last Name"></label>
+          <label>Email<input type="email" id="email" placeholder="email@example.com"></label>
+          <label>Phone
+            <div class="phone-row">
+              <select id="phoneCountry"><option>US +1</option><option>HN +504</option></select>
+              <input type="tel" id="phone" placeholder="(123) 456-7890">
+            </div>
+          </label>
+          <label class="checkbox"><input type="checkbox" id="smsOpt"> Text me updates and promotions</label>
+          <div class="actions"><button id="saveContinue" class="primary">Save & Continue</button></div>
+        </div>
+      </section>
+
+      <section class="section card fulfill-section">
+        <div class="section-header"><span class="step">2</span><h2>Fulfillment Information</h2></div>
+        <div class="section-body">
+          <div class="fulfill-tabs">
+            <button class="tab active" data-type="delivery">Delivery</button>
+            <button class="tab" data-type="pickup">Pickup</button>
+          </div>
+
+          <div class="fulfill-body">
+            <div class="fulfill-delivery">
+              <label>Address<input type="text" id="address" placeholder="Address"></label>
+              <label>Apartment, Suite, Unit, etc. (optional)<input type="text" id="apt" placeholder="Apt, Suite, etc."></label>
+              <label>Company (optional)<input type="text" id="company" placeholder="Company"></label>
+              <div class="row">
+                <label>City<input type="text" id="city"></label>
+                <label>State<select id="state"><option>Select an option</option></select></label>
+                <label>Postal Code<input type="text" id="postal"></label>
+              </div>
+              <div class="actions"><button class="primary" id="confirmAddress">Confirm Delivery Address</button></div>
+            </div>
+
+            <div class="fulfill-pickup" style="display:none">
+              <p class="pickup-location">8950 Krewstown Rd<br>Philadelphia PA 19115 US</p>
+              <label>Select a pickup date</label>
+              <div class="pickup-options">
+                <button class="pickopt">Tomorrow <span class="date">31 de octubre</span></button>
+                <button class="pickopt">sábado <span class="date">1 de noviembre</span></button>
+                <button class="pickopt">lunes <span class="date">3 de noviembre</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section card recipient-section">
+        <div class="section-header"><span class="step">3</span><h2>Recipient Information</h2></div>
+        <div class="section-body">
+          <div class="recipient-grid">
+            <label>First Name<input type="text" id="rFirst" placeholder="Jane"></label>
+            <label>Last Name<input type="text" id="rLast" placeholder="Doe"></label>
+            <label>Recipient's phone number (optional)
+              <div class="phone-row"><select id="rCountry"><option>US +1</option></select><input type="tel" id="rPhone" placeholder="(123) 456-7890"></div>
+            </label>
+          </div>
+
+          <label>Gift Message (optional)</label>
+          <div class="gift-options">
+            <label class="gift"><input type="radio" name="giftmsg"> Card Message <span class="tag">Free</span></label>
+            <label class="gift"><input type="radio" name="giftmsg"> Video Message <span class="new">New</span></label>
+          </div>
+
+          <label>Notes for the florist / special instructions (optional)
+            <textarea id="notes" placeholder="Do you have any requests or instructions for us?"></textarea>
+          </label>
+
+          <div class="actions bottom-actions">
+            <button id="continueToPayment" class="primary big">Continue To Payment</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <script>
+      // Manejo simple de tabs Delivery / Pickup
+      document.addEventListener('DOMContentLoaded', function(){
+        document.querySelectorAll('.fulfill-tabs .tab').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            document.querySelectorAll('.fulfill-tabs .tab').forEach(t=>t.classList.remove('active'));
+            btn.classList.add('active');
+            const type = btn.dataset.type;
+            if(type==='pickup'){
+              document.querySelector('.fulfill-delivery').style.display='none';
+              document.querySelector('.fulfill-pickup').style.display='block';
+            } else {
+              document.querySelector('.fulfill-delivery').style.display='block';
+              document.querySelector('.fulfill-pickup').style.display='none';
+            }
+          });
+        });
+
+        // Continuar al pago -> puedes reemplazar la siguiente línea para integrar con la pasarela real
+        document.getElementById('continueToPayment').addEventListener('click', function(){
+          // Aquí podríamos validar y guardar los datos, luego redirigir a una pasarela
+          alert('Formulario guardado localmente. Implementa integración con pasarela según sea necesario.');
+        });
+      });
+    </script>
+  </body>
+</html>

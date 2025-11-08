@@ -1,4 +1,6 @@
-const stripe = require('stripe')(require('../config/stripe').STRIPE_SECRET_KEY);
+// Prefer env var (Vercel) but fall back to local config for development
+const secretKey = process.env.STRIPE_SECRET_KEY || require('../config/stripe').STRIPE_SECRET_KEY;
+const stripe = require('stripe')(secretKey);
 
 module.exports = async function handler(req, res) {
   // Allow CORS from any origin (adjust in production to limit origins)

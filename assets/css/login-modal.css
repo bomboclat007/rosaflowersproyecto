@@ -1,0 +1,32 @@
+/* Minimal styles for the login/register modal */
+#loginModal { display:none; position:fixed; inset:0; z-index:99999; font-family: 'Helvetica Neue', Arial, sans-serif; }
+#loginModal .modal-backdrop { position:absolute; inset:0; background:rgba(0,0,0,0.45); backdrop-filter: blur(2px); }
+#loginModal .modal-dialog { position:relative; width:520px; max-width:96%; margin:6% auto; background:#fff; border-radius:10px; box-shadow:0 18px 48px rgba(0,0,0,0.32); overflow:hidden; border:1px solid rgba(11,103,255,0.06); }
+
+/* Header uses site pink */
+#loginModal .modal-header { padding:14px 18px; background:linear-gradient(90deg,#f294cd 0%,#f6a1d0 100%); color:#fff; display:flex; align-items:center; justify-content:space-between; }
+#loginModal .tabs { display:flex; gap:8px; }
+#loginModal .tabs .tab { padding:8px 14px; cursor:pointer; border-radius:6px; background:rgba(255,255,255,0.15); color:#fff; font-weight:600; }
+#loginModal .tabs .active { background:#fff; color:#d33a6b; box-shadow:0 4px 12px rgba(211,58,107,0.12); }
+
+#loginModal .modal-body { padding:18px; background: #fff; }
+#loginModal input[type="email"], #loginModal input[type="password"], #loginModal input[type="text"], #loginModal input[type="number"] { width:100%; padding:12px; border:1px solid #f1d6e1; border-radius:8px; margin-bottom:12px; background:#fff7fb; }
+#loginModal input:focus { outline: none; box-shadow: 0 6px 18px rgba(242,148,205,0.18); border-color:#f294cd; }
+
+#loginModal .form-row { margin-bottom:12px; }
+#loginModal .actions { display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
+#loginModal button.btn { background:#d33a6b; color:#fff; border:0; padding:10px 14px; border-radius:8px; cursor:pointer; font-weight:700; box-shadow:0 8px 18px rgba(211,58,107,0.18); }
+#loginModal button.btn.secondary { background:transparent; color:#d33a6b; border:1px solid rgba(211,58,107,0.12); box-shadow:none; }
+
+#loginModal .hint { font-size:13px; color:#666; margin-top:6px; }
+#loginModal .msg { margin-top:10px; font-size:14px; }
+#loginModal .msg.success { color: #0b7a3a; }
+#loginModal .msg.error { color: #c02020; }
+
+#loginModal .close { position:absolute; right:12px; top:12px; cursor:pointer; font-weight:700; color: #fff; background: rgba(0,0,0,0.08); border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; }
+
+@media (max-width:520px){
+	#loginModal .modal-dialog{ width:94%; margin:10% auto; }
+	#loginModal .tabs .tab{ padding:7px 10px; }
+}
+#loginMsg { margin-top:8px; min-height:18px; }

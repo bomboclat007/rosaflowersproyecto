@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>POS - Punto de Venta</title>
+  <link rel="stylesheet" href="/assets/css/pos.css">
+</head>
+<body>
+  <header class="pos-header">
+    <h1>POS - Punto de Venta</h1>
+    <div class="pos-header-actions">
+      <button id="posBack">Volver</button>
+      <button id="posClear">Limpiar</button>
+    </div>
+  </header>
+
+  <div class="pos-container">
+    <aside class="pos-sidebar">
+      <nav>
+        <h3>Menú</h3>
+        <ul>
+          <li><a href="#">Orders Snapshot</a></li>
+          <li><a href="#">All Orders</a></li>
+          <li><a href="#">New Orders</a></li>
+          <li><a href="#">Arrangement Created</a></li>
+          <li><a href="#">Out for Delivery</a></li>
+          <li><a href="#">Completed</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="pos-main">
+      <section class="products">
+        <div class="products-head">
+            <input id="productSearch" placeholder="Buscar producto..." />
+            <div id="productsStatus" style="margin-top:8px;font-size:13px;color:#666"></div>
+        </div>
+        <div id="productGrid" class="product-grid"></div>
+      </section>
+
+      <aside class="cart">
+        <h2>Carrito</h2>
+        <div id="cartItems" class="cart-items"></div>
+        <div class="cart-totals">
+          <div><span>Subtotal</span><span id="cartSubtotal">$0.00</span></div>
+          <div><span>Impuestos</span><span id="cartTax">$0.00</span></div>
+          <div class="total-row"><strong>Total</strong><strong id="cartTotal">$0.00</strong></div>
+        </div>
+        <div class="cart-actions">
+          <button id="checkoutBtn">Cobrar</button>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="/assets/js/pos.js"></script>
+</body>
+</html>

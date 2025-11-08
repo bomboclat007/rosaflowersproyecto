@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin - Menú</title>
+  <link rel="stylesheet" href="/assets/css/admin.css">
+</head>
+<body>
+  <header class="admin-header">
+    <h1>Panel Administrativo</h1>
+    <div class="admin-actions">
+      <button id="adminPOS">POS</button>
+      <button id="adminLogout">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <p class="intro">Bienvenido, administrador. Selecciona una opción:</p>
+    <div class="tiles">
+      <a class="tile" href="/deliverysystem.html" target="_self">
+        <h2>Delivery System</h2>
+        <p>Editar zonas de entrega y ver el mapa.</p>
+      </a>
+
+      <a class="tile" href="/pos.html" target="_self">
+        <h2>POS - Punto de Venta</h2>
+        <p>Abrir interfaz de ventas: seleccionar productos, añadir al carrito y cobrar.</p>
+      </a>
+
+      <a class="tile" href="https://dashboard.stripe.com/" target="_blank" rel="noopener noreferrer">
+        <h2>Cuenta de Stripe</h2>
+        <p>Accede al panel de Stripe (se requiere login).</p>
+      </a>
+
+      <a class="tile" href="/" target="_self">
+        <h2>Volver al sitio</h2>
+        <p>Regresar al sitio público.</p>
+      </a>
+    </div>
+  </main>
+
+  <script>
+    document.getElementById('adminLogout').addEventListener('click', function(){
+      try { localStorage.removeItem('site_session'); } catch(e){}
+      window.location.href = '/';
+    });
+    document.getElementById('adminPOS').addEventListener('click', function(){
+      window.location.href = '/pos.html';
+    });
+  </script>
+</body>
+</html>

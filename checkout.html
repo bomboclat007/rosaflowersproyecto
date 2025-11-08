@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Checkout — The Floral Cottage</title>
+  <link rel="stylesheet" href="assets/css/checkout-styles.css">
+  <!-- Fallbacks for deployments that serve pages under a nested path or expect absolute root -->
+  <link rel="stylesheet" href="/assets/css/checkout-styles.css">
+  <link rel="stylesheet" href="/proyectooficial-j892d73v9-truenojf10-gmailcoms-projects.vercel.app/assets/css/checkout-styles.css">
+    <style>
+      /* Collapsible step styles */
+      .section { overflow: hidden; border-radius:8px; margin-bottom:18px; transition: box-shadow .2s ease; }
+      .section .section-body { transition: max-height .28s ease, opacity .2s ease, padding .2s ease; overflow: hidden; }
+      .section.collapsed { box-shadow: none; }
+      .section.collapsed .section-body { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; }
+      .section.expanded { box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
+      .section.expanded .section-body { max-height: 1200px; opacity: 1; padding-top: 14px; padding-bottom: 14px; }
+      .section-header { cursor: pointer; display:flex;align-items:center;gap:12px }
+      .section-header .step { width:34px;height:34px;border-radius:50%;background:#e9e9e9;display:inline-flex;align-items:center;justify-content:center;font-weight:700 }
+      .section.completed .section-header .step { background:#28a745;color:#fff }
+  /* pickup options */
+  .pickup-options{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+  .pickup-options .pickopt{border:1px solid #e0e0e0;background:#fff;padding:10px 12px;border-radius:6px;cursor:pointer;min-width:160px;text-align:left}
+  .pickup-options .pickopt .main{font-weight:700;color:#222}
+  .pickup-options .pickopt .date{font-size:13px;color:#666;margin-top:4px}
+  .pickup-options .pickopt.active{border-color:#2b6cb0;background:rgba(66,153,225,0.08)}
+  .pickup-calendar input[type=date]{display:block;padding:8px;border-radius:6px;border:1px solid #ddd;width:100%;max-width:300px}
+    </style>
+    <script>
+      // Pequeño script para prefilar datos desde localStorage si existen
+      function getCart() { try { return JSON.parse(localStorage.getItem('stripe_cart')||'[]'); } catch(e){return [];} }
+      function prefillUser() {
+        // Intentamos leer algunos valores si ya existen
+        const cart = getCart();
+        // Aquí se podrían rellenar campos en base al carrito si se desea
+      }
+      document.addEventListener('DOMContentLoaded', function(){ prefillUser(); });
+    </script>
+    <!-- Supabase client (UMD) - replace with specific version if desired -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
+  </head>
+  <body>
+    <main class="checkout-wrapper">
+      <h1>Checkout</h1>
+
+      <!-- Account / Login area -->
+      <div id="accountArea" style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+        <div id="accountStatus" style="font-size:14px;color:#333">No has iniciado sesión</div>
+        <button id="btnOpenLogin" class="primary" style="padding:6px 10px">Login / Cuenta</button>
+        <button id="btnLogout" class="secondary" style="padding:6px 10px;display:none">Logout</button>
+      </div>
+
+      <section class="section card info-section">
+        <div class="section-header"><span class="step">1</span><h2>Your Information</h2></div>
+        <div class="section-body">
+          <label>First Name<input type="text" id="firstName" placeholder="First Name"></label>
+          <label>Last Name<input type="text" id="lastName" placeholder="Last Name"></label>
+          <label>Email<input type="email" id="email" placeholder="email@example.com"></label>
+          <label>Phone
+            <div class="phone-row">
+              <select id="phoneCountry"><option>US +1</option><option>HN +504</option></select>
+              <input type="tel" id="phone" placeholder="(123) 456-7890">
+            </div>
+          </label>
+          <!-- hidden field to hold Stripe Customer ID created after login/signup -->
+          <input type="hidden" id="stripeCustomerId" name="stripeCustomerId" value="">
+          <label class="checkbox"><input type="checkbox" id="smsOpt"> Text me updates and promotions</label>
+          <div class="actions"><button id="saveContinue" class="primary">Save & Continue</button></div>
+        </div>
+      </section>
+
+      <section class="section card fulfill-section">
+        <div class="section-header"><span class="step">2</span><h2>Fulfillment Information</h2></div>
+        <div class="section-body">
+          <div class="fulfill-tabs">
+            <button class="tab active" data-type="delivery">Delivery</button>
+            <button class="tab" data-type="pickup">Pickup</button>
+          </div>
+
+          <div class="fulfill-body">
+            <div class="fulfill-delivery">
+              <label>Address
+                <input type="text" id="address" placeholder="Address" autocomplete="off">
+                <div id="address-suggestions" class="suggestions" style="display:none"></div>
+                <!-- hidden fields to store resolved latitude/longitude for the selected/geocoded address -->
+                <input type="hidden" id="addressLat" name="addressLat" value="">
+                <input type="hidden" id="addressLon" name="addressLon" value="">
+                <!-- hidden fields to record which delivery zone allowed this address (id and price) -->
+                <input type="hidden" id="deliveryZoneId" name="deliveryZoneId" value="">
+                <input type="hidden" id="deliveryPrice" name="deliveryPrice" value="">
+                <!-- inline UI feedback for matched delivery zone -->
+                <div id="deliveryZoneInfo" style="margin-top:8px;font-size:14px;color:#2b6cb0;display:none"></div>
+              </label>
+              <label>Apartment, Suite, Unit, etc. (optional)<input type="text" id="apt" placeholder="Apt, Suite, etc."></label>
+              <label>Company (optional)<input type="text" id="company" placeholder="Company"></label>
+              <div class="row">
+                <label>City<input type="text" id="city"></label>
+                <label>State<select id="state"><option>Select an option</option></select></label>
+                <label>Postal Code<input type="text" id="postal"></label>
+              </div>
+              <div class="actions">
+                <button id="backToStep1" class="secondary">← Back</button>
+                <button class="primary" id="confirmAddress">Confirm Delivery Address</button>
+              </div>
+            </div>
+
+            <div class="fulfill-pickup" style="display:none">
+              <p class="pickup-location">8950 Krewstown Rd<br>Philadelphia PA 19115 US</p>
+              <label>Select a pickup date</label>
+              <div class="pickup-options" id="pickupOptions">
+                <!-- populated by script: three quick-select buttons -->
+              </div>
+
+              <label style="margin-top:12px">Or choose a different date</label>
+              <div class="pickup-calendar">
+                <input type="date" id="pickupDateInput" aria-label="Select a pickup date">
+              </div>
+
+              <!-- hidden field to hold the selected ISO date for submission or inspection -->
+              <input type="hidden" id="pickupDate" name="pickupDate" value="">
+
+              <div class="actions">
+                <button id="backToStep1Pickup" class="secondary">← Back</button>
+                <button id="confirmPickup" class="primary">Save & Continue</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section card recipient-section">
+        <div class="section-header"><span class="step">3</span><h2>Recipient Information</h2></div>
+        <div class="section-body">
+          <div class="recipient-grid">
+            <label>First Name<input type="text" id="rFirst" placeholder="Jane"></label>
+            <label>Last Name<input type="text" id="rLast" placeholder="Doe"></label>
+            <label>Recipient's phone number (optional)
+              <div class="phone-row"><select id="rCountry"><option>US +1</option></select><input type="tel" id="rPhone" placeholder="(123) 456-7890"></div>
+            </label>
+          </div>
+
+          <label>Gift Message (optional)</label>
+          <div class="gift-options">
+            <label class="gift"><input type="radio" name="giftmsg"> Card Message <span class="tag">Free</span></label>
+            <label class="gift"><input type="radio" name="giftmsg"> Video Message <span class="new">New</span></label>
+          </div>
+
+          <label>Notes for the florist / special instructions (optional)
+            <textarea id="notes" placeholder="Do you have any requests or instructions for us?"></textarea>
+          </label>
+
+          <div class="actions bottom-actions">
+            <button id="backToStep2" class="secondary">← Back</button>
+            <button id="continueToPayment" class="primary big">Continue To Payment</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <script>
+      // Manejo simple de tabs Delivery / Pickup
+      document.addEventListener('DOMContentLoaded', function(){
+        // Collapsible steps behavior
+        const sections = Array.from(document.querySelectorAll('.section'));
+        // add data-step indices
+        sections.forEach((sec, i) => sec.setAttribute('data-step', (i+1)));
+
+        let currentIndex = 0;
+        function collapseAllExcept(index) {
+          sections.forEach((sec, i) => {
+            if (i === index) {
+              sec.classList.remove('collapsed'); sec.classList.add('expanded');
+            } else {
+              sec.classList.remove('expanded'); sec.classList.add('collapsed');
+            }
+          });
+          currentIndex = index;
+        }
+
+        function markCompleted(stepIndex) {
+          const sec = sections[stepIndex-1]; if (!sec) return;
+          sec.classList.add('completed');
+        }
+
+        function unmarkAfter(stepIndex) {
+          // remove completed from steps after stepIndex
+          sections.forEach((sec, i) => {
+            if (i >= stepIndex) {
+              sec.classList.remove('completed');
+            }
+          });
+        }
+
+        // initialize: expand first, collapse others
+        collapseAllExcept(0);
+
+        // allow clicking header to open only if previous step is completed or it's first
+        sections.forEach((sec, idx) => {
+          const header = sec.querySelector('.section-header');
+          if (!header) return;
+          header.addEventListener('click', () => {
+            // can open if previous completed, it's the first, or it's a prior step (allow going back)
+            if (idx === 0 || sections[idx-1].classList.contains('completed') || idx < currentIndex) {
+              collapseAllExcept(idx);
+            }
+          });
+        });
+        /* --- Autocomplete for Address using Nominatim (OpenStreetMap) --- */
+        // Populate US states into #state select so user can pick
+        (function populateStates(){
+          const states = [
+            'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','District of Columbia','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming'
+          ];
+          const stateSelect = document.getElementById('state');
+          if (!stateSelect) return;
+          // remove any placeholder except keep first option text
+          stateSelect.innerHTML = '';
+          const placeholder = document.createElement('option');
+          placeholder.value = '';
+          placeholder.text = 'Select an option';
+          stateSelect.appendChild(placeholder);
+          states.forEach(s=>{
+            const o = document.createElement('option'); o.value = s; o.text = s; stateSelect.appendChild(o);
+          });
+        })();
+        const addressInput = document.getElementById('address');
+        const suggestionsBox = document.getElementById('address-suggestions');
+        let debounceTimer = null;
+        let suggestions = [];
+
+        function showSuggestions(items) {
+          suggestions = items;
+          if (!items || items.length === 0) { suggestionsBox.style.display='none'; suggestionsBox.innerHTML=''; return; }
+          // Build structured suggestion: main line (street), sub line (city, state postcode)
+          suggestionsBox.innerHTML = items.map((it, idx) => {
+            const adr = it.address || {};
+            // assemble main: house_number + road or fallback to display_name
+            const main = (adr.house_number ? adr.house_number + ' ' : '') + (adr.road || adr.pedestrian || adr.cycleway || adr.footway || adr.neighbourhood || adr.suburb || adr.village || adr.town || adr.city || adr.county || it.display_name);
+            const cityPart = adr.city || adr.town || adr.village || adr.county || '';
+            const statePart = adr.state || adr.region || '';
+            const postcode = adr.postcode || '';
+            const sub = [cityPart, statePart].filter(Boolean).join(', ') + (postcode ? (postcode ? (' ' + postcode) : '') : '');
+            return (`<div class="suggestion" data-idx="${idx}"><div class="main">${escapeHtml(main)}</div><div class="sub">${escapeHtml(sub)}</div></div>`);
+          }).join('');
+          suggestionsBox.style.display = 'block';
+        }
+
+        function clearSuggestions() { suggestions = []; suggestionsBox.style.display='none'; suggestionsBox.innerHTML=''; }
+
+        function fillAddressFromSuggestion(item) {
+          if (!item) return;
+          // Fill main address input with display name (or road + house_number)
+          addressInput.value = item.display_name || '';
+          // Parse address details if available
+          const adr = item.address || {};
+          document.getElementById('city').value = adr.city || adr.town || adr.village || adr.county || '';
+          // populate state select if exists
+          const stateSelect = document.getElementById('state');
+          if (stateSelect) {
+            // try to set option matching state, else append
+            const stateVal = adr.state || adr.region || '';
+            if (stateVal) {
+              let opt = Array.from(stateSelect.options).find(o=>o.value===stateVal || o.text===stateVal);
+              if (!opt) {
+                opt = document.createElement('option'); opt.value = stateVal; opt.text = stateVal; stateSelect.appendChild(opt);
+              }
+              stateSelect.value = opt.value;
+            }
+          }
+          document.getElementById('postal').value = adr.postcode || '';
+          // store resolved coordinates so we can test point-in-polygon against delivery zones
+          if (item.lat && item.lon) {
+            const latEl = document.getElementById('addressLat');
+            const lonEl = document.getElementById('addressLon');
+            if (latEl) latEl.value = item.lat;
+            if (lonEl) lonEl.value = item.lon;
+          }
+          // close suggestions
+          clearSuggestions();
+        }
+
+        addressInput.addEventListener('input', function(e){
+          const q = e.target.value.trim();
+          if (debounceTimer) clearTimeout(debounceTimer);
+          if (!q) { clearSuggestions(); return; }
+          debounceTimer = setTimeout(async ()=>{
+            try {
+              // Restrict suggestions to United States using countrycodes=us
+              const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(q)}&addressdetails=1&limit=5&countrycodes=us`;
+              const res = await fetch(url, { headers: { 'Accept-Language': 'en' }});
+              if (!res.ok) { clearSuggestions(); return; }
+              const data = await res.json();
+              showSuggestions(data);
+            } catch (err) { console.error('Autocomplete error', err); clearSuggestions(); }
+          }, 300);
+        });
+
+        // Click on suggestion
+        suggestionsBox.addEventListener('click', function(ev){
+          const el = ev.target.closest('.suggestion');
+          if (!el) return;
+          const idx = parseInt(el.getAttribute('data-idx'),10);
+          const item = suggestions[idx];
+          fillAddressFromSuggestion(item);
+        });
+
+        // Close suggestions when clicking outside
+        document.addEventListener('click', function(ev){ if (!ev.target.closest('#address') && !ev.target.closest('#address-suggestions')) clearSuggestions(); });
+
+        // basic keyboard navigation
+        addressInput.addEventListener('keydown', function(ev){
+          const visible = suggestionsBox.style.display === 'block';
+          if (!visible) return;
+          const active = suggestionsBox.querySelector('.suggestion.active');
+          if (ev.key === 'ArrowDown') {
+            ev.preventDefault();
+            if (!active) { const first = suggestionsBox.querySelector('.suggestion'); if (first) first.classList.add('active'); return; }
+            const next = active.nextElementSibling; if (next) { active.classList.remove('active'); next.classList.add('active'); }
+          } else if (ev.key === 'ArrowUp') {
+            ev.preventDefault(); if (!active) return; const prev = active.previousElementSibling; if (prev) { active.classList.remove('active'); prev.classList.add('active'); }
+          } else if (ev.key === 'Enter') {
+            if (active) { ev.preventDefault(); const idx = parseInt(active.getAttribute('data-idx'),10); fillAddressFromSuggestion(suggestions[idx]); }
+          }
+        });
+
+        // small helper escape (same as server side)
+        function escapeHtml(str){ if(!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+
+        // minimal styles for suggestions
+        const styleEl = document.createElement('style');
+        styleEl.textContent = `
+          .suggestions{position:relative}
+          #address-suggestions{position:absolute;background:#fff;border:1px solid #ddd;max-height:220px;overflow:auto;width:100%;z-index:40;border-radius:4px}
+          #address-suggestions .suggestion{padding:8px 10px;cursor:pointer;border-bottom:1px solid #f2f2f2}
+          #address-suggestions .suggestion:last-child{border-bottom:none}
+          #address-suggestions .suggestion .main{font-weight:600;color:#222}
+          #address-suggestions .suggestion .sub{font-size:12px;color:#666;margin-top:3px}
+          #address-suggestions .suggestion:hover,#address-suggestions .suggestion.active{background:#f7f7f7}
+        `;
+        document.head.appendChild(styleEl);
+        document.querySelectorAll('.fulfill-tabs .tab').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            document.querySelectorAll('.fulfill-tabs .tab').forEach(t=>t.classList.remove('active'));
+            btn.classList.add('active');
+            const type = btn.dataset.type;
+            if(type==='pickup'){
+              document.querySelector('.fulfill-delivery').style.display='none';
+              document.querySelector('.fulfill-pickup').style.display='block';
+              setRequiredForFulfillment('pickup');
+            } else {
+              document.querySelector('.fulfill-delivery').style.display='block';
+              document.querySelector('.fulfill-pickup').style.display='none';
+              setRequiredForFulfillment('delivery');
+            }
+          });
+        });
+        
+        // Function to toggle required attributes depending on fulfillment type
+        function setRequiredForFulfillment(type){
+          const deliveryFields = ['address','city','state','postal'];
+          const pickupFields = ['pickupDate'];
+          if (type === 'pickup'){
+            pickupFields.forEach(id=>{ const el = document.getElementById(id); if(el) el.setAttribute('required','required'); });
+            deliveryFields.forEach(id=>{ const el = document.getElementById(id); if(el) el.removeAttribute('required'); });
+          } else {
+            deliveryFields.forEach(id=>{ const el = document.getElementById(id); if(el) el.setAttribute('required','required'); });
+            pickupFields.forEach(id=>{ const el = document.getElementById(id); if(el) el.removeAttribute('required'); });
+          }
+        }
+        // initialize required fields based on current active tab
+        const activeTab = document.querySelector('.fulfill-tabs .tab.active');
+        setRequiredForFulfillment(activeTab && activeTab.dataset && activeTab.dataset.type === 'pickup' ? 'pickup' : 'delivery');
+        // --- Pickup date quick-select generation (Hoy / Mañana / Pasado) ---
+        (function setupPickupDates(){
+          const pickupOptions = document.getElementById('pickupOptions');
+          const pickupHidden = document.getElementById('pickupDate');
+          const pickupInput = document.getElementById('pickupDateInput');
+          if (!pickupOptions || !pickupHidden || !pickupInput) return;
+          const today = new Date();
+          const locale = 'es-ES';
+          function toISO(d){ return d.toISOString().slice(0,10); }
+          function formatDate(d){ return new Intl.DateTimeFormat(locale,{day:'numeric', month:'long'}).format(d); }
+          function weekdayLower(d){ return new Intl.DateTimeFormat(locale,{weekday:'long'}).format(d); }
+          const labels = ['Hoy','Mañana'];
+          const btns = [];
+          for (let i=0;i<3;i++){
+            const d = new Date(today);
+            d.setDate(today.getDate()+i);
+            const label = (i<2) ? labels[i] : weekdayLower(d);
+            const formatted = formatDate(d);
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'pickopt';
+            btn.setAttribute('data-iso', toISO(d));
+            btn.innerHTML = `<div class="main">${label}</div><div class="date">${formatted}</div>`;
+            btn.addEventListener('click', function(){
+              pickupOptions.querySelectorAll('.pickopt').forEach(b=>b.classList.remove('active'));
+              btn.classList.add('active');
+              pickupHidden.value = btn.getAttribute('data-iso');
+              pickupInput.value = pickupHidden.value;
+            });
+            pickupOptions.appendChild(btn);
+            btns.push(btn);
+          }
+          // select today by default
+          if (btns[0]) { btns[0].classList.add('active'); pickupHidden.value = btns[0].getAttribute('data-iso'); pickupInput.value = pickupHidden.value; }
+
+          // when user picks a custom date from calendar, clear quick selections
+          pickupInput.addEventListener('change', function(){
+            pickupOptions.querySelectorAll('.pickopt').forEach(b=>b.classList.remove('active'));
+            if (pickupInput.value) pickupHidden.value = pickupInput.value;
+          });
+        })();
+        // Hook step progression buttons to collapse/expand steps
+        const saveContinueBtn = document.getElementById('saveContinue');
+        if (saveContinueBtn) {
+          saveContinueBtn.addEventListener('click', function(){
+            // mark step 1 complete and open step 2
+            markCompleted(1);
+            collapseAllExcept(1);
+            // small scroll to header
+            const next = sections[1]; if (next) next.scrollIntoView({behavior:'smooth', block:'start'});
+          });
+        }
+
+        const confirmAddressBtn = document.getElementById('confirmAddress');
+        if (confirmAddressBtn) {
+          confirmAddressBtn.addEventListener('click', async function(){
+            // When confirming a delivery address we must ensure it's inside one of the saved delivery zones
+            try {
+              // Only enforce when current fulfillment tab is 'delivery'
+              const fulfillment = (document.querySelector('.fulfill-tabs .tab.active') || {}).dataset?.type || 'delivery';
+              if (fulfillment !== 'delivery') {
+                // If pickup, allow progression
+                markCompleted(2);
+                collapseAllExcept(2);
+                const next = sections[2]; if (next) next.scrollIntoView({behavior:'smooth', block:'start'});
+                return;
+              }
+
+              // get lat/lon from hidden fields (set when user selects suggestion)
+              let lat = (document.getElementById('addressLat') || {}).value || '';
+              let lon = (document.getElementById('addressLon') || {}).value || '';
+              const addressText = (document.getElementById('address') || {}).value || '';
+
+              // If lat/lon are missing, try to geocode the entered address (Nominatim, restricted to US)
+              if (!lat || !lon) {
+                if (!addressText) { alert('Please enter an address.'); return; }
+                try {
+                  const geourl = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(addressText)}&addressdetails=1&limit=1&countrycodes=us`;
+                  const r = await fetch(geourl, { headers: { 'Accept-Language': 'en' }});
+                  if (r.ok) {
+                    const data = await r.json();
+                    if (Array.isArray(data) && data.length>0) {
+                      lat = data[0].lat; lon = data[0].lon;
+                      // persist for later
+                      const latEl = document.getElementById('addressLat'); if(latEl) latEl.value = lat;
+                      const lonEl = document.getElementById('addressLon'); if(lonEl) lonEl.value = lon;
+                    }
+                  }
+                } catch (err) { console.warn('Geocode failed', err); }
+              }
+
+              if (!lat || !lon) {
+                alert('No pudimos obtener coordenadas para la dirección proporcionada. Por favor selecciona una sugerencia válida o escribe una dirección más específica.');
+                return;
+              }
+
+              // load delivery zones from localStorage (key used by deliverysystem.html)
+              const raw = localStorage.getItem('delivery_zones');
+              if (!raw) {
+                alert('No hay zonas de entrega configuradas. Actualmente no realizamos delivery a esta dirección.');
+                return;
+              }
+              let geojson = null;
+              try { geojson = JSON.parse(raw); } catch (e) { console.error('Invalid delivery_zones geojson', e); alert('Error leyendo zonas de entrega.'); return; }
+
+              // helper: simple point-in-polygon for GeoJSON polygons (ray-casting)
+              function pointInRing(x, y, ring) {
+                // ring: array of [lon, lat]
+                let inside = false;
+                for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                  const xi = ring[i][0], yi = ring[i][1];
+                  const xj = ring[j][0], yj = ring[j][1];
+                  const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi + 0.0) + xi);
+                  if (intersect) inside = !inside;
+                }
+                return inside;
+              }
+
+              function pointInPolygonCoords(lonNum, latNum, polygonCoords) {
+                // polygonCoords: [ [ [lon,lat], ... ] ]  (array of linear rings)
+                if (!Array.isArray(polygonCoords) || polygonCoords.length === 0) return false;
+                // test against outer ring, and subtract holes (if any)
+                const outer = polygonCoords[0];
+                let insideOuter = pointInRing(lonNum, latNum, outer);
+                if (!insideOuter) return false;
+                // if there are holes, ensure point is not in any hole
+                for (let r = 1; r < polygonCoords.length; r++) {
+                  if (pointInRing(lonNum, latNum, polygonCoords[r])) return false;
+                }
+                return true;
+              }
+
+              function isPointInAnyFeature(lonNum, latNum, geojson) {
+                if (!geojson || !Array.isArray(geojson.features)) return false;
+                for (const f of geojson.features) {
+                  if (!f.geometry) continue;
+                  const geom = f.geometry;
+                  if (geom.type === 'Polygon') {
+                    if (pointInPolygonCoords(lonNum, latNum, geom.coordinates)) return true;
+                  } else if (geom.type === 'MultiPolygon') {
+                    for (const poly of geom.coordinates) {
+                      if (pointInPolygonCoords(lonNum, latNum, poly)) return true;
+                    }
+                  }
+                }
+                return false;
+              }
+
+              const lonNum = parseFloat(lon);
+              const latNum = parseFloat(lat);
+              if (!isFinite(lonNum) || !isFinite(latNum)) { alert('Coordenadas inválidas.'); return; }
+
+              const allowed = isPointInAnyFeature(lonNum, latNum, geojson);
+              if (!allowed) {
+                alert('Lo sentimos — esa dirección está fuera de nuestras zonas de delivery. Si crees que es un error, contáctanos.');
+                // clear any previous zone info
+                const zIdEl = document.getElementById('deliveryZoneId'); if (zIdEl) zIdEl.value = '';
+                const zPriceEl = document.getElementById('deliveryPrice'); if (zPriceEl) zPriceEl.value = '';
+                const infoEl = document.getElementById('deliveryZoneInfo'); if (infoEl) { infoEl.style.display='none'; infoEl.textContent=''; }
+                return;
+              }
+
+              // find which feature allowed the address (so we can show id/price)
+              let matchedFeature = null;
+              for (const f of geojson.features) {
+                if (!f.geometry) continue;
+                const geom = f.geometry;
+                let inThis = false;
+                if (geom.type === 'Polygon') {
+                  inThis = pointInPolygonCoords(lonNum, latNum, geom.coordinates);
+                } else if (geom.type === 'MultiPolygon') {
+                  for (const poly of geom.coordinates) {
+                    if (pointInPolygonCoords(lonNum, latNum, poly)) { inThis = true; break; }
+                  }
+                }
+                if (inThis) { matchedFeature = f; break; }
+              }
+
+              // if matchedFeature found, set hidden fields and show UI feedback
+              const infoEl = document.getElementById('deliveryZoneInfo');
+              const zIdEl = document.getElementById('deliveryZoneId');
+              const zPriceEl = document.getElementById('deliveryPrice');
+              if (matchedFeature) {
+                const props = matchedFeature.properties || {};
+                const zid = props.id || props.zoneId || props.name || '';
+                const zprice = (props.price === undefined || props.price === null) ? '' : String(props.price);
+                if (zIdEl) zIdEl.value = zid;
+                if (zPriceEl) zPriceEl.value = zprice;
+                if (infoEl) {
+                  let txt = 'Delivery disponible';
+                  if (zprice) txt += ` — $${zprice}`;
+                  if (zid) txt += ` (zona ${zid})`;
+                  infoEl.textContent = txt;
+                  infoEl.style.display = 'block';
+                }
+              } else {
+                // no matched feature found (shouldn't happen because allowed was true) — clear
+                if (zIdEl) zIdEl.value = '';
+                if (zPriceEl) zPriceEl.value = '';
+                if (infoEl) { infoEl.style.display='none'; infoEl.textContent=''; }
+              }
+
+              // success: address is inside at least one zone -> proceed to next step
+              markCompleted(2);
+              collapseAllExcept(2);
+              const next = sections[2]; if (next) next.scrollIntoView({behavior:'smooth', block:'start'});
+            } catch (err) {
+              console.error('Error verifying delivery zone', err);
+              alert('Ocurrió un error al verificar la zona de delivery. Intenta de nuevo.');
+            }
+          });
+        }
+
+        // confirmPickup: same progression when user selected pickup date
+        const confirmPickupBtn = document.getElementById('confirmPickup');
+        if (confirmPickupBtn) {
+          confirmPickupBtn.addEventListener('click', function(){
+            // ensure a pickup date is selected
+            const pickupValue = document.getElementById('pickupDate').value;
+            if (!pickupValue) {
+              alert('Please select a pickup date.');
+              return;
+            }
+            markCompleted(2);
+            collapseAllExcept(2);
+            const next = sections[2]; if (next) next.scrollIntoView({behavior:'smooth', block:'start'});
+          });
+        }
+
+        // Back buttons behavior: allow editing previous steps
+        const backToStep1 = document.getElementById('backToStep1');
+        if (backToStep1) {
+          backToStep1.addEventListener('click', function(){
+            // unmark later steps so user can re-complete
+            unmarkAfter(1);
+            collapseAllExcept(0);
+            sections[0].scrollIntoView({behavior:'smooth', block:'start'});
+          });
+        }
+
+        const backToStep1Pickup = document.getElementById('backToStep1Pickup');
+        if (backToStep1Pickup) {
+          backToStep1Pickup.addEventListener('click', function(){
+            unmarkAfter(1);
+            collapseAllExcept(0);
+            sections[0].scrollIntoView({behavior:'smooth', block:'start'});
+          });
+        }
+
+        const backToStep2 = document.getElementById('backToStep2');
+        if (backToStep2) {
+          backToStep2.addEventListener('click', function(){
+            unmarkAfter(2);
+            collapseAllExcept(1);
+            sections[1].scrollIntoView({behavior:'smooth', block:'start'});
+          });
+        }
+
+        // Continuar al pago -> crear sesión de Stripe Checkout usando /api/create-checkout-session
+        document.getElementById('continueToPayment').addEventListener('click', async function(){
+          try {
+            const btn = this;
+            // mark recipient step completed before continuing
+            try { markCompleted(3); } catch (e) {}
+            btn.disabled = true;
+            btn.textContent = 'Procesando...';
+
+            // Leer carrito desde localStorage (formato usado por la app)
+            const cart = (function(){ try { return JSON.parse(localStorage.getItem('stripe_cart')||'[]'); } catch(e){ return []; } })();
+
+            if (!Array.isArray(cart) || cart.length === 0) {
+              alert('Tu carrito está vacío. Añade productos antes de continuar.');
+              btn.disabled = false;
+              btn.textContent = 'Continue To Payment';
+              return;
+            }
+
+            // Normalizar items para el endpoint: { price_id, quantity }
+            const items = cart.map(it => ({ price_id: it.priceId || it.price_id || it.price || it.productId || '', quantity: parseInt(it.quantity,10) || 1 })).filter(i=>i.price_id);
+
+            if (!items.length) {
+              alert('No se encontraron price_id válidos en el carrito.');
+              btn.disabled = false;
+              btn.textContent = 'Continue To Payment';
+              return;
+            }
+
+            // Collect form data to include as metadata and customer_email
+            const metadata = {};
+            const getVal = id => (document.getElementById(id) && document.getElementById(id).value) ? document.getElementById(id).value.trim() : '';
+            metadata.firstName = getVal('firstName');
+            metadata.lastName = getVal('lastName');
+            metadata.email = getVal('email');
+            metadata.phone = getVal('phone');
+            metadata.fulfillment = (document.querySelector('.fulfill-tabs .tab.active') || {}).dataset?.type || 'delivery';
+            metadata.address = getVal('address');
+            metadata.apt = getVal('apt');
+            metadata.company = getVal('company');
+            metadata.city = getVal('city');
+            metadata.state = getVal('state');
+            metadata.postal = getVal('postal');
+            metadata.pickupDate = getVal('pickupDate');
+            metadata.deliveryZoneId = getVal('deliveryZoneId');
+            metadata.deliveryPrice = getVal('deliveryPrice');
+            metadata.rFirst = getVal('rFirst');
+            metadata.rLast = getVal('rLast');
+            metadata.rPhone = getVal('rPhone');
+            const giftRadio = document.querySelector('input[name="giftmsg"]:checked');
+            metadata.giftMessageType = giftRadio ? (giftRadio.parentElement ? giftRadio.parentElement.innerText.trim() : (giftRadio.value || '')) : '';
+            metadata.notes = getVal('notes');
+            metadata.smsOpt = (document.getElementById('smsOpt') && document.getElementById('smsOpt').checked) ? 'yes' : 'no';
+
+            // Basic validation for required fields (we enforce server-side metadata presence)
+            const requiredErrors = [];
+            if (!metadata.firstName) requiredErrors.push('First Name');
+            if (!metadata.lastName) requiredErrors.push('Last Name');
+            if (!metadata.email) requiredErrors.push('Email');
+            if (!metadata.phone) requiredErrors.push('Phone');
+            if (metadata.fulfillment === 'delivery'){
+              if (!metadata.address) requiredErrors.push('Address');
+              if (!metadata.city) requiredErrors.push('City');
+              if (!metadata.state) requiredErrors.push('State');
+              if (!metadata.postal) requiredErrors.push('Postal Code');
+            } else {
+              if (!metadata.pickupDate) requiredErrors.push('Pickup Date');
+            }
+            if (!metadata.rFirst) requiredErrors.push('Recipient First Name');
+            if (!metadata.rLast) requiredErrors.push('Recipient Last Name');
+            if (requiredErrors.length){
+              alert('Please complete required fields: ' + requiredErrors.join(', '));
+              btn.disabled = false;
+              btn.textContent = 'Continue To Payment';
+              return;
+            }
+
+            const resp = await fetch('/api/create-checkout-session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ items, metadata, customer_email: metadata.email })
+            });
+
+            const json = await resp.json();
+            if (resp.ok && json && json.url) {
+              // Redirect to Stripe Checkout
+              window.location.href = json.url;
+              return;
+            }
+
+            // If there was an error, show useful message
+            const msg = (json && json.error) ? json.error : `Error creating checkout session (${resp.status})`;
+            alert(msg);
+            btn.disabled = false;
+            btn.textContent = 'Continue To Payment';
+          } catch (err) {
+            console.error('Error al crear sesión:', err);
+            alert('Ocurrió un error al iniciar el pago. Revisa la consola.');
+            const btn = document.getElementById('continueToPayment');
+            btn.disabled = false;
+            btn.textContent = 'Continue To Payment';
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

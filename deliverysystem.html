@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery System Management</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 80vh;
+            width: 100%;
+            margin: 20px 0;
+        }
+        body {
+            padding: 20px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 12px;
+        }
+        .note {
+            color: #555;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Delivery System Management</h1>
+        <div class="note">Mapa centrado en: 8950 Krewstown Rd, Philadelphia PA 19115 (sin necesidad de clave/API)</div>
+
+        <div style="display:flex; gap:20px; align-items:flex-start;">
+            <div style="flex:1">
+                <div id="map"></div>
+            </div>
+            <div style="width:340px;">
+                <h3>Zonas de delivery</h3>
+                <div id="controls">
+                    <button id="btn-export">Exportar zonas (.geojson)</button>
+                    <button id="btn-import">Importar zonas</button>
+                    <input type="file" id="file-input" style="display:none" accept="application/json" />
+                    <div style="margin-top:12px;">
+                        <strong>Lista de zonas guardadas</strong>
+                        <ul id="zones-list" style="padding-left:16px; max-height:50vh; overflow:auto;">
+                        </ul>
+                    </div>
+                    <div style="margin-top:12px; font-size:0.9rem; color:#555;">
+                        Usa la herramienta de dibujo (polígono) en el mapa para crear una zona. Al crearla se te pedirá el precio.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet & Leaflet.draw -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
+    <script>
+        // Coordenadas aproximadas de 8950 Krewstown Rd, Philadelphia PA 19115
+        const storeLocation = [40.0849, -75.0366];
+
+        // Inicializar mapa con Leaflet y OpenStreetMap
+        const map = L.map('map').setView(storeLocation, 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Marcador de la tienda
+        L.marker(storeLocation).addTo(map)
+            .bindPopup('<b>8950 Krewstown Rd</b><br>Philadelphia PA 19115').openPopup();
+
+        // Grupo donde se colocan las zonas dibujadas
+        const drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+
+        // Control de dibujo - sólo polígonos
+        const drawControl = new L.Control.Draw({
+            edit: { featureGroup: drawnItems },
+            draw: {
+                polygon: true,
+                rectangle: false,
+                polyline: false,
+                circle: false,
+                marker: false,
+                circlemarker: false
+            }
+        });
+        map.addControl(drawControl);
+
+        // Utilidades
+        function generateId() {
+            return 'z_' + Date.now();
+        }
+
+        function bindZonePopup(layer) {
+            const props = layer.feature && layer.feature.properties ? layer.feature.properties : {};
+            const id = props.id || '';
+            const price = props.price !== undefined ? props.price : '';
+            const html = `Precio: <b>$${price}</b><br><button onclick="editZone('${id}')">Editar precio</button> <button onclick="deleteZone('${id}')">Eliminar</button>`;
+            layer.bindPopup(html);
+        }
+
+        // Eventos de dibujo
+        map.on(L.Draw.Event.CREATED, function (e) {
+            const layer = e.layer;
+            // Assign id and ask for price
+            const id = generateId();
+            // prompt price (you can replace with a nicer UI later)
+            let price = prompt('Precio de delivery para esta zona (número en USD):', '10');
+            if (price === null) price = '';
+            price = price === '' ? '' : Number(price);
+
+            // Ensure GeoJSON feature properties exist so we can save
+            layer.feature = layer.feature || { type: 'Feature', properties: {} };
+            layer.feature.properties = layer.feature.properties || {};
+            layer.feature.properties.id = id;
+            layer.feature.properties.price = price;
+
+            // Add to map and bind popup
+            drawnItems.addLayer(layer);
+            bindZonePopup(layer);
+            saveZones();
+            renderZonesList();
+        });
+
+        map.on(L.Draw.Event.EDITED, function (e) {
+            // update saved geojson
+            saveZones();
+            renderZonesList();
+        });
+
+        map.on(L.Draw.Event.DELETED, function (e) {
+            saveZones();
+            renderZonesList();
+        });
+
+        // Save zones to localStorage as GeoJSON
+        function saveZones() {
+            const geojson = drawnItems.toGeoJSON();
+            // Keep only necessary properties
+            geojson.features = geojson.features.map(f => {
+                f.properties = f.properties || {};
+                // normalize price
+                if (f.properties.price === undefined) f.properties.price = '';
+                return f;
+            });
+            localStorage.setItem('delivery_zones', JSON.stringify(geojson));
+        }
+
+        // Load zones from localStorage
+        function loadZones() {
+            const raw = localStorage.getItem('delivery_zones');
+            if (!raw) return;
+            let geojson = null;
+            try { geojson = JSON.parse(raw); } catch (e) { console.error('Invalid geojson in storage'); return; }
+            drawnItems.clearLayers();
+            L.geoJSON(geojson, {
+                onEachFeature: function (feature, layer) {
+                    // ensure properties
+                    feature.properties = feature.properties || {};
+                    // If layer is polygon, add to drawnItems and bind popup
+                    drawnItems.addLayer(layer);
+                    // Make editable
+                    bindZonePopup(layer);
+                }
+            });
+            renderZonesList();
+        }
+
+        // Render list in sidebar
+        function renderZonesList() {
+            const list = document.getElementById('zones-list');
+            list.innerHTML = '';
+            drawnItems.eachLayer(function (layer) {
+                const props = layer.feature && layer.feature.properties ? layer.feature.properties : {};
+                const id = props.id || '';
+                const price = props.price !== undefined ? props.price : '';
+                const li = document.createElement('li');
+                li.style.marginBottom = '8px';
+                li.innerHTML = `<b>${id}</b><br>Precio: $${price} <br><button onclick="zoomToZone('${id}')">Ir</button> <button onclick="editZone('${id}')">Editar</button> <button onclick="deleteZone('${id}')">Eliminar</button>`;
+                list.appendChild(li);
+            });
+        }
+
+        // Helpers accessible from popup buttons (must be global)
+        window.zoomToZone = function (id) {
+            let found = null;
+            drawnItems.eachLayer(function (layer) {
+                if (layer.feature && layer.feature.properties && layer.feature.properties.id === id) found = layer;
+            });
+            if (found) {
+                map.fitBounds(found.getBounds());
+                found.openPopup();
+            }
+        };
+
+        window.editZone = function (id) {
+            let found = null;
+            drawnItems.eachLayer(function (layer) {
+                if (layer.feature && layer.feature.properties && layer.feature.properties.id === id) found = layer;
+            });
+            if (!found) return alert('Zona no encontrada');
+            const current = found.feature.properties.price || '';
+            let price = prompt('Nuevo precio para esta zona (USD):', current);
+            if (price === null) return;
+            price = price === '' ? '' : Number(price);
+            found.feature.properties.price = price;
+            bindZonePopup(found);
+            saveZones();
+            renderZonesList();
+            found.openPopup();
+        };
+
+        window.deleteZone = function (id) {
+            let target = null;
+            drawnItems.eachLayer(function (layer) {
+                if (layer.feature && layer.feature.properties && layer.feature.properties.id === id) target = layer;
+            });
+            if (!target) return alert('Zona no encontrada');
+            if (!confirm('Eliminar esta zona?')) return;
+            drawnItems.removeLayer(target);
+            saveZones();
+            renderZonesList();
+        };
+
+        // Export/Import
+        document.getElementById('btn-export').addEventListener('click', function () {
+            const geojson = drawnItems.toGeoJSON();
+            const blob = new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'delivery_zones.geojson';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        document.getElementById('btn-import').addEventListener('click', function () {
+            document.getElementById('file-input').click();
+        });
+
+        document.getElementById('file-input').addEventListener('change', function (ev) {
+            const f = ev.target.files[0];
+            if (!f) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const geojson = JSON.parse(e.target.result);
+                    // Merge: add features to drawnItems
+                    L.geoJSON(geojson, {
+                        onEachFeature: function (feature, layer) {
+                            // Ensure id
+                            feature.properties = feature.properties || {};
+                            if (!feature.properties.id) feature.properties.id = generateId();
+                            drawnItems.addLayer(layer);
+                            bindZonePopup(layer);
+                        }
+                    });
+                    saveZones();
+                    renderZonesList();
+                    alert('Importado correctamente');
+                } catch (err) { alert('Archivo inválido'); }
+            };
+            reader.readAsText(f);
+            ev.target.value = '';
+        });
+
+        // Inicializar desde storage
+        loadZones();
+
+    </script>
+</body>
+</html>

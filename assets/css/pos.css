@@ -1,0 +1,33 @@
+/* POS styles */
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:0;background:#f6f7fb;color:#111}
+.pos-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:#fff;border-bottom:1px solid #e6e9ef}
+.pos-header h1{margin:0;color:#d63384;font-size:18px}
+.pos-header-actions button{margin-left:8px;padding:8px 12px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer}
+.pos-container{display:flex;gap:18px;max-width:1200px;margin:20px auto;padding:0 18px}
+.pos-sidebar{width:220px;background:#fff;border-radius:10px;padding:12px;border:1px solid #eee}
+.pos-sidebar h3{margin:0 0 8px 0}
+.pos-sidebar ul{list-style:none;margin:0;padding:0}
+.pos-sidebar li{margin-bottom:8px}
+.pos-sidebar a{color:#333;text-decoration:none;padding:6px 8px;display:block;border-radius:6px}
+.pos-sidebar a:hover{background:#f6f7fb}
+
+.pos-main{display:flex;gap:18px;flex:1}
+.products{flex:1}
+.products-head{margin-bottom:12px}
+#productSearch{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd}
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.product-card{background:#fff;border-radius:8px;padding:12px;border:1px solid #eee;display:flex;flex-direction:column;justify-content:space-between}
+.product-card img{width:100%;height:110px;object-fit:cover;border-radius:6px;margin-bottom:8px}
+.product-card h3{margin:0 0 6px 0;font-size:15px}
+.product-card .price{color:#111;font-weight:600;margin-bottom:8px}
+.product-card button{background:#d63384;color:#fff;border:none;padding:8px;border-radius:6px;cursor:pointer}
+.cart{width:340px;background:#fff;border-radius:10px;padding:12px;border:1px solid #eee;display:flex;flex-direction:column;gap:12px}
+.cart h2{margin:0 0 6px 0}
+.cart-items{max-height:420px;overflow:auto}
+.cart-item{display:flex;align-items:center;justify-content:space-between;padding:8px;border-bottom:1px dashed #eee}
+.cart-item .meta{flex:1}
+.qty-controls button{padding:4px 8px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer;margin-left:6px}
+.cart-totals{border-top:1px solid #f0f0f0;padding-top:8px}
+.cart-totals div{display:flex;justify-content:space-between;padding:6px 0}
+.total-row{font-size:16px;margin-top:8px}
+.cart-actions button{padding:10px 12px;background:#0070f3;color:#fff;border:none;border-radius:8px;cursor:pointer}

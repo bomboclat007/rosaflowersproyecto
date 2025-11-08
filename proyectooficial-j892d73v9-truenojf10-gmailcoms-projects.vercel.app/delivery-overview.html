@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Delivery Overview</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="/assets/css/delivery.css" />
+  <style>body { margin:0 }</style>
+</head>
+<body class="delivery-overview">
+  <div class="container-delivery">
+    <div class="zones-list">
+      <div class="list-header">
+        <div class="list-title">Delivery Overview</div>
+        <button class="test-address-btn">Test Delivery Address</button>
+      </div>
+
+      <!-- Editor -->
+      <div class="editor">
+        <div class="accordion">
+          <div class="section">
+            <div class="section-head">Zone Name</div>
+            <div class="section-body">
+              <input id="zoneName" placeholder="e.g. Center City North" />
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-head">Zone Area</div>
+            <div class="section-body">
+              <h4>Postal Codes</h4>
+              <div class="form-row postal-range">
+                <label>Add postal codes between</label>
+                <input id="minMiles" type="number" min="0" step="0.1" value="0" style="width:72px; margin:0 8px;" />
+                <span>and</span>
+                <input id="maxMiles" type="number" min="0" step="0.1" value="5" style="width:72px; margin:0 8px;" />
+                <span>miles away</span>
+                <button id="addRangeBtn" class="btn">Add</button>
+                <a href="#" id="clearChipsBtn" style="margin-left:8px; color:#0b67ff;">Clear All</a>
+              </div>
+
+              <div class="chips" id="postalChips"></div>
+              <div class="form-row">
+                <input id="zipInput" placeholder="Type in input to add postal codes manually" />
+                <button id="addZipBtn" class="btn">Add</button>
+              </div>
+              <div class="form-row">
+                <button id="chooseCenterBtn" class="btn ghost">Choose center on map</button>
+                <div id="centerInfo" class="center-info"></div>
+              </div>
+              <div class="form-row">
+                <label>Radius (miles)</label>
+                <input id="radiusMiles" type="number" min="0" step="0.1" placeholder="e.g. 5" />
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-head">Standard Delivery Rate</div>
+            <div class="section-body">
+              <div class="toggle">
+                <button data-method="static" class="active">Static</button>
+                <button data-method="dynamic">Dynamic</button>
+              </div>
+              <div class="form-row">
+                <label>Fee</label>
+                <input id="deliveryFee" type="number" min="0" step="0.01" placeholder="e.g. 10.00" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <button id="saveZoneBtn" class="btn primary">Save Zone</button>
+        </div>
+      </div>
+
+      <h3 class="saved-title">Saved Zones</h3>
+      <div id="zonesContainer"></div>
+    </div>
+
+    <div class="map-side">
+      <div id="deliveryMap"></div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/assets/js/delivery.js" defer></script>
+</body>
+</html>
