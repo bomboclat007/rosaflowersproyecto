@@ -217,25 +217,8 @@ module.exports = async function handler(req, res) {
       </div>
       `;
 
-      // Send to admin and optionally to customer
-      // Send only to admin (EMAIL_TO / ADMIN_EMAIL). Keep customer email as replyTo so admin can respond if needed.
-      if (!adminEmail) {
-        console.warn('No admin recipient configured; set EMAIL_TO or ADMIN_EMAIL in environment variables');
-      } else {
-        await sendEmail({
-          subject: `Nueva orden / ${session.id}`,
-          html,
-          to: adminEmail,
-          replyTo: customer.email || undefined
-        });
-      }
-
-      return res.status(200).json({ received: true });
-    } catch (err) {
-      console.error('Error handling checkout.session.completed:', err);
-      return res.status(500).json({ error: 'Error procesando la orden' });
-    }
       // Persist the order to Supabase pos_orders table if available.
+      // NOTE: run persistence BEFORE returning response so upsert actually executes.
       if (supabaseAdmin) {
         try {
           // Build a plain-text delivery address
@@ -252,6 +235,17 @@ module.exports = async function handler(req, res) {
           }
           const delivery_address_plain = addrParts.join(', ');
 
+          // parse checkout_info from metadata if present
+          const parseCheckoutInfo = (md) => {
+            if (!md) return null;
+            const ci = md.checkout_info;
+            if (!ci) return null;
+            try { return (typeof ci === 'string') ? JSON.parse(ci) : ci; } catch (e) { return null; }
+          };
+          const ci = parseCheckoutInfo(session.metadata);
+          const recipientFromMeta = (session.metadata && (session.metadata.recipient_name || session.metadata.recipient)) || (ci && ((ci.rFirst || ci.firstName) ? [ci.rFirst || ci.firstName, ci.rLast || ci.lastName].filter(Boolean).join(' ') : (ci.recipientName || ci.recipient))) || null;
+          const orderTypeFromMeta = (session.metadata && session.metadata.order_type) || (ci && (ci.order_type || ci.fulfillmentType || ci.fulfillment_type)) || null;
+
           const orderRow = {
             id: session.id,
             session_created: session.created || null,
@@ -261,10 +255,10 @@ module.exports = async function handler(req, res) {
             payment_method: paymentLine || null,
             customer_name: (customer && customer.name) || null,
             customer_email: (customer && customer.email) || null,
-            recipient: (session.metadata && (session.metadata.recipient_name || session.metadata.recipient)) || null,
+            recipient: recipientFromMeta,
             delivery_address: delivery_address_plain || null,
             designer: (session.metadata && session.metadata.designer) || null,
-            order_type: (session.metadata && session.metadata.order_type) || null,
+            order_type: orderTypeFromMeta,
             bloomsnap: (session.metadata && (session.metadata.bloomsnap || session.metadata.bloomsnap_url)) || null,
             fulfillment_date: (session.metadata && session.metadata.fulfillment_date) || null,
             time_due: (session.metadata && session.metadata.time_due) || null,
@@ -284,6 +278,25 @@ module.exports = async function handler(req, res) {
           console.error('Failed to persist order to Supabase pos_orders:', e && e.message ? e.message : e);
         }
       }
+
+      // Send to admin and optionally to customer
+      // Send only to admin (EMAIL_TO / ADMIN_EMAIL). Keep customer email as replyTo so admin can respond if needed.
+      if (!adminEmail) {
+        console.warn('No admin recipient configured; set EMAIL_TO or ADMIN_EMAIL in environment variables');
+      } else {
+        await sendEmail({
+          subject: `Nueva orden / ${session.id}`,
+          html,
+          to: adminEmail,
+          replyTo: customer.email || undefined
+        });
+      }
+
+      return res.status(200).json({ received: true });
+    } catch (err) {
+      console.error('Error handling checkout.session.completed:', err);
+      return res.status(500).json({ error: 'Error procesando la orden' });
+    }
   }
 
   // Other event types not handled here

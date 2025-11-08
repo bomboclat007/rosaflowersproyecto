@@ -43,7 +43,7 @@ module.exports = async function handler(req, res) {
   // Fallback: if Supabase is not available or returned an error, return Stripe checkout sessions
   try {
     const sessions = await stripe.checkout.sessions.list({ limit: 100 });
-    const orders = await Promise.all(sessions.data.map(async s => {
+  const orders = await Promise.all(sessions.data.map(async s => {
       let full = s;
       let line_items = [];
       let payment_method = null;
@@ -83,6 +83,38 @@ module.exports = async function handler(req, res) {
         delivery_address = parts.join(', ');
       }
 
+      // helper: try to parse a stringified `checkout_info` JSON blob commonly stored in metadata
+      const parseCheckoutInfo = (md) => {
+        if (!md) return null;
+        const ci = md.checkout_info;
+        if (!ci) return null;
+        try {
+          return (typeof ci === 'string') ? JSON.parse(ci) : ci;
+        } catch (e) {
+          return null;
+        }
+      };
+
+      const ci = parseCheckoutInfo(full.metadata);
+      const pickRecipient = () => {
+        if (full.metadata && (full.metadata.recipient_name || full.metadata.recipient)) return full.metadata.recipient_name || full.metadata.recipient;
+        if (ci) {
+          // common shapes: rFirst/rLast, rFirstName/rLastName, recipientName, firstName/lastName
+          const rFirst = ci.rFirst || ci.rFirstName || ci.rfirst || ci.r_first || ci.rfirstName;
+          const rLast = ci.rLast || ci.rLastName || ci.rlast || ci.r_last || ci.rlastName;
+          if (rFirst || rLast) return [rFirst, rLast].filter(Boolean).join(' ');
+          if (ci.recipientName || ci.recipient) return ci.recipientName || ci.recipient;
+          if (ci.firstName || ci.lastName) return [ci.firstName, ci.lastName].filter(Boolean).join(' ');
+        }
+        return null;
+      };
+
+      const pickOrderType = () => {
+        if (full.metadata && full.metadata.order_type) return full.metadata.order_type;
+        if (ci) return ci.order_type || ci.fulfillmentType || ci.fulfillment_type || null;
+        return null;
+      };
+
       return {
         id: s.id,
         created: s.created,
@@ -92,10 +124,10 @@ module.exports = async function handler(req, res) {
         payment_method: payment_method || null,
         customer_email: (full.customer_details && full.customer_details.email) || s.customer_email || null,
         customer_name: (full.customer_details && full.customer_details.name) || null,
-        recipient: (full.metadata && full.metadata.recipient_name) || null,
+  recipient: pickRecipient(),
         delivery_address,
         designer: (full.metadata && full.metadata.designer) || null,
-        order_type: (full.metadata && full.metadata.order_type) || null,
+  order_type: pickOrderType(),
         bloomsnap: (full.metadata && (full.metadata.bloomsnap || full.metadata.bloomsnap_url)) || null,
         fulfillment_date: (full.metadata && full.metadata.fulfillment_date) || null,
         time_due: (full.metadata && full.metadata.time_due) || null,
