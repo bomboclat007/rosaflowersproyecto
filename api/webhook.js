@@ -24,7 +24,8 @@ try {
   sendgridAvailable = false;
 }
 // Optional Supabase admin client for persisting orders
-let supabaseAdmin = null;
+// (supabaseAdmin already declared above as `var supabaseAdmin = null`)
+// don't redeclare here — initialize below if env vars exist
 try {
   const { createClient } = require('@supabase/supabase-js');
   const SUPABASE_URL = process.env.SUPABASE_URL || null;
