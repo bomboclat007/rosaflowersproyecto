@@ -117,8 +117,49 @@
           const completedKey = 'order_completed_' + o.id;
           const completed = localStorage.getItem(completedKey) === '1';
           const itemsHtml = (o.line_items && o.line_items.length) ? o.line_items.map(i=>`${i.quantity}× ${esc(i.description||'')}`).join('<br>') : '';
-            const delivery = esc(o.delivery_address) || '-';
-            const recipient = esc(o.recipient) || '-';
+            // Build recipient preferring persisted value, then metadata/checkout_info, then customer name/email
+            const recipient = (function(){
+              try{
+                if (o.recipient) return esc(o.recipient);
+                const md = o.metadata || {};
+                if (md.recipient_name) return esc(md.recipient_name);
+                if (md.recipient) return esc(md.recipient);
+                // checkout_info may be serialized JSON
+                if (md.checkout_info) {
+                  const ci = (typeof md.checkout_info === 'string') ? JSON.parse(md.checkout_info) : md.checkout_info;
+                  if (ci.recipientName) return esc(ci.recipientName);
+                  if (ci.recipient) return esc(ci.recipient);
+                  const rFirst = ci.rFirst || ci.firstName || ci.rFirstName || ci.rfirst;
+                  const rLast = ci.rLast || ci.lastName || ci.rLastName || ci.rlast;
+                  if (rFirst || rLast) return esc([rFirst, rLast].filter(Boolean).join(' '));
+                }
+                if (o.customer_name) return esc(o.customer_name);
+                if (o.customer_email) return esc(o.customer_email);
+              }catch(e){ /* ignore and fallback */ }
+              return '-';
+            })();
+            // Delivery address: only show when orderType === 'delivery'
+            const delivery = (orderType === 'delivery') ? (function(){
+              try{
+                if (o.delivery_address) return esc(o.delivery_address);
+                const md = o.metadata || {};
+                if (md.delivery_address) return esc(md.delivery_address);
+                if (md.shipping_address) return esc(md.shipping_address);
+                if (md.checkout_info) {
+                  const ci = (typeof md.checkout_info === 'string') ? JSON.parse(md.checkout_info) : md.checkout_info;
+                  if (ci.deliveryAddress) return esc(ci.deliveryAddress);
+                  if (ci.address) return esc(ci.address);
+                  // some forms may have address fields
+                  const parts = [];
+                  if (ci.address_line1) parts.push(ci.address_line1);
+                  if (ci.address_line2) parts.push(ci.address_line2);
+                  if (ci.city) parts.push(ci.city);
+                  if (ci.postal_code) parts.push(ci.postal_code);
+                  if (parts.length) return esc(parts.join(', '));
+                }
+              }catch(e){}
+              return '-';
+            })() : '-';
             const designer = esc(o.designer) || '-';
             // Infer order type when not provided by backend: prefer explicit order_type, then metadata/payment heuristics
             function inferOrderType(order){
