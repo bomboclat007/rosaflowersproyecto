@@ -80,6 +80,25 @@ module.exports = async function handler(req, res) {
       };
 
       const ci = parseCheckoutInfo(full.metadata);
+      // If stripe didn't provide a shipping object, try to extract address from checkout_info metadata
+      if ((!delivery_address || delivery_address.trim()==='') && ci) {
+        try {
+          if (ci.address) delivery_address = ci.address;
+          else if (ci.deliveryAddress) delivery_address = ci.deliveryAddress;
+          else {
+            const parts = [];
+            if (ci.address_line1) parts.push(ci.address_line1);
+            if (ci.address_line2) parts.push(ci.address_line2);
+            if (ci.city) parts.push(ci.city);
+            if (ci.state) parts.push(ci.state);
+            if (ci.postal) parts.push(ci.postal);
+            if (ci.postal_code) parts.push(ci.postal_code);
+            if (parts.length) delivery_address = parts.join(', ');
+          }
+        } catch (e) {
+          // ignore parse errors and leave delivery_address as-is
+        }
+      }
       const pickRecipient = () => {
         if (full.metadata && (full.metadata.recipient_name || full.metadata.recipient)) return full.metadata.recipient_name || full.metadata.recipient;
         if (ci) {
