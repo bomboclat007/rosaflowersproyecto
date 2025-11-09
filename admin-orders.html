@@ -100,10 +100,32 @@
           const completedKey = 'order_completed_' + o.id;
           const completed = localStorage.getItem(completedKey) === '1';
           const itemsHtml = (o.line_items && o.line_items.length) ? o.line_items.map(i=>`${i.quantity}× ${esc(i.description||'')}`).join('<br>') : '';
-          const delivery = esc(o.delivery_address) || '-';
-          const recipient = esc(o.recipient) || '-';
-          const designer = esc(o.designer) || '-';
-          const orderType = esc(o.order_type) || '-';
+            const delivery = esc(o.delivery_address) || '-';
+            const recipient = esc(o.recipient) || '-';
+            const designer = esc(o.designer) || '-';
+            // Infer order type when not provided by backend: prefer explicit order_type, then metadata/payment heuristics
+            function inferOrderType(order){
+              if(!order) return '-';
+              if(order.order_type) return (''+order.order_type).toLowerCase();
+              // metadata may contain a declared type
+              try{
+                const md = order.metadata || {};
+                if(md.order_type) return (''+md.order_type).toLowerCase();
+                if(md.type) return (''+md.type).toLowerCase();
+                if(md.pos === true || md.pos === 'true') return 'pos';
+              }catch(e){ /* ignore */ }
+              const pm = (order.payment_method || '').toLowerCase();
+              if(/present|terminal|pos|in-?person|card_present|cardpresent/.test(pm)) return 'pos';
+              // payment method details may indicate card_present
+              try{
+                const pmd = order.payment_method_details || {};
+                if(pmd.type && /card_present|card_present/.test(pmd.type)) return 'pos';
+              }catch(e){}
+              // presence of a delivery address or shipping info => delivery
+              if(order.delivery_address || order.shipping_address || (order.shipping && Object.keys(order.shipping||{}).length>0)) return 'delivery';
+              return '-';
+            }
+            const orderType = inferOrderType(o);
           const bloomsnapHtml = o.bloomsnap ? `<a href="${esc(o.bloomsnap)}" target="_blank">Ver</a>` : '-';
           const orderStatus = esc(o.order_status) || '-';
           const paymentMethod = esc(o.payment_method) || '-';
