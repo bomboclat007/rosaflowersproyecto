@@ -113,7 +113,8 @@
         if(!data.orders || data.orders.length===0){ status.textContent = 'No se encontraron órdenes.'; return; }
         status.textContent = '';
         data.orders.forEach(o=>{
-          const tr = document.createElement('tr');
+          try{
+            const tr = document.createElement('tr');
           const completedKey = 'order_completed_' + o.id;
           const completed = localStorage.getItem(completedKey) === '1';
           const itemsHtml = (o.line_items && o.line_items.length) ? o.line_items.map(i=>`${i.quantity}× ${esc(i.description||'')}`).join('<br>') : '';
@@ -206,7 +207,11 @@
             <td>${formatMoney(o.amount_total,o.currency)}</td>
             <td>${itemsHtml}</td>
           `;
-          tbody.appendChild(tr);
+            tbody.appendChild(tr);
+          }catch(renderErr){
+            console.error('Render error for order', o && o.id, renderErr);
+            // continue with next order
+          }
         });
         // attach handlers
         document.querySelectorAll('#ordersTable input[type=checkbox]').forEach(ch=> ch.addEventListener('change', function(){ const id=this.dataset.id; const key='order_completed_'+id; if(this.checked) localStorage.setItem(key,'1'); else localStorage.removeItem(key); }));
