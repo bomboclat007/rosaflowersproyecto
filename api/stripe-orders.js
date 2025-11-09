@@ -36,10 +36,14 @@ module.exports = async function handler(req, res) {
           }));
         }
 
-        // try to get a human-friendly payment method type
+        // try to get a human-friendly payment method type and capture full payment_method_details when available
+        let payment_method_details = null;
         if (full.payment_intent && full.payment_intent.charges && full.payment_intent.charges.data && full.payment_intent.charges.data.length) {
           const ch = full.payment_intent.charges.data[0];
-          if (ch.payment_method_details && ch.payment_method_details.type) payment_method = ch.payment_method_details.type;
+          if (ch.payment_method_details) {
+            payment_method_details = ch.payment_method_details;
+            if (ch.payment_method_details.type) payment_method = ch.payment_method_details.type;
+          }
           else if (full.payment_method_types && full.payment_method_types.length) payment_method = full.payment_method_types[0];
         } else if (full.payment_method_types && full.payment_method_types.length) {
           payment_method = full.payment_method_types[0];
@@ -103,19 +107,20 @@ module.exports = async function handler(req, res) {
         return normalizeOrderType(raw);
       };
 
-      return {
+  return {
         id: s.id,
         created: s.created,
         amount_total: s.amount_total || null,
         currency: s.currency || null,
         payment_status: s.payment_status || (full.payment_intent && full.payment_intent.status) || null,
-        payment_method: payment_method || null,
+  payment_method: payment_method || null,
+  payment_method_details: payment_method_details || null,
         customer_email: (full.customer_details && full.customer_details.email) || s.customer_email || null,
         customer_name: (full.customer_details && full.customer_details.name) || null,
   recipient: pickRecipient(),
         delivery_address,
         designer: (full.metadata && full.metadata.designer) || null,
-  order_type: (function(){ const t = pickOrderType(); if(t) return t; if(payment_method && /present|terminal|pos|in-person|card_present/i.test(payment_method)) return 'pos'; return null; })(),
+  order_type: (function(){ const t = pickOrderType(); if(t) return t; if(payment_method && /present|terminal|pos|in-?person|card_present/i.test(payment_method)) return 'pos'; try{ if(payment_method_details && (payment_method_details.card_present || payment_method_details.type==='card_present')) return 'pos'; }catch(e){} return null; })(),
         bloomsnap: (full.metadata && (full.metadata.bloomsnap || full.metadata.bloomsnap_url)) || null,
         fulfillment_date: (full.metadata && full.metadata.fulfillment_date) || null,
         time_due: (full.metadata && full.metadata.time_due) || null,
