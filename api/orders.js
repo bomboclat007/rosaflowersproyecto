@@ -16,15 +16,24 @@ module.exports = async function handler(req, res) {
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+  // Read optional filter param (type=pos|pickup|delivery)
+  const q = req.query || {};
+  const typeFilter = q.type ? String(q.type).toLowerCase().trim() : null;
+
   // If Supabase is configured, try to return persisted rows from pos_orders
   if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
     try {
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-      const { data, error } = await supabase
+      let query = supabase
         .from('pos_orders')
         .select('*')
         .order('session_created', { ascending: false })
         .limit(200);
+      if (typeFilter) {
+        // filter rows where order_type equals the requested type
+        query = query.eq('order_type', typeFilter);
+      }
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error reading pos_orders:', error);
@@ -174,7 +183,10 @@ module.exports = async function handler(req, res) {
       };
     }));
 
-    return res.status(200).json({ orders });
+    // If a typeFilter is provided, filter the computed orders client-side as well
+    const filtered = typeFilter ? orders.filter(o => (o.order_type && String(o.order_type).toLowerCase() === typeFilter)) : orders;
+
+    return res.status(200).json({ orders: filtered });
   } catch (err) {
     console.error('Error listing stripe orders fallback:', err);
     return res.status(500).json({ error: 'Error fetching orders' });

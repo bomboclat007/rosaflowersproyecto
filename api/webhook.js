@@ -6,6 +6,9 @@
 // - ADMIN_EMAIL (email that receives order notifications)
 // - optionally SENDGRID_API_KEY or SMTP_URL (or SMTP_HOST / SMTP_USER / SMTP_PASS)
 
+// Defensive declaration to ensure variable exists in all deployments
+var supabaseAdmin = null;
+
 const secretKey = process.env.STRIPE_SECRET_KEY;
 if (!secretKey) {
   console.warn('STRIPE_SECRET_KEY not set; webhook will fail without it');
@@ -19,6 +22,22 @@ try {
   sendgridAvailable = true;
 } catch (e) {
   sendgridAvailable = false;
+}
+// Optional Supabase admin client for persisting orders
+let supabaseAdmin = null;
+try {
+  const { createClient } = require('@supabase/supabase-js');
+  const SUPABASE_URL = process.env.SUPABASE_URL || null;
+  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE || null;
+  if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+    supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    console.log('supabaseAdmin: initialized');
+  } else {
+    console.log('supabaseAdmin: not configured');
+  }
+} catch (e) {
+  console.warn('supabaseAdmin: failed to initialize', e && e.message ? e.message : e);
+  supabaseAdmin = null;
 }
 // Support common env names used in this project (EMAIL_TO, EMAIL_FROM)
 const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_MAIL || process.env.EMAIL_TO;
@@ -35,19 +54,64 @@ function getRawBody(req) {
 }
 
 async function sendEmail({ subject, html, to, replyTo }) {
-  // Try SendGrid first if available and configured
+  // Debug info: log which provider options are present (no secrets are printed)
+  console.log('sendEmail: config', {
+    brevoKeyPresent: !!process.env.BREVO_API_KEY,
+    sendgridKeyPresent: !!sendgridKey,
+    sendgridPackageInstalled: sendgridAvailable,
+    smtpUrlPresent: !!process.env.SMTP_URL,
+    smtpHostPresent: !!process.env.SMTP_HOST,
+    defaultFrom,
+    to
+  });
+
+  // Prefer Brevo (Sendinblue) if configured
+  if (process.env.BREVO_API_KEY) {
+    try {
+      // Use the official Sendinblue/Brevo SDK (sib-api-v3-sdk)
+      const SibApiV3Sdk = require('sib-api-v3-sdk');
+      const defaultClient = SibApiV3Sdk.ApiClient.instance;
+      // Configure API key authorization: api-key
+      const apiKeyAuth = defaultClient.authentications['api-key'];
+      apiKeyAuth.apiKey = process.env.BREVO_API_KEY;
+
+      const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+      const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+      sendSmtpEmail.to = [{ email: to }];
+      // sender expects object with email (and optional name)
+      sendSmtpEmail.sender = { email: defaultFrom };
+      sendSmtpEmail.subject = subject;
+      sendSmtpEmail.htmlContent = html;
+      if (replyTo) sendSmtpEmail.replyTo = { email: replyTo };
+
+      const resp = await apiInstance.sendTransacEmail(sendSmtpEmail);
+      console.log('sendEmail: sent via Brevo to', to, 'resp:', resp && resp.messageId ? resp.messageId : '(no messageId)');
+      return;
+    } catch (e) {
+      console.error('sendEmail: Brevo send failed', e && e.message ? e.message : e);
+      // fall through to other providers if available
+    }
+  }
+
+  // Try SendGrid next if available and configured
   if (sendgridKey && sendgridAvailable) {
-    const sg = require('@sendgrid/mail');
-    sg.setApiKey(sendgridKey);
-    const msg = {
-      to: to,
-      from: defaultFrom,
-      subject,
-      html,
-    };
-    if (replyTo) msg.replyTo = replyTo;
-    await sg.send(msg);
-    return;
+    try {
+      const sg = require('@sendgrid/mail');
+      sg.setApiKey(sendgridKey);
+      const msg = {
+        to: to,
+        from: defaultFrom,
+        subject,
+        html,
+      };
+      if (replyTo) msg.replyTo = replyTo;
+      await sg.send(msg);
+      console.log('sendEmail: sent via SendGrid to', to);
+      return;
+    } catch (e) {
+      console.error('sendEmail: SendGrid send failed', e && e.message ? e.message : e);
+      // fall through to SMTP
+    }
   }
 
   // Fallback to Nodemailer with SMTP_URL or host config
@@ -66,16 +130,24 @@ async function sendEmail({ subject, html, to, replyTo }) {
       } : undefined
     });
   } else {
-    throw new Error('No email provider configured (SENDGRID_API_KEY or SMTP_URL/SMTP_HOST)');
+    const errMsg = 'No email provider configured (set BREVO_API_KEY or SENDGRID_API_KEY or SMTP_URL/SMTP_HOST in environment)';
+    console.error('sendEmail:', errMsg);
+    throw new Error(errMsg);
   }
 
-  await transporter.sendMail({
-    from: defaultFrom,
-    to,
-    subject,
-    html,
-    replyTo
-  });
+  try {
+    const info = await transporter.sendMail({
+      from: defaultFrom,
+      to,
+      subject,
+      html,
+      replyTo
+    });
+    console.log('sendEmail: sent via SMTP to', to, 'info:', info && info.messageId ? info.messageId : '(no messageId)');
+  } catch (e) {
+    console.error('sendEmail: SMTP send failed', e && e.message ? e.message : e);
+    throw e;
+  }
 }
 
 module.exports = async function handler(req, res) {
@@ -311,18 +383,29 @@ module.exports = async function handler(req, res) {
       if (!adminEmail) {
         console.warn('No admin recipient configured; set EMAIL_TO or ADMIN_EMAIL in environment variables');
       } else {
-        await sendEmail({
-          subject: `Nueva orden / ${session.id}`,
-          html,
-          to: adminEmail,
-          replyTo: customer.email || undefined
-        });
+        try {
+          console.log('Attempting to send notification email to', adminEmail, 'for session', session.id);
+          await sendEmail({
+            subject: `Nueva orden / ${session.id}`,
+            html,
+            to: adminEmail,
+            replyTo: customer.email || undefined
+          });
+        } catch (e) {
+          // Log error in detail so platform logs show why email failed
+          console.error('Failed to send order notification email:', e && e.message ? e.message : e, e && e.stack ? e.stack : 'no-stack');
+          // Re-throw so the outer try/catch returns 500 and Stripe can retry the webhook if desired
+          throw e;
+        }
       }
 
       return res.status(200).json({ received: true });
     } catch (err) {
-      console.error('Error handling checkout.session.completed:', err);
-      return res.status(500).json({ error: 'Error procesando la orden' });
+      // Log full error message and stack to help diagnose ReferenceError or other runtime problems
+      console.error('Error handling checkout.session.completed:', err && err.message ? err.message : err);
+      if (err && err.stack) console.error(err.stack);
+      // Return a 500 but include the error message in the JSON to aid debugging (non-sensitive)
+      return res.status(500).json({ error: 'Error procesando la orden', details: err && err.message ? String(err.message) : undefined });
     }
   }
 

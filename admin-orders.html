@@ -25,7 +25,16 @@
 
   <div class="orders-container">
     <p class="small-muted">Listado de órdenes registradas en Stripe (últimas 100). Marca la casilla cuando el pedido esté completado.</p>
-    <div id="ordersStatus" style="margin-bottom:8px;color:#666">Cargando órdenes...</div>
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px">
+      <label for="orderTypeFilter" class="small-muted">Filtrar por tipo:</label>
+      <select id="orderTypeFilter">
+        <option value="">Todos</option>
+        <option value="pos">POS</option>
+        <option value="pickup">Pickup</option>
+        <option value="delivery">Delivery</option>
+      </select>
+      <div id="ordersStatus" style="margin-left:12px;color:#666">Cargando órdenes...</div>
+    </div>
     <div style="overflow:auto">
     <table class="orders" id="ordersTable">
       <thead>
@@ -62,14 +71,27 @@
     async function loadOrders(){
       const status = document.getElementById('ordersStatus');
       try{
-        // Try persisted orders first (from Supabase via /api/orders). Fallback to /api/stripe-orders if not available.
-        let res = await fetch('/api/orders');
-        if(!res.ok) {
-          console.warn('/api/orders failed, falling back to /api/stripe-orders', res.status);
-          res = await fetch('/api/stripe-orders');
+        // Read filter
+        const filter = document.getElementById('orderTypeFilter');
+        const type = filter ? filter.value : '';
+        // Fetch persisted orders and recent Stripe sessions, then merge so the table shows everything
+        const ordersUrl = '/api/orders' + (type ? ('?type=' + encodeURIComponent(type)) : '');
+        const stripeUrl = '/api/stripe-orders' + (type ? ('?type=' + encodeURIComponent(type)) : '');
+        // Fetch both in parallel and tolerate failures from either
+        const [r1, r2] = await Promise.allSettled([fetch(ordersUrl), fetch(stripeUrl)]);
+        let persisted = [];
+        let stripe = [];
+        if (r1.status === 'fulfilled' && r1.value.ok) {
+          try { const j = await r1.value.json(); persisted = j.orders || []; } catch(e) { persisted = []; }
         }
-        if(!res.ok) throw new Error('Error fetching orders');
-        const data = await res.json();
+        if (r2.status === 'fulfilled' && r2.value.ok) {
+          try { const j2 = await r2.value.json(); stripe = j2.orders || []; } catch(e) { stripe = []; }
+        }
+        // Merge: prefer persisted rows (they may have more accurate order_type and created_at), then add stripe sessions not present
+        const map = new Map();
+        persisted.forEach(o => map.set(o.id, o));
+        stripe.forEach(o => { if (!map.has(o.id)) map.set(o.id, o); });
+        const data = { orders: Array.from(map.values()) };
         const tbody = document.querySelector('#ordersTable tbody'); tbody.innerHTML='';
         if(!data.orders || data.orders.length===0){ status.textContent = 'No se encontraron órdenes.'; return; }
         status.textContent = '';
@@ -114,6 +136,9 @@
     }
 
     document.addEventListener('DOMContentLoaded', loadOrders);
+    // Re-load on filter change
+    const filterEl = document.getElementById('orderTypeFilter');
+    if (filterEl) filterEl.addEventListener('change', loadOrders);
   </script>
 </body>
 </html>
