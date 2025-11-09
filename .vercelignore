@@ -1,0 +1,8 @@
+# Ignore temporary or development serverless functions to stay within Hobby limits
+api/test-email.js
+
+# Ignore local node_modules and other artifacts
+node_modules/
+.env
+.env.*
+/.vercel
