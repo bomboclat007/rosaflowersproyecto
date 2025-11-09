@@ -87,10 +87,27 @@
         if (r2.status === 'fulfilled' && r2.value.ok) {
           try { const j2 = await r2.value.json(); stripe = j2.orders || []; } catch(e) { stripe = []; }
         }
-        // Merge: prefer persisted rows (they may have more accurate order_type and created_at), then add stripe sessions not present
+        // Merge: prefer persisted rows (they may have more accurate order_type and created_at),
+        // but if a persisted row lacks useful fields (order_type, payment details), complement from Stripe data.
         const map = new Map();
         persisted.forEach(o => map.set(o.id, o));
-        stripe.forEach(o => { if (!map.has(o.id)) map.set(o.id, o); });
+        stripe.forEach(s => {
+          if (map.has(s.id)) {
+            const p = map.get(s.id);
+            // If persisted row is missing order_type, use stripe's inferred order_type
+            if ((!p.order_type || p.order_type === null || p.order_type === '') && s.order_type) p.order_type = s.order_type;
+            // copy payment method fields if missing in persisted
+            if ((!p.payment_method || p.payment_method === '-') && s.payment_method) p.payment_method = s.payment_method;
+            if ((!p.payment_method_details || Object.keys(p.payment_method_details||{}).length===0) && s.payment_method_details) p.payment_method_details = s.payment_method_details;
+            // copy delivery address and line items if missing
+            if ((!p.delivery_address || p.delivery_address === '-') && s.delivery_address) p.delivery_address = s.delivery_address;
+            if ((!p.line_items || p.line_items.length===0) && s.line_items) p.line_items = s.line_items;
+            // keep other persisted fields (customer_name, created, etc.) as-is
+            map.set(p.id, p);
+          } else {
+            map.set(s.id, s);
+          }
+        });
         const data = { orders: Array.from(map.values()) };
         const tbody = document.querySelector('#ordersTable tbody'); tbody.innerHTML='';
         if(!data.orders || data.orders.length===0){ status.textContent = 'No se encontraron órdenes.'; return; }
