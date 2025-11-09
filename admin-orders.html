@@ -140,7 +140,8 @@
               }catch(e){}
               // presence of a delivery address or shipping info => delivery
               if(order.delivery_address || order.shipping_address || (order.shipping && Object.keys(order.shipping||{}).length>0)) return 'delivery';
-              return '-';
+              // If it's not delivery or pickup, default to POS as requested
+              return 'pos';
             }
             const orderType = inferOrderType(o);
           const bloomsnapHtml = o.bloomsnap ? `<a href="${esc(o.bloomsnap)}" target="_blank">Ver</a>` : '-';
