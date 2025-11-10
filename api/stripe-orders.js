@@ -21,8 +21,9 @@ module.exports = async function handler(req, res) {
     const orders = await Promise.all(sessions.data.map(async s => {
       // retrieve expanded session to access line_items, payment_intent and customer details
       let full = s;
-      let line_items = [];
-      let payment_method = null;
+  let line_items = [];
+  let payment_method = null;
+  let payment_method_details = null;
       try {
   // expand payment_intent and its charges so we can inspect payment method details for POS detection
   full = await stripe.checkout.sessions.retrieve(s.id, { expand: ['line_items', 'payment_intent', 'payment_intent.charges.data', 'customer'] });
@@ -37,7 +38,6 @@ module.exports = async function handler(req, res) {
         }
 
         // try to get a human-friendly payment method type and capture full payment_method_details when available
-        let payment_method_details = null;
         if (full.payment_intent && full.payment_intent.charges && full.payment_intent.charges.data && full.payment_intent.charges.data.length) {
           const ch = full.payment_intent.charges.data[0];
           if (ch.payment_method_details) {
