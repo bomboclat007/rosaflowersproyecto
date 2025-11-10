@@ -149,7 +149,22 @@ module.exports = async function handler(req, res) {
         designer: (full.metadata && full.metadata.designer) || null,
   order_type: (function(){ const t = pickOrderType(); if(t) return t; if(payment_method && /present|terminal|pos|in-?person|card_present/i.test(payment_method)) return 'pos'; try{ if(payment_method_details && (payment_method_details.card_present || payment_method_details.type==='card_present')) return 'pos'; }catch(e){} return null; })(),
         bloomsnap: (full.metadata && (full.metadata.bloomsnap || full.metadata.bloomsnap_url)) || null,
-        fulfillment_date: (full.metadata && full.metadata.fulfillment_date) || null,
+        // Prefer explicit fulfillment_date from metadata, otherwise try pickup date from checkout_info or metadata
+        fulfillment_date: (function(){
+          try{
+            if (full.metadata && full.metadata.fulfillment_date) return full.metadata.fulfillment_date;
+            if (ci) {
+              if (ci.pickupDate) return ci.pickupDate;
+              if (ci.pickup_date) return ci.pickup_date;
+              if (ci.pickupDateTime) return ci.pickupDateTime;
+            }
+            if (full.metadata) {
+              if (full.metadata.pickupDate) return full.metadata.pickupDate;
+              if (full.metadata.pickup_date) return full.metadata.pickup_date;
+            }
+          }catch(e){}
+          return null;
+        })(),
         time_due: (full.metadata && full.metadata.time_due) || null,
         order_status: (full.metadata && full.metadata.order_status) || null,
         line_items,
