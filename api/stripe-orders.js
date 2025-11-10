@@ -81,7 +81,7 @@ module.exports = async function handler(req, res) {
 
       const ci = parseCheckoutInfo(full.metadata);
       // If stripe didn't provide a shipping object, try to extract address from checkout_info metadata
-      if ((!delivery_address || delivery_address.trim()==='') && ci) {
+  if ((!delivery_address || delivery_address.trim()==='') && ci) {
         try {
           if (ci.address) delivery_address = ci.address;
           else if (ci.deliveryAddress) delivery_address = ci.deliveryAddress;
@@ -99,6 +99,14 @@ module.exports = async function handler(req, res) {
           // ignore parse errors and leave delivery_address as-is
         }
       }
+      // Also check top-level metadata fields (some checkouts store address directly in metadata)
+      try {
+        if ((!delivery_address || delivery_address.trim()==='') && full.metadata) {
+          if (full.metadata.address) delivery_address = full.metadata.address;
+          else if (full.metadata.delivery_address) delivery_address = full.metadata.delivery_address;
+          else if (full.metadata.shipping_address) delivery_address = full.metadata.shipping_address;
+        }
+      } catch (e) { /* ignore */ }
       const pickRecipient = () => {
         if (full.metadata && (full.metadata.recipient_name || full.metadata.recipient)) return full.metadata.recipient_name || full.metadata.recipient;
         if (ci) {
