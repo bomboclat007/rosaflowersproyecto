@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Events & Invoices</title>
+  <link rel="stylesheet" href="/assets/css/admin.css">
+  <style>
+    .events-header{display:flex;align-items:center;justify-content:space-between;margin:18px 0}
+    .controls{display:flex;gap:12px;align-items:center}
+    .controls input[type="search"]{padding:10px 12px;border-radius:8px;border:1px solid #e6e6e6;min-width:300px}
+    .controls select{padding:10px;border-radius:8px;border:1px solid #e6e6e6}
+    .controls .date{padding:10px;border-radius:8px;border:1px solid #e6e6e6}
+    .top-actions{display:flex;gap:10px;align-items:center}
+    .top-actions .btn{background:#0b5cff;color:#fff;padding:8px 12px;border-radius:8px;border:none;cursor:pointer}
+    .top-actions .btn.secondary{background:#06c15f}
+    .events-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #eee;border-radius:8px;overflow:hidden}
+    .events-table thead{background:#f7f8fa;color:#444}
+    .events-table th, .events-table td{padding:10px 12px;border-bottom:1px solid #f1f1f1;text-align:left;font-size:13px}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .need-help{color:#0b5cff;text-decoration:none;margin-right:12px}
+    .columns-toggle{color:#666}
+    .empty-placeholder{height:420px;display:flex;align-items:center;justify-content:center;color:#aaa}
+  </style>
+</head>
+<body>
+  <header class="admin-header">
+    <h1>Events & Invoices</h1>
+    <div class="admin-actions">
+      <button id="adminLogout">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main class="admin-main" style="max-width:1200px;margin:18px auto;padding:0 18px">
+    <div class="toolbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <a class="need-help" href="#">Need Help?</a>
+      </div>
+      <div class="top-actions">
+        <button class="btn">Create Quick Invoice</button>
+        <a class="btn secondary" href="https://pos.bloomnation.com/pos/invoices/create-invoice" target="_blank" rel="noopener noreferrer">Create Event Invoice</a>
+      </div>
+    </div>
+
+    <div class="events-header">
+      <div class="controls">
+        <input type="search" placeholder="Search Title, Customer, Event ID" aria-label="search">
+        <select aria-label="Event Status">
+          <option value="">Event Status</option>
+          <option value="upcoming">Upcoming</option>
+          <option value="completed">Completed</option>
+        </select>
+        <select aria-label="Payment Status">
+          <option value="">Payment Status</option>
+          <option value="paid">Paid</option>
+          <option value="unpaid">Unpaid</option>
+        </select>
+        <input type="date" class="date" aria-label="Event Date">
+        <div class="columns-toggle">Columns</div>
+      </div>
+    </div>
+
+    <table class="events-table" role="table" aria-label="Events table">
+      <thead>
+        <tr>
+          <th>Event ID</th>
+          <th>Status</th>
+          <th>Payment Status</th>
+          <th>Title</th>
+          <th>Created On</th>
+          <th>Customer</th>
+          <th>Event Date</th>
+          <th>Amount</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td colspan="9">
+            <div class="empty-placeholder">No events to display</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+  </main>
+
+  <script>
+    document.getElementById('adminLogout').addEventListener('click', function(){
+      try { localStorage.removeItem('site_session'); } catch(e){}
+      window.location.href = '/';
+    });
+  </script>
+</body>
+</html>
