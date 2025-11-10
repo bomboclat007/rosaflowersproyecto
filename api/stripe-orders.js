@@ -151,7 +151,10 @@ module.exports = async function handler(req, res) {
 
     res.status(200).json({ orders });
   } catch (err) {
-    console.error('Error listing stripe orders:', err);
-    res.status(500).json({ error: 'Error obteniendo orders de Stripe' });
+    // Log full error for debugging and return diagnostic info (temporary)
+    console.error('Error listing stripe orders:', err && err.stack ? err.stack : err);
+    const detail = (err && err.message) ? err.message : String(err);
+    // Return error detail and stack to help debug (remove or reduce in production)
+    res.status(500).json({ error: 'Error obteniendo orders de Stripe', detail, stack: (err && err.stack) ? err.stack.split('\n').slice(0,10) : undefined });
   }
 };
