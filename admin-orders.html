@@ -101,6 +101,10 @@
             if ((!p.payment_method_details || Object.keys(p.payment_method_details||{}).length===0) && s.payment_method_details) p.payment_method_details = s.payment_method_details;
             // copy delivery address and line items if missing
             if ((!p.delivery_address || p.delivery_address === '-') && s.delivery_address) p.delivery_address = s.delivery_address;
+            // copy fulfillment_date, time_due and order_status when missing in persisted row
+            if ((!p.fulfillment_date || p.fulfillment_date === null || p.fulfillment_date === '') && s.fulfillment_date) p.fulfillment_date = s.fulfillment_date;
+            if ((!p.time_due || p.time_due === null || p.time_due === '') && s.time_due) p.time_due = s.time_due;
+            if ((!p.order_status || p.order_status === null || p.order_status === '') && s.order_status) p.order_status = s.order_status;
             if ((!p.line_items || p.line_items.length===0) && s.line_items) p.line_items = s.line_items;
             // keep other persisted fields (customer_name, created, etc.) as-is
             map.set(p.id, p);
