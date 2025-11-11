@@ -13,7 +13,7 @@
     .section{background:#fff;border:1px solid #eee;border-radius:6px;margin:14px 0;padding:12px}
     .section .section-header{display:flex;justify-content:space-between;align-items:center}
     .section .section-body{margin-top:12px}
-    .btn.small{padding:6px 10px;border-radius:6px}
+  .btn.small{padding:6px 10px;border-radius:6px;cursor:pointer}
     .add-section{display:block;margin:12px auto;padding:8px 12px;border:1px solid #0b5cff;color:#0b5cff;background:#fff;border-radius:6px}
     .color-palette{display:flex;gap:12px;align-items:center}
     .color-swatch{width:44px;height:44px;border-radius:22px;border:1px solid #e6e6e6;display:flex;align-items:center;justify-content:center;color:#0b5cff}
@@ -48,8 +48,8 @@
         <div class="tab">Settings</div>
       </div>
       <div style="display:flex;gap:10px">
-        <button class="btn small">Save as Draft</button>
-        <button class="green-btn">Publish &amp; Send</button>
+        <button class="btn small" onclick="saveDraft()">Save as Draft</button>
+        <button class="green-btn" onclick="publish()">Publish &amp; Send</button>
       </div>
     </div>
 
@@ -380,7 +380,7 @@
 
     <div style="text-align:center;margin:20px">
       <button class="teal-btn" onclick="publish()">Publish &amp; Send</button>
-      <button class="btn small" style="margin-left:8px">Save as Draft</button>
+      <button class="btn small" style="margin-left:8px" onclick="saveDraft()">Save as Draft</button>
     </div>
 
   </main>
