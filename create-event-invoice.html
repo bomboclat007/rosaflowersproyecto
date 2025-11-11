@@ -69,11 +69,12 @@
             <div id="coverPlaceholder" style="position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;color:#bbb">📷</div>
           </div>
 
-          <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
-            <input id="coverFile" type="file" accept="image/*" />
-            <button class="btn small" id="uploadCoverBtn">Upload Cover</button>
-            <span class="small-muted">Recommended size: 1200x400 (jpg/png)</span>
-          </div>
+              <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+                <input id="coverFile" type="file" accept="image/*" />
+                <button class="btn small" id="uploadCoverBtn">Upload Cover</button>
+                <span class="small-muted">Recommended size: 1200x400 (jpg/png)</span>
+                <div id="bucketInfo" style="margin-left:8px;font-size:12px;color:#666"></div>
+              </div>
 
           <div style="display:flex;gap:12px;margin-top:12px">
             <div style="flex:1">
@@ -538,14 +539,25 @@
     async function uploadCoverToStorage(file, invoiceId){
       const supabase = await ensureSupabaseClient();
       if (!supabase) throw new Error('Supabase client not available');
+      const bucket = window.SUPABASE_BUCKET || 'invoices';
       const safeName = file.name.replace(/[^a-z0-9\.\-_]/ig,'');
-      const path = `invoices/${invoiceId}/${Date.now()}-${safeName}`;
-      const { data, error } = await supabase.storage.from('invoices').upload(path, file, { cacheControl: '3600', upsert: false });
-      if (error){ throw error; }
-      // get public url
-      const publicObj = supabase.storage.from('invoices').getPublicUrl(path);
-      const publicURL = publicObj && (publicObj.publicURL || publicObj.data && publicObj.data.publicUrl) || publicObj?.data?.publicURL;
-      return { path, publicURL };
+      const path = `${bucket}/${invoiceId}/${Date.now()}-${safeName}`;
+      try{
+        const { data, error } = await supabase.storage.from(bucket).upload(path, file, { cacheControl: '3600', upsert: false });
+        if (error) throw error;
+        // get public url
+        const publicObj = supabase.storage.from(bucket).getPublicUrl(path);
+        const publicURL = publicObj && (publicObj.publicURL || publicObj.data && publicObj.data.publicUrl) || publicObj?.data?.publicURL;
+        return { path, publicURL };
+      } catch (err){
+        console.error('uploadCoverToStorage error', err);
+        // Normalize common Supabase storage error
+        const msg = (err && err.message) || (err && err.error) || String(err);
+        if (/bucket not found|Bucket not found/i.test(msg) || /Could not find bucket/i.test(msg)){
+          throw new Error(`Bucket not found: '${bucket}'. Please create a bucket with this name in your Supabase project's Storage (or set window.SUPABASE_BUCKET to the correct name in assets/js/supabase-config.js).`);
+        }
+        throw err;
+      }
     }
 
     async function applyCoverMetadata(invoiceId, path, file){
@@ -570,7 +582,7 @@
       }catch(e){ console.warn('Could not insert attachment record', e); }
     }
 
-    async function publish(){
+  async function publish(){
       const supabase = await ensureSupabaseClient();
       const payload = await collectForm();
       payload.status = 'published';
@@ -590,8 +602,13 @@
         const fileInput = document.getElementById('coverFile');
         const file = fileInput && fileInput.files && fileInput.files[0];
         if (file){
-          const up = await uploadCoverToStorage(file, currentInvoiceId);
-          await applyCoverMetadata(currentInvoiceId, up.path, file);
+          try{
+            const up = await uploadCoverToStorage(file, currentInvoiceId);
+            await applyCoverMetadata(currentInvoiceId, up.path, file);
+          }catch(err){
+            console.error('Cover upload failed', err);
+            alert('Cover upload failed: ' + (err.message || err));
+          }
         }
 
         alert('Invoice saved (id: ' + currentInvoiceId + ')');
@@ -601,7 +618,7 @@
       }
     }
 
-    async function saveDraft(){
+  async function saveDraft(){
       const supabase = await ensureSupabaseClient();
       const payload = await collectForm();
       payload.status = 'draft';
@@ -619,8 +636,13 @@
         const fileInput = document.getElementById('coverFile');
         const file = fileInput && fileInput.files && fileInput.files[0];
         if (file){
-          const up = await uploadCoverToStorage(file, currentInvoiceId);
-          await applyCoverMetadata(currentInvoiceId, up.path, file);
+          try{
+            const up = await uploadCoverToStorage(file, currentInvoiceId);
+            await applyCoverMetadata(currentInvoiceId, up.path, file);
+          }catch(err){
+            console.error('Cover upload failed', err);
+            alert('Cover upload failed: ' + (err.message || err));
+          }
         }
 
         alert('Draft saved (id: ' + currentInvoiceId + ')');
