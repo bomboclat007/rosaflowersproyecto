@@ -53,6 +53,124 @@
       </div>
     </div>
 
+    <!-- Section: Header / Cover -->
+    <section class="section" id="header-cover">
+      <div class="section-header">
+        <h3>Header / Cover</h3>
+        <div>
+          <button class="btn small" onclick="toggle('#header-cover .section-body')">Toggle</button>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="section" style="padding:12px">
+          <label class="small-muted">Cover Image</label>
+          <div class="box-dashed" style="height:220px;display:flex;align-items:center;justify-content:center;margin-top:8px">📷</div>
+
+          <div style="display:flex;gap:12px;margin-top:12px">
+            <div style="flex:1">
+              <label class="small-muted">Header</label>
+              <input type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
+            </div>
+            <div style="flex:1">
+              <label class="small-muted">Subheader (optional)</label>
+              <input type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Details -->
+    <section class="section" id="details">
+      <div class="section-header">
+        <h3>Details</h3>
+        <div>
+          <button class="btn small" onclick="toggle('#details .section-body')">Toggle</button>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="section" style="padding:12px">
+          <div style="display:flex;gap:12px">
+            <div style="flex:1">
+              <label class="small-muted">Title (For Internal Use)</label>
+              <input type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
+            </div>
+            <div style="width:260px">
+              <label class="small-muted">P.O. Number (optional)</label>
+              <input type="text" placeholder="XXXXX" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            <label class="small-muted">Customer Information</label>
+            <input type="text" placeholder="Search by customer name, phone, email, house account, recipient name..." style="width:100%;padding:10px;border:1px solid #e6e6e6;border-radius:6px" />
+            <div style="margin-top:6px;color:#0b5cff">+ Add a new customer</div>
+          </div>
+
+          <div style="display:flex;gap:12px;margin-top:12px">
+            <div style="width:180px">
+              <label class="small-muted">Event Start (optional)</label>
+              <input type="date" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
+            </div>
+            <div style="width:180px">
+              <label class="small-muted">Event End (optional)</label>
+              <input type="date" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Venue Information -->
+    <section class="section" id="venue">
+      <div class="section-header">
+        <h3>Venue Information</h3>
+        <div>
+          <button class="btn small" onclick="toggle('#venue .section-body')">Toggle</button>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="section" style="padding:12px">
+          <div style="background:#f7f8fa;padding:12px;border-radius:6px">
+            <div style="margin-bottom:8px;color:#444">If your items are being delivered, please provide the venue address. If no venue address is provided, the store address will be used instead. The event date will be used as the delivery date.</div>
+          </div>
+
+          <div style="margin-top:12px">
+            <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" checked/> Items will be delivered to the venue address</label>
+            <label style="display:flex;align-items:center;gap:8px;margin-top:6px"><input type="checkbox"/> Hide venue address from the proposal page</label>
+          </div>
+
+          <div style="margin-top:12px">
+            <label class="small-muted">Venue Name</label>
+            <input type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
+          </div>
+
+          <div style="margin-top:12px">
+            <label class="small-muted">Street Address *</label>
+            <input type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
+          </div>
+          <div style="margin-top:8px">
+            <label class="small-muted">Address Line 2 (optional)</label>
+            <input type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
+          </div>
+
+          <div style="display:flex;gap:12px;margin-top:12px">
+            <div style="width:160px"><label class="small-muted">City *</label><input type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" /></div>
+            <div style="width:120px"><label class="small-muted">State *</label><input type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" /></div>
+            <div style="width:120px"><label class="small-muted">Zip *</label><input type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" /></div>
+          </div>
+
+          <div style="margin-top:12px">
+            <label class="small-muted">Note to Customer (Optional)</label>
+            <div style="background:#fff;border:1px solid #e6e6e6;padding:6px;border-radius:4px;margin-top:6px">
+              <div style="margin-bottom:8px">[Rich text toolbar placeholder]</div>
+              <textarea rows="4" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Section: Inspiration Board -->
     <section class="section" id="inspiration">
       <div class="section-header">
