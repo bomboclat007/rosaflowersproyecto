@@ -90,12 +90,13 @@ module.exports = async function handler(req, res) {
 
     if (error) {
       console.error('Supabase insert error:', error);
-      return res.status(500).json({ error: 'Error saving event invoice' });
+      // Return error details for debugging (remove in production)
+      return res.status(500).json({ error: 'Error saving event invoice', details: error });
     }
 
     return res.status(200).json({ invoice: data });
   } catch (err) {
     console.error('api/event-invoice error', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error', details: (err && err.message) || String(err) });
   }
 };
