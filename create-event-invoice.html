@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Create Event Invoice</title>
+  <link rel="stylesheet" href="/assets/css/admin.css">
+  <style>
+    .page{max-width:1100px;margin:18px auto;padding:0 18px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin:14px 0}
+    .tabs{display:flex;gap:18px;border-bottom:1px solid #eee;padding-bottom:8px}
+    .tab{padding:8px 6px;color:#0b5cff}
+    .section{background:#fff;border:1px solid #eee;border-radius:6px;margin:14px 0;padding:12px}
+    .section .section-header{display:flex;justify-content:space-between;align-items:center}
+    .section .section-body{margin-top:12px}
+    .btn.small{padding:6px 10px;border-radius:6px}
+    .add-section{display:block;margin:12px auto;padding:8px 12px;border:1px solid #0b5cff;color:#0b5cff;background:#fff;border-radius:6px}
+    .color-palette{display:flex;gap:12px;align-items:center}
+    .color-swatch{width:44px;height:44px;border-radius:22px;border:1px solid #e6e6e6;display:flex;align-items:center;justify-content:center;color:#0b5cff}
+    .box-dashed{border:1px dashed #ddd;padding:18px;border-radius:6px;background:#fafafa}
+
+    .product-row{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+    .product-row input[type=text],.product-row input[type=number],textarea{padding:8px;border:1px solid #e6e6e6;border-radius:6px;width:100%}
+    .product-row .qty{width:80px}
+    .product-row .price{width:120px}
+
+    .section-total{display:flex;justify-content:flex-end;align-items:center;padding-top:8px}
+    .section-total strong{font-size:18px}
+    .green-btn{background:#06c15f;color:#fff;padding:8px 12px;border-radius:6px;border:none}
+    .teal-btn{background:#0b5cff;color:#fff;padding:8px 12px;border-radius:6px;border:none}
+
+    .ingredient-row{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+    .ingredient-row input{padding:8px;border:1px solid #e6e6e6;border-radius:6px}
+    .small-muted{font-size:12px;color:#888}
+
+    .payments-empty{padding:28px;text-align:center;color:#888}
+  </style>
+</head>
+<body>
+  <header class="admin-header">
+    <h1>Create New</h1>
+  </header>
+
+  <main class="page">
+    <div class="topbar">
+      <div class="tabs">
+        <div class="tab">Details</div>
+        <div class="tab">Settings</div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn small">Save as Draft</button>
+        <button class="green-btn">Publish &amp; Send</button>
+      </div>
+    </div>
+
+    <!-- Section: Inspiration Board -->
+    <section class="section" id="inspiration">
+      <div class="section-header">
+        <h3>Inspiration Board (Optional)</h3>
+        <div>
+          <button class="btn small" onclick="toggle('#inspiration .section-body')">Toggle</button>
+          <button class="btn small" onclick="removeSection('inspiration')" style="margin-left:8px;color:#d63384">Remove Section</button>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="section" style="padding:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <strong>Section</strong>
+            <div>
+              <button class="btn small">▲</button>
+              <button class="btn small">▼</button>
+              <button class="btn small" style="margin-left:8px;border:1px solid #06c15f;color:#06c15f">Remove</button>
+            </div>
+          </div>
+          <div style="margin-top:12px">
+            <label class="small-muted">Color Palette (Optional)</label>
+            <div class="color-palette" style="margin-top:8px">
+              <div class="color-swatch">+</div>
+              <div class="color-swatch">+</div>
+              <div class="color-swatch">+</div>
+              <div class="color-swatch">+</div>
+              <div class="color-swatch">+</div>
+              <div class="color-swatch">+</div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            <label class="small-muted">Overall Look and Feel (Optional)</label>
+            <textarea rows="4" style="width:100%;margin-top:6px" placeholder="Add information about the general aesthetic and atmosphere of the event"></textarea>
+            <div style="text-align:right;color:#888;font-size:12px">0/1000</div>
+          </div>
+
+          <div style="margin-top:12px">
+            <label class="small-muted">Photo Inspiration</label>
+            <div class="box-dashed" style="height:120px;display:flex;align-items:center">
+              <div style="width:100px;height:100px;border:1px dashed #cfcfcf;display:flex;align-items:center;justify-content:center;color:#0b5cff">📷</div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+            <input type="text" placeholder="Inspiration Link (Optional)" style="flex:1" />
+            <input type="text" placeholder="Display Text (Optional)" style="width:260px" />
+          </div>
+
+        </div>
+
+        <div style="text-align:center;margin-top:8px">
+          <button class="add-section">+ Add Section</button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Section: Product & Services -->
+    <section class="section" id="products">
+      <div class="section-header">
+        <h3>Product &amp; Services</h3>
+        <div>
+          <button class="btn small" onclick="toggle('#products .section-body')">Toggle</button>
+          <button class="btn small" onclick="removeSection('products')" style="margin-left:8px;color:#d63384">Remove Section</button>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="section" style="padding:12px">
+          <div class="product-row">
+            <input type="text" placeholder="Search for Item Name or ID" />
+            <input class="qty" type="number" min="1" value="1" />
+            <input class="price" type="number" min="0" step="0.01" placeholder="$" />
+          </div>
+
+          <div style="margin-top:8px">
+            <label class="small-muted">Notes</label>
+            <textarea rows="4" placeholder="Notes" style="width:100%;margin-top:6px"></textarea>
+            <div style="text-align:right;color:#888;font-size:12px">0/1000</div>
+          </div>
+
+          <div style="margin-top:10px">
+            <a href="#" onclick="addProduct(event)">+ Add another item</a>
+          </div>
+
+          <div class="section-total">
+            <div><strong>Section Total:</strong>&nbsp;&nbsp;$<span id="sectionTotal">0.00</span></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Recipe & Stem Counter -->
+    <section class="section" id="recipe">
+      <div class="section-header">
+        <h3>Recipe &amp; Stem Counter</h3>
+        <div>
+          <button class="btn small" onclick="toggle('#recipe .section-body')">Toggle</button>
+          <button class="btn small" onclick="removeSection('recipe')" style="margin-left:8px;color:#d63384">Remove Section</button>
+        </div>
+      </div>
+      <div class="section-body">
+        <div style="background:#f0f9f7;padding:12px;border-radius:6px">
+          <label class="small-muted">Markup</label>
+          <div style="margin-top:6px">
+            <select><option>Default Markup Settings</option></select>
+          </div>
+
+          <div style="margin-top:12px">
+            <strong>Recipe</strong>
+            <div style="margin-top:8px;">
+              <div class="ingredient-row">
+                <input type="text" placeholder="Ingredient" style="flex:1" />
+                <input type="number" placeholder="Quantity" style="width:120px" />
+                <input type="number" placeholder="Cost Per Unit" style="width:140px" />
+                <div style="width:140px;text-align:right">$0.00</div>
+                <button class="btn small">✎</button>
+                <button class="btn small" style="color:#d63384">🗑</button>
+              </div>
+            </div>
+
+            <div style="text-align:right;margin-top:8px">
+              <div>Recipe Total (Cost): $0.00</div>
+              <div>Suggested Total (Markup): $0.00</div>
+              <button class="btn small" style="margin-top:8px">Apply Suggested Total</button>
+            </div>
+
+            <div style="margin-top:12px">
+              <label class="small-muted">Estimated Prep Time (Optional)</label>
+              <div style="margin-top:6px"><input type="number" style="width:120px" /> <select><option>min</option></select></div>
+            </div>
+
+            <div style="margin-top:12px">
+              <label class="small-muted">Size (Optional)</label>
+              <div style="display:flex;gap:8px;margin-top:6px">
+                <input style="width:120px" /><select><option>in</option></select>
+                <input style="width:120px" /><select><option>in</option></select>
+                <input style="width:120px" /><select><option>in</option></select>
+              </div>
+            </div>
+
+            <div style="margin-top:12px">
+              <label class="small-muted">Notes (Optional)</label>
+              <textarea rows="3" style="width:100%"></textarea>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Grand Total / Payments -->
+    <section class="section" id="grand">
+      <div class="section-header">
+        <h3>Grand Total</h3>
+        <div></div>
+      </div>
+      <div class="section-body">
+        <div style="text-align:center;color:#777;padding:12px">The total includes sections marked as optional. Hidden sections are excluded from the total.</div>
+        <div style="max-width:480px;margin:6px auto;text-align:left">
+          <div style="display:flex;justify-content:space-between;padding:8px 0"><div>Subtotal</div><div>$0.00</div></div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0"><div><a href="#">+ Add Discount</a></div><div>$0.00</div></div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;align-items:center"><div>Total Tax</div><div><input type="number" value="8" style="width:60px"/> % &nbsp;&nbsp; <span>$0.00</span></div></div>
+          <div style="display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid #eee"><strong>Total</strong><strong>$0.00</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Payments -->
+    <section class="section" id="payments">
+      <div class="section-header">
+        <h3>Payments</h3>
+      </div>
+      <div class="section-body">
+        <div class="payments-empty">
+          <div><strong>No Payments Scheduled.</strong></div>
+          <div style="margin-top:8px"><button class="teal-btn">+ Add A Payment</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Terms & Conditions -->
+    <section class="section" id="terms">
+      <div class="section-header">
+        <h3>Terms &amp; Conditions</h3>
+      </div>
+      <div class="section-body">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><input type="checkbox" checked/> Don't require signature</div>
+        <div style="background:#f3f4f5;padding:8px;border-radius:4px;border:1px solid #e6e6e6">
+          <div style="margin-bottom:8px">[Rich text editor toolbar placeholder]</div>
+          <textarea rows="6" style="width:100%"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- Documents -->
+    <section class="section" id="docs">
+      <div class="section-header">
+        <h3>Documents (Optional)</h3>
+      </div>
+      <div class="section-body">
+        <div style="text-align:center"><button class="add-section">+ Add a Document</button></div>
+      </div>
+    </section>
+
+    <div style="text-align:center;margin:20px">
+      <button class="teal-btn" onclick="publish()">Publish &amp; Send</button>
+      <button class="btn small" style="margin-left:8px">Save as Draft</button>
+    </div>
+
+  </main>
+
+  <script>
+    function toggle(sel){
+      const el = document.querySelector(sel);
+      if(!el) return;
+      el.style.display = el.style.display === 'none' ? '' : 'none';
+    }
+    function removeSection(id){
+      const el = document.getElementById(id);
+      if(el) el.remove();
+    }
+    function addProduct(e){
+      e.preventDefault();
+      const container = document.querySelector('#products .section-body .section');
+      const node = document.createElement('div');
+      node.className = 'product-row';
+      node.innerHTML = `<input type="text" placeholder="Search for Item Name or ID" /> <input class="qty" type="number" min="1" value="1" /> <input class="price" type="number" min="0" step="0.01" placeholder="$" /> <button class="btn small" onclick="this.closest('.product-row').remove();updateSectionTotal();">Remove</button>`;
+      container.appendChild(node);
+      updateSectionTotal();
+    }
+    function updateSectionTotal(){
+      let total = 0;
+      document.querySelectorAll('#products .product-row').forEach(r => {
+        const q = parseFloat(r.querySelector('.qty')?.value || 0);
+        const p = parseFloat(r.querySelector('.price')?.value || 0);
+        total += q*p;
+      });
+      document.getElementById('sectionTotal').textContent = total.toFixed(2);
+    }
+    function publish(){
+      alert('Publish & Send (mock)');
+    }
+
+    // init events
+    document.addEventListener('input', function(e){ if(e.target.matches('#products .qty, #products .price')) updateSectionTotal(); });
+  </script>
+</body>
+</html>
