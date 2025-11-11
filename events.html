@@ -90,6 +90,70 @@
       try { localStorage.removeItem('site_session'); } catch(e){}
       window.location.href = '/';
     });
+
+    // Fetch and render invoices
+    (function(){
+      const tableBody = document.querySelector('.events-table tbody');
+      const searchInput = document.querySelector('input[type=search]');
+      const statusSelect = document.querySelector('select[aria-label="Event Status"]');
+      let page = 1;
+
+      async function load(){
+        const q = new URLSearchParams();
+        q.set('page', page);
+        q.set('page_size', 50);
+        if (searchInput.value) q.set('search', searchInput.value);
+        if (statusSelect.value) q.set('status', statusSelect.value);
+
+        tableBody.innerHTML = '<tr><td colspan="9"><div class="empty-placeholder">Loading…</div></td></tr>';
+        try {
+          const r = await fetch('/api/event-invoice?' + q.toString());
+          const j = await r.json();
+          if (!r.ok) throw new Error(j.error || 'Error fetching');
+          renderRows(j.invoices || []);
+        } catch (err) {
+          console.error(err);
+          tableBody.innerHTML = '<tr><td colspan="9"><div class="empty-placeholder">Error loading events</div></td></tr>';
+        }
+      }
+
+      function renderRows(rows){
+        if (!rows || rows.length === 0){
+          tableBody.innerHTML = '<tr><td colspan="9"><div class="empty-placeholder">No events to display</div></td></tr>';
+          return;
+        }
+        tableBody.innerHTML = '';
+        rows.forEach(r => {
+          const tr = document.createElement('tr');
+          const created = r.created_at ? new Date(r.created_at).toLocaleString() : '';
+          const eventDate = r.event_start ? new Date(r.event_start).toLocaleDateString() : '';
+          const customer = (r.customer && (typeof r.customer === 'string' ? r.customer : (r.customer.name || JSON.stringify(r.customer)))) || '';
+          const amount = (r.totals && r.totals.grand_total) ? r.totals.grand_total : '';
+          tr.innerHTML = `
+            <td>${r.id}</td>
+            <td>${r.status || ''}</td>
+            <td>${(r.totals && r.totals.payment_status) || ''}</td>
+            <td>${escapeHtml(r.title || '')}</td>
+            <td>${created}</td>
+            <td>${escapeHtml(customer)}</td>
+            <td>${eventDate}</td>
+            <td>${amount}</td>
+            <td><a href="/create-event-invoice.html?id=${r.id}">Edit</a> • <a href="/event/${r.id}">View</a></td>
+          `;
+          tableBody.appendChild(tr);
+        });
+      }
+
+      function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+      // wire search
+      let debounce;
+      searchInput.addEventListener('input', ()=>{ clearTimeout(debounce); debounce = setTimeout(()=>{ page=1; load(); }, 350); });
+      statusSelect.addEventListener('change', ()=>{ page=1; load(); });
+
+      // initial load
+      load();
+    })();
   </script>
 </body>
 </html>

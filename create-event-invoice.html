@@ -64,16 +64,25 @@
       <div class="section-body">
         <div class="section" style="padding:12px">
           <label class="small-muted">Cover Image</label>
-          <div class="box-dashed" style="height:220px;display:flex;align-items:center;justify-content:center;margin-top:8px">📷</div>
+          <div class="box-dashed" style="height:220px;display:flex;align-items:center;justify-content:center;margin-top:8px;position:relative">
+            <img id="coverPreview" src="" alt="Cover preview" style="max-height:200px;max-width:100%;display:none;border-radius:6px;object-fit:cover" />
+            <div id="coverPlaceholder" style="position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;color:#bbb">📷</div>
+          </div>
+
+          <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+            <input id="coverFile" type="file" accept="image/*" />
+            <button class="btn small" id="uploadCoverBtn">Upload Cover</button>
+            <span class="small-muted">Recommended size: 1200x400 (jpg/png)</span>
+          </div>
 
           <div style="display:flex;gap:12px;margin-top:12px">
             <div style="flex:1">
               <label class="small-muted">Header</label>
-              <input type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
+              <input id="header_text" type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
             </div>
             <div style="flex:1">
               <label class="small-muted">Subheader (optional)</label>
-              <input type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
+              <input id="subheader_text" type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
             </div>
           </div>
         </div>
@@ -93,28 +102,28 @@
           <div style="display:flex;gap:12px">
             <div style="flex:1">
               <label class="small-muted">Title (For Internal Use)</label>
-              <input type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
+              <input id="title" type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
             </div>
             <div style="width:260px">
               <label class="small-muted">P.O. Number (optional)</label>
-              <input type="text" placeholder="XXXXX" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
+              <input id="po_number" type="text" placeholder="XXXXX" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
             </div>
           </div>
 
           <div style="margin-top:12px">
             <label class="small-muted">Customer Information</label>
-            <input type="text" placeholder="Search by customer name, phone, email, house account, recipient name..." style="width:100%;padding:10px;border:1px solid #e6e6e6;border-radius:6px" />
+            <input id="customer" type="text" placeholder="Search by customer name, phone, email, house account, recipient name..." style="width:100%;padding:10px;border:1px solid #e6e6e6;border-radius:6px" />
             <div style="margin-top:6px;color:#0b5cff">+ Add a new customer</div>
           </div>
 
           <div style="display:flex;gap:12px;margin-top:12px">
             <div style="width:180px">
               <label class="small-muted">Event Start (optional)</label>
-              <input type="date" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
+              <input id="event_start" type="date" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
             </div>
             <div style="width:180px">
               <label class="small-muted">Event End (optional)</label>
-              <input type="date" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
+              <input id="event_end" type="date" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
             </div>
           </div>
         </div>
@@ -133,29 +142,29 @@
 
             <div style="margin-top:12px">
               <label class="small-muted">Venue Name</label>
-              <input type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
+              <input id="venue_name" type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
             </div>
 
             <div style="margin-top:12px">
               <label class="small-muted">Street Address *</label>
-              <input type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
+              <input id="venue_street" type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
             </div>
             <div style="margin-top:8px">
               <label class="small-muted">Address Line 2 (optional)</label>
-              <input type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
+              <input id="venue_line2" type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" />
             </div>
 
             <div style="display:flex;gap:12px;margin-top:12px">
-              <div style="width:160px"><label class="small-muted">City *</label><input type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" /></div>
-              <div style="width:120px"><label class="small-muted">State *</label><input type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" /></div>
-              <div style="width:120px"><label class="small-muted">Zip *</label><input type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" /></div>
+              <div style="width:160px"><label class="small-muted">City *</label><input id="venue_city" type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" /></div>
+              <div style="width:120px"><label class="small-muted">State *</label><input id="venue_state" type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" /></div>
+              <div style="width:120px"><label class="small-muted">Zip *</label><input id="venue_zip" type="text" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px" /></div>
             </div>
 
             <div style="margin-top:12px">
               <label class="small-muted">Note to Customer (Optional)</label>
               <div style="background:#fff;border:1px solid #e6e6e6;padding:6px;border-radius:4px;margin-top:6px">
                 <div style="margin-bottom:8px">[Rich text toolbar placeholder]</div>
-                <textarea rows="4" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px"></textarea>
+                <textarea id="note_to_customer" rows="4" style="width:100%;padding:8px;border:1px solid #e6e6e6;border-radius:6px"></textarea>
               </div>
             </div>
           </div>
@@ -376,6 +385,10 @@
 
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
+  <script src="/assets/js/supabase-config.js"></script>
+  <script src="/assets/js/supabase-client.js"></script>
+
   <script>
     function toggle(sel){
       const el = document.querySelector(sel);
@@ -404,12 +417,230 @@
       });
       document.getElementById('sectionTotal').textContent = total.toFixed(2);
     }
-    function publish(){
-      alert('Publish & Send (mock)');
+    async function collectForm(){
+      const data = {};
+      // Details
+      const details = document.querySelector('#details');
+      if (details) {
+        data.title = details.querySelector('input[type=text]')?.value || '';
+        data.po_number = details.querySelector('input[placeholder="XXXXX"]')?.value || '';
+        data.customer = details.querySelector('input[placeholder]')?.value || '';
+        data.event_start = details.querySelector('input[type=date]')?.value || '';
+        const dates = details.querySelectorAll('input[type=date]');
+        if (dates && dates.length>1) data.event_end = dates[1].value || '';
+
+        // venue related fields are placed inside details after merge
+        const venueName = details.querySelector('input[placeholder]')?.value || '';
+      }
+
+      // Generic gather: collect named inputs across page
+      const inputs = document.querySelectorAll('main input, main textarea, main select');
+      const sections = {};
+      inputs.forEach(i => {
+        const name = i.getAttribute('name') || i.getAttribute('id') || i.getAttribute('placeholder') || i.getAttribute('aria-label') || null;
+        if (!name) return;
+        // sanitize name
+        const key = name.replace(/[^a-z0-9_\-]/ig,'').toLowerCase().slice(0,40);
+        if (!sections[key]) sections[key] = i.value;
+      });
+      data.sections = sections;
+      // collect product rows
+      data.products = Array.from(document.querySelectorAll('.product-row')).map(r => ({
+        description: r.querySelector('input[type=text]')?.value || '',
+        qty: r.querySelector('.qty')?.value || '',
+        price: r.querySelector('.price')?.value || ''
+      }));
+      // collect recipe ingredients
+      data.ingredients = Array.from(document.querySelectorAll('.ingredient-row')).map(r => ({
+        ingredient: r.querySelector('input[type=text]')?.value || '',
+        quantity: r.querySelector('input[type=number]')?.value || '',
+        cost_per_unit: r.querySelectorAll('input[type=number]')[1]?.value || ''
+      }));
+
+      // venue object fields (best-effort mapping)
+      data.venue = {
+        name: document.querySelector('input[placeholder="Venue Name"]')?.value || document.querySelector('#details input[type=text]')?.value || null,
+        street: Array.from(document.querySelectorAll('#details input[type=text]'))[1]?.value || null,
+        line2: null,
+        city: document.querySelector('#details input[placeholder]')?.value || null,
+        state: null,
+        zip: null
+      };
+
+      // note to customer
+      data.note_to_customer = document.querySelector('#details textarea')?.value || '';
+
+      return data;
+    }
+
+    // ---------------- Supabase / Upload helpers ----------------
+    let currentInvoiceId = null;
+    let pendingCoverFile = null;
+
+    function getParam(name){
+      const u = new URL(window.location.href);
+      return u.searchParams.get(name);
+    }
+
+    async function ensureSupabaseClient(){
+      // window.supabaseClient should be created by /assets/js/supabase-client.js
+      if (window.supabaseClient) return window.supabaseClient;
+      if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY){
+        try { window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY); } catch(e){ console.warn('Could not create supabase client', e); }
+      }
+      return window.supabaseClient;
+    }
+
+    async function loadInvoice(id){
+      const supabase = await ensureSupabaseClient();
+      if (!supabase) return;
+      const { data, error } = await supabase.from('event_invoices').select('*').eq('id', id).single();
+      if (error){ console.warn('Error loading invoice', error); return; }
+      if (!data) return;
+      currentInvoiceId = data.id;
+      // populate fields
+      document.getElementById('title').value = data.title || '';
+      document.getElementById('po_number').value = data.po_number || '';
+      document.getElementById('customer').value = (typeof data.customer === 'string') ? data.customer : (data.customer && data.customer.name) || '';
+      document.getElementById('event_start').value = data.event_start || '';
+      document.getElementById('event_end').value = data.event_end || '';
+      document.getElementById('venue_name').value = (data.venue && data.venue.name) || '';
+      document.getElementById('venue_street').value = (data.venue && data.venue.street) || '';
+      document.getElementById('venue_line2').value = (data.venue && data.venue.line2) || '';
+      document.getElementById('venue_city').value = (data.venue && data.venue.city) || '';
+      document.getElementById('venue_state').value = (data.venue && data.venue.state) || '';
+      document.getElementById('venue_zip').value = (data.venue && data.venue.zip) || '';
+      document.getElementById('note_to_customer').value = data.note_to_customer || '';
+      document.getElementById('header_text').value = (data.sections && data.sections.header_text) || '';
+      document.getElementById('subheader_text').value = (data.sections && data.sections.subheader_text) || '';
+
+      // cover image
+      if (data.cover_image_path){
+        try{
+          const urlObj = supabase.storage.from('invoices').getPublicUrl(data.cover_image_path);
+          const publicURL = urlObj && (urlObj.publicURL || urlObj.data && urlObj.data.publicUrl) || urlObj?.data?.publicURL;
+          const img = document.getElementById('coverPreview');
+          img.src = publicURL || '';
+          if (img.src){ img.style.display = ''; document.getElementById('coverPlaceholder').style.display = 'none'; }
+        }catch(e){ console.warn('Could not get public url', e); }
+      }
+    }
+
+    function previewLocalFile(file){
+      const img = document.getElementById('coverPreview');
+      const placeholder = document.getElementById('coverPlaceholder');
+      if (!file){ img.style.display='none'; placeholder.style.display='flex'; img.src=''; return; }
+      const reader = new FileReader();
+      reader.onload = function(e){ img.src = e.target.result; img.style.display=''; placeholder.style.display='none'; };
+      reader.readAsDataURL(file);
+    }
+
+    async function uploadCoverToStorage(file, invoiceId){
+      const supabase = await ensureSupabaseClient();
+      if (!supabase) throw new Error('Supabase client not available');
+      const safeName = file.name.replace(/[^a-z0-9\.\-_]/ig,'');
+      const path = `invoices/${invoiceId}/${Date.now()}-${safeName}`;
+      const { data, error } = await supabase.storage.from('invoices').upload(path, file, { cacheControl: '3600', upsert: false });
+      if (error){ throw error; }
+      // get public url
+      const publicObj = supabase.storage.from('invoices').getPublicUrl(path);
+      const publicURL = publicObj && (publicObj.publicURL || publicObj.data && publicObj.data.publicUrl) || publicObj?.data?.publicURL;
+      return { path, publicURL };
+    }
+
+    async function applyCoverMetadata(invoiceId, path, file){
+      const supabase = await ensureSupabaseClient();
+      if (!supabase) throw new Error('Supabase client not available');
+      const upd = {
+        cover_image_path: path,
+        cover_image_name: file.name,
+        cover_image_content_type: file.type,
+        cover_image_size: file.size
+      };
+      await supabase.from('event_invoices').update(upd).eq('id', invoiceId);
+      // insert attachment record
+      try{
+        await supabase.from('event_invoice_files').insert([{
+          invoice_id: invoiceId,
+          storage_path: path,
+          file_name: file.name,
+          content_type: file.type,
+          size: file.size
+        }]);
+      }catch(e){ console.warn('Could not insert attachment record', e); }
+    }
+
+    async function publish(){
+      const supabase = await ensureSupabaseClient();
+      const payload = await collectForm();
+      payload.status = 'published';
+      try {
+        if (!currentInvoiceId){
+          // create via server endpoint (keeps current behavior)
+          const r = await fetch('/api/event-invoice', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+          const j = await r.json();
+          if (!r.ok) throw new Error(j.error || 'Server error');
+          currentInvoiceId = j.invoice && j.invoice.id;
+        } else {
+          // update existing
+          await supabase.from('event_invoices').update(payload).eq('id', currentInvoiceId);
+        }
+
+        // upload cover if file selected
+        const fileInput = document.getElementById('coverFile');
+        const file = fileInput && fileInput.files && fileInput.files[0];
+        if (file){
+          const up = await uploadCoverToStorage(file, currentInvoiceId);
+          await applyCoverMetadata(currentInvoiceId, up.path, file);
+        }
+
+        alert('Invoice saved (id: ' + currentInvoiceId + ')');
+      } catch (err) {
+        console.error(err);
+        alert('Error saving invoice: ' + (err.message || err));
+      }
+    }
+
+    async function saveDraft(){
+      const supabase = await ensureSupabaseClient();
+      const payload = await collectForm();
+      payload.status = 'draft';
+      try {
+        if (!currentInvoiceId){
+          const r = await fetch('/api/event-invoice', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+          const j = await r.json();
+          if (!r.ok) throw new Error(j.error || 'Server error');
+          currentInvoiceId = j.invoice && j.invoice.id;
+        } else {
+          await supabase.from('event_invoices').update(payload).eq('id', currentInvoiceId);
+        }
+
+        // if cover selected, upload
+        const fileInput = document.getElementById('coverFile');
+        const file = fileInput && fileInput.files && fileInput.files[0];
+        if (file){
+          const up = await uploadCoverToStorage(file, currentInvoiceId);
+          await applyCoverMetadata(currentInvoiceId, up.path, file);
+        }
+
+        alert('Draft saved (id: ' + currentInvoiceId + ')');
+      } catch (err) {
+        console.error(err);
+        alert('Error saving draft: ' + (err.message || err));
+      }
     }
 
     // init events
     document.addEventListener('input', function(e){ if(e.target.matches('#products .qty, #products .price')) updateSectionTotal(); });
+    document.getElementById('coverFile').addEventListener('change', function(e){ const f = e.target.files && e.target.files[0]; pendingCoverFile = f || null; previewLocalFile(f); });
+    document.getElementById('uploadCoverBtn').addEventListener('click', async function(e){ e.preventDefault(); if(!currentInvoiceId){ alert('Please save the invoice first (draft) before uploading the cover.'); return; } const f = document.getElementById('coverFile').files[0]; if(!f){ alert('Choose a file first'); return; } try{ const up = await uploadCoverToStorage(f, currentInvoiceId); await applyCoverMetadata(currentInvoiceId, up.path, f); alert('Cover uploaded'); } catch(err){ console.error(err); alert('Upload failed: '+err.message); } });
+
+    // on page load, if ?id= present load invoice
+    (async function(){
+      await ensureSupabaseClient();
+      const id = getParam('id');
+      if (id) await loadInvoice(id);
+    })();
   </script>
 </body>
 </html>
