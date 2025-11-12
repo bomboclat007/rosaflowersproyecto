@@ -6105,55 +6105,9 @@ Louisiana located between Baton Rouge and New Orleans." />
                 else (document.body || document.documentElement).appendChild(placeholderContainer);
               }
 
-              // use for..of so we can await public URL resolution (Supabase client may be used)
-              async function resolveImg(inv){
-                try{
-                  if (!inv) return '';
-                  const p = inv.cover_image_path && String(inv.cover_image_path).trim();
-                  const name = inv.cover_image_name && String(inv.cover_image_name).trim();
-                  // If Supabase client/config is available, prefer using its getPublicUrl helper
-                  try{
-                    const SUP_URL = window.SUPABASE_URL;
-                    const SUP_KEY = window.SUPABASE_ANON_KEY;
-                    const BUCKET = window.SUPABASE_BUCKET || 'invoices';
-                    if (SUP_URL && SUP_KEY && (window.supabase || typeof supabase !== 'undefined')){
-                      // create or reuse a lightweight client for this page
-                      if (!window._featured_supabase_client){
-                        try{ window._featured_supabase_client = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(SUP_URL, SUP_KEY) : (typeof supabase !== 'undefined' && supabase.createClient ? supabase.createClient(SUP_URL, SUP_KEY) : null); }catch(e){ window._featured_supabase_client = null; }
-                      }
-                      const s = window._featured_supabase_client;
-                      if (s){
-                        // path inside bucket: if cover_image_path includes the bucket prefix, strip it
-                        let path = p || (name ? `${inv.id}/${name}` : '');
-                        if (path && typeof path === 'string'){
-                          const prefix = BUCKET + '/';
-                          if (path.indexOf(prefix) === 0) path = path.slice(prefix.length);
-                        }
-                        if (path){
-                          try{
-                            const publicObj = s.storage.from(BUCKET).getPublicUrl(path);
-                            const publicURL = publicObj && (publicObj.publicURL || (publicObj.data && publicObj.data.publicUrl)) || (publicObj && publicObj.data && publicObj.data.publicURL) || null;
-                            if (publicURL) return publicURL;
-                          }catch(e){ /* ignore and fall back */ }
-                        }
-                      }
-                    }
-                  }catch(e){ /* ignore */ }
-
-                  if (p){
-                    if (/^https?:\/\//i.test(p)) return p;
-                    return (window.location.origin || '') + '/' + p.replace(/^\/+/, '');
-                  }
-                  if (name){
-                    return (window.location.origin || '') + '/invoices/' + String(inv.id) + '/' + name.replace(/^\/+/, '');
-                  }
-                }catch(e){ }
-                return '';
-              }
-
-              for (const mslug of missing){
+              missing.forEach(mslug => {
                 const inv = invMap.get(mslug) || invMap.get(String(mslug));
-                if (!inv) continue;
+                if (!inv) return;
                 // create a compact card
                 const card = document.createElement('div');
                 card.className = 'featured-placeholder-card';
@@ -6164,30 +6118,32 @@ Louisiana located between Baton Rouge and New Orleans." />
                 card.style.background = '#fff';
                 card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.04)';
                 const href = inv.fullUrl && inv.fullUrl.indexOf('.html') !== -1 ? inv.fullUrl : ('/event/' + inv.id);
-                // Prefer server-provided public URL if available (avoids path-normalization issues)
-                const imgSrc = (inv && inv.cover_image_public_url) ? String(inv.cover_image_public_url) : await resolveImg(inv);
-                // build a human-friendly date display: single date or range
-                let dateText = '';
-                try{
-                  if (inv && inv.event_start){
-                    const s = new Date(inv.event_start);
-                    const e = inv && inv.event_end ? new Date(inv.event_end) : null;
-                    const sText = isNaN(s.getTime()) ? '' : s.toLocaleDateString();
-                    const eText = (e && !isNaN(e.getTime())) ? e.toLocaleDateString() : '';
-                    if (sText && eText && eText !== sText) dateText = `${sText} — ${eText}`;
-                    else dateText = sText || eText || '';
-                  }
-                }catch(e){ dateText = ''; }
-
+                // resolve image URL: prefer absolute URL if provided, otherwise build from origin + path
+                function resolveImg(inv){
+                  try{
+                    if (!inv) return '';
+                    const p = inv.cover_image_path && String(inv.cover_image_path).trim();
+                    const name = inv.cover_image_name && String(inv.cover_image_name).trim();
+                    if (p){
+                      if (/^https?:\/\//i.test(p)) return p;
+                      return (window.location.origin || '') + '/' + p.replace(/^\/+/, '');
+                    }
+                    if (name){
+                      return (window.location.origin || '') + '/invoices/' + String(inv.id) + '/' + name.replace(/^\/+/, '');
+                    }
+                  }catch(e){ }
+                  return '';
+                }
+                const imgSrc = resolveImg(inv);
                 card.innerHTML = `
-                  ${ imgSrc ? ('<div style="height:160px;overflow:hidden;background-image:url(\''+imgSrc+'\');background-size:cover;background-position:center"></div><img src="'+imgSrc+'" alt="" style="display:none;"/>') : '' }
+                  ${ imgSrc ? ('<div style="height:160px;overflow:hidden"><img src="'+imgSrc+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.opacity=0.6;this.src=\'/assets/images/placeholder.png\'"/></div>') : '' }
                   <div style="padding:12px">
                     <a href="${href}" style="color:#333;font-weight:600;text-decoration:none;display:block;margin-bottom:8px">${(inv.title||'').replace(/</g,'&lt;')}</a>
-                    ${ dateText ? ('<div style="color:#666;font-size:13px">'+dateText.replace(/</g,'&lt;')+'</div>') : '' }
+                    <div style="color:#666;font-size:13px">${inv.event_start ? new Date(inv.event_start).toLocaleDateString() : ''}</div>
                   </div>
                 `;
                 placeholderContainer.appendChild(card);
-              }
+              });
             }
           }catch(e){ console.warn('Could not fetch admin events to render missing featured tiles', e); }
         }
@@ -6199,8 +6155,6 @@ Louisiana located between Baton Rouge and New Orleans." />
   }catch(e){ console.error('featured events init error', e); }
 })();
 </script>
-
-    <!-- Removed quick fallback banner to avoid visual clutter; placeholder rendering is handled by the main script -->
 
 <script>
 (function(){

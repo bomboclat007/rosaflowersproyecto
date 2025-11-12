@@ -2228,6 +2228,71 @@
 
 <div class="sqs-events-collection-list events events-list events-stacked" data-controller="EventsImageLoader">
 
+  <!-- Admin checklist panel (built client-side) -->
+  <script>
+  (function(){
+    try{
+      const KEY = 'featuredUpcomingEvents';
+      function slugFromHref(href){
+        try{ const url = href.split('/').filter(Boolean); return url[url.length-1]; }catch(e){return href}
+      }
+      function loadSelected(){ try{ return JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(e){return []} }
+      async function saveSelected(arr){
+        try{
+          localStorage.setItem(KEY, JSON.stringify(arr));
+          // POST updated list to server so selection is global
+          try{
+            await fetch('/api/featured-events', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ slugs: arr })
+            });
+          }catch(postErr){
+            // network or server error — keep localStorage as fallback
+            console.warn('Could not save featured events to server, saved locally', postErr);
+          }
+          window.dispatchEvent(new Event('featured-updated'));
+        }catch(e){ console.error('saveSelected error', e); }
+      }
+
+      const upcomingEls = Array.from(document.querySelectorAll('.eventlist-event--upcoming'));
+      if(!upcomingEls.length) return;
+
+      const panel = document.createElement('div');
+      panel.id = 'events-checkbox-panel';
+      panel.style.cssText = 'position:fixed;left:12px;top:120px;background:rgba(255,255,255,0.98);padding:12px;border:1px solid rgba(0,0,0,0.08);box-shadow:0 6px 18px rgba(0,0,0,0.06);max-height:75vh;overflow:auto;z-index:9999;width:220px;font-family:inherit;font-size:14px;';
+
+      const title = document.createElement('div'); title.textContent = 'Show on index'; title.style.cssText='font-weight:700;margin-bottom:8px'; panel.appendChild(title);
+
+      const selected = loadSelected();
+
+      upcomingEls.forEach(el => {
+        const a = el.querySelector('a[href]');
+        const href = a ? a.getAttribute('href') : null;
+        const slug = href ? slugFromHref(href) : (Math.random().toString(36).slice(2,8));
+        const label = (el.querySelector('.eventlist-title') && el.querySelector('.eventlist-title').innerText) ? el.querySelector('.eventlist-title').innerText.trim() : slug;
+
+        const row = document.createElement('label');
+        row.style.cssText = 'display:block;cursor:pointer;margin-bottom:6px;line-height:1.2;';
+        const cb = document.createElement('input'); cb.type='checkbox'; cb.dataset.slug = slug; cb.style.marginRight='8px';
+        if(selected.includes(slug)) cb.checked = true;
+        cb.addEventListener('change', () => {
+          const cur = loadSelected();
+          if(cb.checked){ if(!cur.includes(slug)) cur.push(slug); }
+          else { const i = cur.indexOf(slug); if(i>-1) cur.splice(i,1); }
+          saveSelected(cur);
+        });
+        row.appendChild(cb);
+        const span = document.createElement('span'); span.textContent = label; row.appendChild(span);
+        panel.appendChild(row);
+      });
+
+      const note = document.createElement('div'); note.style.cssText='margin-top:8px;font-size:12px;color:#666'; note.textContent='Changes saved to browser. Index page will show checked events.'; panel.appendChild(note);
+      document.addEventListener('DOMContentLoaded', () => { document.body.appendChild(panel); });
+    }catch(e){ console.error('events checklist init error', e); }
+  })();
+  </script>
+
   <!-- Upcoming Events -->
 
   <div class="eventlist eventlist--upcoming">

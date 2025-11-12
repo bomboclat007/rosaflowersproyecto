@@ -493,27 +493,32 @@
     }
 
     async function loadInvoice(id){
-      const supabase = await ensureSupabaseClient();
-      if (!supabase) return;
-      const { data, error } = await supabase.from('event_invoices').select('*').eq('id', id).single();
-      if (error){ console.warn('Error loading invoice', error); return; }
-      if (!data) return;
-      currentInvoiceId = data.id;
-      // populate fields
-      document.getElementById('title').value = data.title || '';
-      document.getElementById('po_number').value = data.po_number || '';
-      document.getElementById('customer').value = (typeof data.customer === 'string') ? data.customer : (data.customer && data.customer.name) || '';
-      document.getElementById('event_start').value = data.event_start || '';
-      document.getElementById('event_end').value = data.event_end || '';
-      document.getElementById('venue_name').value = (data.venue && data.venue.name) || '';
-      document.getElementById('venue_street').value = (data.venue && data.venue.street) || '';
-      document.getElementById('venue_line2').value = (data.venue && data.venue.line2) || '';
-      document.getElementById('venue_city').value = (data.venue && data.venue.city) || '';
-      document.getElementById('venue_state').value = (data.venue && data.venue.state) || '';
-      document.getElementById('venue_zip').value = (data.venue && data.venue.zip) || '';
-      document.getElementById('note_to_customer').value = data.note_to_customer || '';
-      document.getElementById('header_text').value = (data.sections && data.sections.header_text) || '';
-      document.getElementById('subheader_text').value = (data.sections && data.sections.subheader_text) || '';
+      // Use server endpoint (service role) to load invoice so RLS doesn't block anon client
+      try{
+        const r = await fetch('/api/event-invoice?id=' + encodeURIComponent(id));
+        if (!r.ok) { console.warn('Failed to fetch invoice from server', r.status); return; }
+        const j = await r.json();
+        const data = j.invoice;
+        if (!data) return;
+      
+        // continue below to populate fields
+      }catch(e){ console.warn('Error loading invoice from server', e); return; }
+  currentInvoiceId = id;
+  // populate fields using `data` fetched from server
+  document.getElementById('title').value = data.title || '';
+  document.getElementById('po_number').value = data.po_number || '';
+  document.getElementById('customer').value = (typeof data.customer === 'string') ? data.customer : (data.customer && data.customer.name) || '';
+  document.getElementById('event_start').value = data.event_start || '';
+  document.getElementById('event_end').value = data.event_end || '';
+  document.getElementById('venue_name').value = (data.venue && data.venue.name) || '';
+  document.getElementById('venue_street').value = (data.venue && data.venue.street) || '';
+  document.getElementById('venue_line2').value = (data.venue && data.venue.line2) || '';
+  document.getElementById('venue_city').value = (data.venue && data.venue.city) || '';
+  document.getElementById('venue_state').value = (data.venue && data.venue.state) || '';
+  document.getElementById('venue_zip').value = (data.venue && data.venue.zip) || '';
+  document.getElementById('note_to_customer').value = data.note_to_customer || '';
+  document.getElementById('header_text').value = (data.sections && data.sections.header_text) || '';
+  document.getElementById('subheader_text').value = (data.sections && data.sections.subheader_text) || '';
 
       // cover image
       if (data.cover_image_path){
@@ -542,17 +547,28 @@
       const bucket = window.SUPABASE_BUCKET || 'invoices';
       const safeName = file.name.replace(/[^a-z0-9\.\-_]/ig,'');
       const path = `${bucket}/${invoiceId}/${Date.now()}-${safeName}`;
+      console.log('uploadCoverToStorage called', { fileName: file.name, invoiceId, bucket, path });
       try{
+        // try client-side upload first (fast path)
         const { data, error } = await supabase.storage.from(bucket).upload(path, file, { cacheControl: '3600', upsert: false });
+        if (!error && data) {
+          // get public url
+          const publicObj = supabase.storage.from(bucket).getPublicUrl(path);
+          const publicURL = publicObj && (publicObj.publicURL || publicObj.data && publicObj.data.publicUrl) || publicObj?.data?.publicURL;
+          console.log('uploadCoverToStorage: client upload success', { path, publicURL });
+          return { path, publicURL };
+        }
         if (error) throw error;
-        // get public url
-        const publicObj = supabase.storage.from(bucket).getPublicUrl(path);
-        const publicURL = publicObj && (publicObj.publicURL || publicObj.data && publicObj.data.publicUrl) || publicObj?.data?.publicURL;
-        return { path, publicURL };
       } catch (err){
         console.error('uploadCoverToStorage error', err);
         // Normalize common Supabase storage error
         const msg = (err && err.message) || (err && err.error) || String(err);
+        // If RLS or permission issue (attempt server-side upload using service role)
+        if (/row-level security|row level security|violates row-level security|violates row level security/i.test(msg) || /not authorized|permission denied|401|403/i.test(msg)){
+          console.warn('uploadCoverToStorage: client upload blocked, falling back to server upload', msg);
+          // read file as base64 and POST to /api/upload-cover
+          return await uploadCoverToServerFallback(file, invoiceId, bucket);
+        }
         if (/bucket not found|Bucket not found/i.test(msg) || /Could not find bucket/i.test(msg)){
           throw new Error(`Bucket not found: '${bucket}'. Please create a bucket with this name in your Supabase project's Storage (or set window.SUPABASE_BUCKET to the correct name in assets/js/supabase-config.js).`);
         }
@@ -560,26 +576,75 @@
       }
     }
 
+    function readFileAsBase64(file){
+      return new Promise((resolve, reject)=>{
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('Could not read file')); 
+        reader.onload = () => {
+          const res = reader.result || '';
+          // data:<type>;base64,AAAA
+          const idx = res.indexOf(',');
+          const base64 = idx !== -1 ? res.slice(idx+1) : res;
+          resolve(base64);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function uploadCoverToServerFallback(file, invoiceId, bucket){
+      try{
+        const base64 = await readFileAsBase64(file);
+        const payload = {
+          invoice_id: invoiceId,
+          file_name: file.name,
+          content_type: file.type,
+          base64,
+          bucket
+        };
+        const r = await fetch('/api/upload-cover', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        const j = await r.json().catch(()=>null);
+        if (!r.ok) {
+          console.error('uploadCoverToServerFallback failed', r.status, j);
+          throw new Error((j && (j.error || j.details)) || 'Server upload failed');
+        }
+        console.log('uploadCoverToServerFallback success', j);
+        return { path: j.path, publicURL: j.publicURL };
+      }catch(e){
+        console.error('uploadCoverToServerFallback error', e);
+        throw e;
+      }
+    }
+
     async function applyCoverMetadata(invoiceId, path, file){
       const supabase = await ensureSupabaseClient();
       if (!supabase) throw new Error('Supabase client not available');
-      const upd = {
-        cover_image_path: path,
-        cover_image_name: file.name,
-        cover_image_content_type: file.type,
-        cover_image_size: file.size
-      };
-      await supabase.from('event_invoices').update(upd).eq('id', invoiceId);
-      // insert attachment record
+      // send cover metadata to server to update invoice and insert attachment (server uses service role key)
+      console.log('applyCoverMetadata: sending metadata to server', { invoiceId, path, fileName: file.name });
       try{
-        await supabase.from('event_invoice_files').insert([{
-          invoice_id: invoiceId,
-          storage_path: path,
-          file_name: file.name,
-          content_type: file.type,
-          size: file.size
-        }]);
-      }catch(e){ console.warn('Could not insert attachment record', e); }
+        const r = await fetch('/api/event-invoice?action=file', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'file',
+            invoice_id: invoiceId,
+            storage_path: path,
+            file_name: file.name,
+            content_type: file.type,
+            size: file.size,
+            cover_image_path: path,
+            cover_image_name: file.name,
+            cover_image_content_type: file.type,
+            cover_image_size: file.size
+          })
+        });
+        const jr = await r.text().catch(() => null);
+        console.log('applyCoverMetadata: server response', r.status, jr);
+        if (!r.ok) {
+          let j = null;
+          try{ j = JSON.parse(jr); }catch(e){}
+          console.warn('Server-side insert/update failed', r.status, j || jr);
+        }
+      }catch(e){ console.warn('Could not send cover metadata to server', e); }
     }
 
   async function publish(){
@@ -587,15 +652,23 @@
       const payload = await collectForm();
       payload.status = 'published';
       try {
+        console.log('publish() start', { currentInvoiceId });
         if (!currentInvoiceId){
           // create via server endpoint (keeps current behavior)
+          console.log('publish(): creating invoice via server', payload);
           const r = await fetch('/api/event-invoice', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
           const j = await r.json();
+          console.log('publish(): create response', r.status, j);
           if (!r.ok) throw new Error(j.error || 'Server error');
           currentInvoiceId = j.invoice && j.invoice.id;
         } else {
-          // update existing
-          await supabase.from('event_invoices').update(payload).eq('id', currentInvoiceId);
+          // update existing via server endpoint to avoid RLS
+          payload.id = currentInvoiceId;
+          console.log('publish(): updating invoice id', currentInvoiceId, payload);
+          const r = await fetch('/api/event-invoice', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+          const j = await r.json();
+          console.log('publish(): update response', r.status, j);
+          if (!r.ok) throw new Error(j.error || 'Server error');
         }
 
         // upload cover if file selected
@@ -623,13 +696,22 @@
       const payload = await collectForm();
       payload.status = 'draft';
       try {
+        console.log('saveDraft() start', { currentInvoiceId, payload });
         if (!currentInvoiceId){
+          console.log('saveDraft(): creating invoice via server', payload);
           const r = await fetch('/api/event-invoice', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
           const j = await r.json();
+          console.log('saveDraft(): create response', r.status, j);
           if (!r.ok) throw new Error(j.error || 'Server error');
           currentInvoiceId = j.invoice && j.invoice.id;
         } else {
-          await supabase.from('event_invoices').update(payload).eq('id', currentInvoiceId);
+          // update existing draft via server endpoint
+          payload.id = currentInvoiceId;
+          console.log('saveDraft(): updating invoice id', currentInvoiceId, payload);
+          const r = await fetch('/api/event-invoice', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+          const j = await r.json();
+          console.log('saveDraft(): update response', r.status, j);
+          if (!r.ok) throw new Error(j.error || 'Server error');
         }
 
         // if cover selected, upload

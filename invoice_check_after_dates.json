@@ -1,0 +1,24 @@
+﻿{
+    "invoice":  {
+                    "id":  "c94a6415-943f-4205-b0fa-a213d67d282f",
+                    "title":  null,
+                    "po_number":  null,
+                    "customer":  null,
+                    "event_start":  "2025-12-01",
+                    "event_end":  "2025-12-06",
+                    "venue":  null,
+                    "note_to_customer":  null,
+                    "sections":  null,
+                    "products":  null,
+                    "ingredients":  null,
+                    "totals":  null,
+                    "status":  "draft",
+                    "created_at":  "2025-11-11T18:49:11.196251+00:00",
+                    "updated_at":  "2025-11-12T00:08:06.567917+00:00",
+                    "cover_image_path":  "invoices/c94a6415-943f-4205-b0fa-a213d67d282f/1762886955633-1326598.jpeg",
+                    "cover_image_name":  "1326598.jpeg",
+                    "cover_image_content_type":  "image/jpeg",
+                    "cover_image_size":  2179505,
+                    "cover_image_public_url":  "https://dwzzwxcbnwfmxkryrmjl.supabase.co/storage/v1/object/public/invoices/c94a6415-943f-4205-b0fa-a213d67d282f/1762886955633-1326598.jpeg"
+                }
+}

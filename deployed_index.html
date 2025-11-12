@@ -6164,26 +6164,12 @@ Louisiana located between Baton Rouge and New Orleans." />
                 card.style.background = '#fff';
                 card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.04)';
                 const href = inv.fullUrl && inv.fullUrl.indexOf('.html') !== -1 ? inv.fullUrl : ('/event/' + inv.id);
-                // Prefer server-provided public URL if available (avoids path-normalization issues)
-                const imgSrc = (inv && inv.cover_image_public_url) ? String(inv.cover_image_public_url) : await resolveImg(inv);
-                // build a human-friendly date display: single date or range
-                let dateText = '';
-                try{
-                  if (inv && inv.event_start){
-                    const s = new Date(inv.event_start);
-                    const e = inv && inv.event_end ? new Date(inv.event_end) : null;
-                    const sText = isNaN(s.getTime()) ? '' : s.toLocaleDateString();
-                    const eText = (e && !isNaN(e.getTime())) ? e.toLocaleDateString() : '';
-                    if (sText && eText && eText !== sText) dateText = `${sText} — ${eText}`;
-                    else dateText = sText || eText || '';
-                  }
-                }catch(e){ dateText = ''; }
-
+                const imgSrc = await resolveImg(inv);
                 card.innerHTML = `
-                  ${ imgSrc ? ('<div style="height:160px;overflow:hidden;background-image:url(\''+imgSrc+'\');background-size:cover;background-position:center"></div><img src="'+imgSrc+'" alt="" style="display:none;"/>') : '' }
+                  ${ imgSrc ? ('<div style="height:160px;overflow:hidden"><img src="'+imgSrc+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.opacity=0.6;this.src=\'data:image/svg+xml;utf8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 240%22%3E%3Crect fill=%22%23f3f4f6%22 width=%22400%22 height=%22240%22/%3E%3C/svg%3E\'"/></div>') : '' }
                   <div style="padding:12px">
                     <a href="${href}" style="color:#333;font-weight:600;text-decoration:none;display:block;margin-bottom:8px">${(inv.title||'').replace(/</g,'&lt;')}</a>
-                    ${ dateText ? ('<div style="color:#666;font-size:13px">'+dateText.replace(/</g,'&lt;')+'</div>') : '' }
+                    <div style="color:#666;font-size:13px">${inv.event_start ? new Date(inv.event_start).toLocaleDateString() : ''}</div>
                   </div>
                 `;
                 placeholderContainer.appendChild(card);
@@ -6199,8 +6185,6 @@ Louisiana located between Baton Rouge and New Orleans." />
   }catch(e){ console.error('featured events init error', e); }
 })();
 </script>
-
-    <!-- Removed quick fallback banner to avoid visual clutter; placeholder rendering is handled by the main script -->
 
 <script>
 (function(){

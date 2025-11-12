@@ -6,8 +6,8 @@
 // window.SUPABASE_URL = 'https://xyzcompany.supabase.co';
 // window.SUPABASE_ANON_KEY = 'public-anon-key';
 
-window.SUPABASE_URL = 'https://hgxzkadpkcccvnrqdebz.supabase.co';
-window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhneHprYWRwa2NjY3ZucnFkZWJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1MzE4MjEsImV4cCI6MjA3ODEwNzgyMX0.VUEPYgP6wQybEwytdWtzZcaZ7uj-YaBV1vjUNfgshFU';
+window.SUPABASE_URL = 'https://dwzzwxcbnwfmxkryrmjl.supabase.co';
+window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR3enp3eGNibndmbXhrcnlybWpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIzNzMwODksImV4cCI6MjA3Nzk0OTA4OX0.0Q_-rGzbm0fKbqCJ5Evtkzkobx8JJDlxpSKF2uOHrmI';
 // Bucket name used for invoice uploads. Change if your bucket is named differently in Supabase Storage.
 window.SUPABASE_BUCKET = 'invoices';
 

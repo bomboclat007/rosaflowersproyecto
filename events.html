@@ -63,6 +63,7 @@
     <table class="events-table" role="table" aria-label="Events table">
       <thead>
         <tr>
+          <th>Featured</th>
           <th>Event ID</th>
           <th>Status</th>
           <th>Payment Status</th>
@@ -76,7 +77,7 @@
       </thead>
       <tbody>
         <tr>
-          <td colspan="9">
+          <td colspan="10">
             <div class="empty-placeholder">No events to display</div>
           </td>
         </tr>
@@ -97,15 +98,69 @@
       const searchInput = document.querySelector('input[type=search]');
       const statusSelect = document.querySelector('select[aria-label="Event Status"]');
       let page = 1;
+      const FEATURED_KEY = 'featuredUpcomingEvents';
+      let featured = [];
+
+      async function loadFeatured(){
+        // try server first, fall back to localStorage
+        try {
+          const r = await fetch('/api/featured-events');
+          if (r.ok){
+            const j = await r.json();
+            featured = Array.isArray(j.slugs) ? j.slugs : [];
+            // normalize and dedupe
+            featured = normalizeAndDedupe(featured);
+            try { localStorage.setItem(FEATURED_KEY, JSON.stringify(featured)); } catch(e){}
+            return;
+          }
+        } catch (err) {
+          // continue to localStorage fallback
+        }
+        try {
+          const raw = localStorage.getItem(FEATURED_KEY);
+          featured = raw ? JSON.parse(raw) : [];
+          featured = normalizeAndDedupe(featured);
+        } catch(e){ featured = []; }
+      }
+
+      async function saveFeatured(){
+        // normalize and dedupe before saving
+        featured = normalizeAndDedupe(featured);
+        try { localStorage.setItem(FEATURED_KEY, JSON.stringify(featured)); } catch(e){}
+        try {
+          const res = await fetch('/api/featured-events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ slugs: featured })
+          });
+          if (res.ok){
+            try {
+              const j = await res.json();
+              if (Array.isArray(j.slugs)){
+                // trust the server canonical list (normalize/unique) to avoid races
+                featured = normalizeAndDedupe(j.slugs);
+                try { localStorage.setItem(FEATURED_KEY, JSON.stringify(featured)); } catch(e){}
+              }
+            } catch(e){}
+          } else {
+            console.warn('Could not save featured to server, saved locally only');
+          }
+        } catch (err) {
+          console.warn('Could not save featured to server, saved locally only');
+        }
+        // notify other parts of the site (homepage) that featured list changed
+        try { window.dispatchEvent(new Event('featured-updated')); } catch(e){}
+      }
 
       async function load(){
+        await loadFeatured();
         const q = new URLSearchParams();
         q.set('page', page);
         q.set('page_size', 50);
         if (searchInput.value) q.set('search', searchInput.value);
         if (statusSelect.value) q.set('status', statusSelect.value);
 
-        tableBody.innerHTML = '<tr><td colspan="9"><div class="empty-placeholder">Loading…</div></td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="10"><div class="empty-placeholder">Loading…</div></td></tr>';
         try {
           const r = await fetch('/api/event-invoice?' + q.toString());
           const j = await r.json();
@@ -113,13 +168,13 @@
           renderRows(j.invoices || []);
         } catch (err) {
           console.error(err);
-          tableBody.innerHTML = '<tr><td colspan="9"><div class="empty-placeholder">Error loading events</div></td></tr>';
+          tableBody.innerHTML = '<tr><td colspan="10"><div class="empty-placeholder">Error loading events</div></td></tr>';
         }
       }
 
       function renderRows(rows){
         if (!rows || rows.length === 0){
-          tableBody.innerHTML = '<tr><td colspan="9"><div class="empty-placeholder">No events to display</div></td></tr>';
+          tableBody.innerHTML = '<tr><td colspan="10"><div class="empty-placeholder">No events to display</div></td></tr>';
           return;
         }
         tableBody.innerHTML = '';
@@ -129,7 +184,14 @@
           const eventDate = r.event_start ? new Date(r.event_start).toLocaleDateString() : '';
           const customer = (r.customer && (typeof r.customer === 'string' ? r.customer : (r.customer.name || JSON.stringify(r.customer)))) || '';
           const amount = (r.totals && r.totals.grand_total) ? r.totals.grand_total : '';
+          // compute a homepage-style slug for this event from title (used by the homepage filter)
+          function slugify(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
+          const titleSlug = slugify(r.title || '');
+          const lastSegment = titleSlug ? (titleSlug + '.html') : String(r.id);
+          // whether this row is currently featured: allow either previously-stored ids or the new slug
+          const checked = (Array.isArray(featured) && (featured.indexOf(String(r.id)) !== -1 || featured.indexOf(lastSegment) !== -1 || featured.indexOf(normalizeSlug(lastSegment)) !== -1)) ? 'checked' : '';
           tr.innerHTML = `
+            <td><input type="checkbox" class="featured-checkbox" data-id="${r.id}" data-slug="${lastSegment}" ${checked}></td>
             <td>${r.id}</td>
             <td>${r.status || ''}</td>
             <td>${(r.totals && r.totals.payment_status) || ''}</td>
@@ -142,6 +204,85 @@
           `;
           tableBody.appendChild(tr);
         });
+
+        // migrate any previously-saved ids into slugs (so homepage filter works) and persist once
+          try{
+          let migrated = false;
+          rows.forEach(r => {
+            function slugify(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
+            const titleSlug = slugify(r.title || '');
+            const lastSegment = titleSlug ? (titleSlug + '.html') : String(r.id);
+            const idIndex = featured.indexOf(String(r.id));
+            // if id exists, replace it with normalized slug (avoid duplicates)
+            if (idIndex !== -1){
+              const normalized = normalizeSlug(lastSegment);
+              // only replace if normalized not already present
+              if (featured.indexOf(normalized) === -1){
+                featured.splice(idIndex, 1);
+                featured.push(normalized);
+                migrated = true;
+              } else {
+                // remove the id-only entry if normalized already present
+                featured.splice(idIndex, 1);
+                migrated = true;
+              }
+            }
+          });
+          if (migrated) saveFeatured();
+        }catch(e){}
+
+        // wire checkbox listeners
+        tableBody.querySelectorAll('.featured-checkbox').forEach(cb => {
+          cb.addEventListener('change', function(e){
+            const id = String(this.getAttribute('data-id'));
+            const slug = String(this.getAttribute('data-slug'));
+            if (this.checked){
+              // remove any old id entry and add slug (store slugs for homepage compatibility)
+              const byId = featured.indexOf(id);
+              if (byId !== -1) featured.splice(byId, 1);
+              if (featured.indexOf(slug) === -1) featured.push(slug);
+            } else {
+              // remove slug and id if present
+              const i1 = featured.indexOf(slug);
+              if (i1 !== -1) featured.splice(i1, 1);
+              const i2 = featured.indexOf(id);
+              if (i2 !== -1) featured.splice(i2, 1);
+            }
+            // Persist the full list atomically to avoid race conditions
+            saveFeatured();
+          });
+        });
+      }
+
+      // helper to normalize slug strings (lowercase, trim, ensure .html suffix for slugs)
+      function normalizeSlug(s){
+        if (!s) return s;
+        s = String(s).trim().toLowerCase();
+        // if looks like a uuid (hex with dashes) keep as-is
+        if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s)) return s;
+        // ensure .html suffix
+        if (!s.endsWith('.html')) s = s + '.html';
+        return s;
+      }
+
+      function normalizeAndDedupe(arr){
+        if (!Array.isArray(arr)) return [];
+        const seen = new Set();
+        const out = [];
+        arr.forEach(item => {
+          try{
+            let v = String(item).trim();
+            // keep uuids as-is, normalize others to slug form
+            if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)){
+              v = normalizeSlug(v);
+            }
+            if (!seen.has(v)){
+              seen.add(v);
+              out.push(v);
+            }
+          }catch(e){}
+        });
+        return out;
       }
 
       function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
