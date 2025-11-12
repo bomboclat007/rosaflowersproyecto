@@ -14,7 +14,9 @@ module.exports = async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
+      // Only fetch active products so archived/inactive products don't show on the site/POS
       const products = await stripe.products.list({
+        active: true,
         expand: ['data.default_price']
       });
 
