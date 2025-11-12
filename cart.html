@@ -2544,9 +2544,9 @@
     function saveCart(cart){ localStorage.setItem('stripe_cart', JSON.stringify(cart)); renderCart(); }
     function formatMoney(cents, currency){ try{ return (cents/100).toFixed(2) + ' ' + (currency||'USD').toUpperCase(); }catch(e){return '—';} }
     function renderCart(){
-      var header = document.getElementById('header');
-      var root = document.getElementById('local-cart-root');
-      if(!root){ root = document.createElement('div'); root.id = 'local-cart-root'; root.style.padding = '30px'; root.style.maxWidth = '1000px'; root.style.margin = '24px auto'; }
+  var header = document.getElementById('header');
+  var root = document.getElementById('local-cart-root');
+  if(!root){ root = document.createElement('div'); root.id = 'local-cart-root'; root.className = 'local-cart-wrapper'; }
       // build content
       var cart = getCart();
       root.innerHTML = '';
