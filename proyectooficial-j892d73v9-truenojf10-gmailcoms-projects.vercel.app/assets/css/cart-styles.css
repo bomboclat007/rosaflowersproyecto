@@ -212,3 +212,10 @@ body#cart .absolute-cart-box,
 body#cart .sqs-pill-shopping-cart {
     display: none !important;
 }
+
+/* Oculta bloques generados por Squarespace que muestran el título 'Shopping Cart' */
+body#cart [aria-label="Shopping Cart"],
+body#cart .cart-title,
+body#cart h2[aria-label="Shopping Cart"] {
+    display: none !important;
+}
