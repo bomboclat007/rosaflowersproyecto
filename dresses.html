@@ -136,6 +136,56 @@
                 }
               })();
             }catch(e){ console.warn('post-inject text-replace failed', e); }
+
+            // Normalize injected URLs so links/resources don't contain duplicated project path segments
+            try{
+              (function(){
+                var projectHost = 'proyectooficial-j892d73v9-truenojf10-gmailcoms-projects.vercel.app';
+                var selector = '[href], [src], [data-src]';
+                var nodes = Array.prototype.slice.call(document.querySelectorAll(selector));
+                nodes.forEach(function(el){
+                  var attr = el.hasAttribute('href') ? 'href' : (el.hasAttribute('src') ? 'src' : (el.hasAttribute('data-src') ? 'data-src' : null));
+                  if(!attr) return;
+                  var val = el.getAttribute(attr);
+                  if(!val) return;
+                  var newVal = val;
+                  try{
+                    // If absolute URL, convert to pathname+search+hash so it becomes root-relative
+                    if(/^(https?:)?\/\//i.test(newVal)){
+                      try{
+                        var parsed = new URL(newVal, location.origin);
+                        // Only rewrite if host contains our projectHost or is same origin
+                        if(parsed.hostname.indexOf(projectHost) !== -1 || parsed.hostname === location.hostname){
+                          newVal = parsed.pathname + (parsed.search||'') + (parsed.hash||'');
+                        }
+                      }catch(e){ /* ignore parse errors */ }
+                    }
+
+                    // collapse duplicate path segments like /projectHost/projectHost/... -> /projectHost/...
+                    var dup = '/' + projectHost + '/' + projectHost;
+                    if(newVal.indexOf(dup) !== -1){
+                      newVal = newVal.replace(new RegExp(projectHost + '\\/' + projectHost, 'g'), projectHost);
+                    }
+
+                    // If the projectHost appears multiple times, collapse to single occurrence
+                    var reMulti = new RegExp('(' + projectHost.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&') + ')+','g');
+                    newVal = newVal.replace(reMulti, projectHost);
+
+                    // Normalize simple relative paths
+                    newVal = newVal.replace(/^(?:\.\.\/)+/, '/'); // ../ -> /
+                    newVal = newVal.replace(/^\.\//, '/'); // ./ -> /
+
+                    // If a URL now starts with projectHost without a leading slash, add it
+                    if(newVal.indexOf(projectHost) === 0){ newVal = '/' + newVal; }
+                  }catch(e){ /* best-effort */ }
+
+                  if(newVal !== val){
+                    try{ el.setAttribute(attr, newVal); }
+                    catch(e){ /* ignore */ }
+                  }
+                });
+              })();
+            }catch(e){ console.warn('normalize-links failed', e); }
             }catch(e){ console.warn('stripe-init failed', e); }
           }catch(err){
             console.error('injection error', err);
