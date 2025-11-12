@@ -15,6 +15,16 @@ module.exports = async function handler(req, res) {
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+  // normalize slug helper: lowercase, trim, ensure .html suffix for non-UUIDs
+  function normalizeSlugValue(s){
+    if (!s) return s;
+    let v = String(s).trim().toLowerCase();
+    // keep uuids as-is
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)) return v;
+    if (!v.endsWith('.html')) v = v + '.html';
+    return v;
+  }
+
   try {
     if (req.method === 'GET') {
       // Return list of slugs
@@ -31,43 +41,59 @@ module.exports = async function handler(req, res) {
       const payload = req.body || {};
       // Accept either { slugs: [] } or { action: 'add'|'remove', slug }
       if (Array.isArray(payload.slugs)) {
-        const slugs = payload.slugs.map(s => String(s).trim()).filter(Boolean);
-        // Replace: delete all existing then insert provided slugs
-        const { error: delErr } = await supabase.from('featured_events').delete().not('slug', 'in', `(${slugs.map(s => `'${s.replace(/'/g, "''")}'`).join(',')})`);
-        // The above deletes rows whose slug is NOT in the new list. To simplify, if slugs is empty delete all.
-        if (delErr) {
-          // If delete with filter failed, fallback to deleting all when slugs empty
-          console.error('Supabase delete featured_events error:', delErr);
-        }
+        // normalize and dedupe incoming slugs
+        const raw = payload.slugs.map(s => String(s || '').trim()).filter(Boolean);
+        const normalizedSet = new Set(raw.map(normalizeSlugValue));
+        const slugs = Array.from(normalizedSet);
+
+        // if empty, remove all and return empty list
         if (slugs.length === 0) {
-          // remove everything
-          await supabase.from('featured_events').delete();
+          const { error: delAllErr } = await supabase.from('featured_events').delete();
+          if (delAllErr) console.error('Supabase delete all featured_events error:', delAllErr);
           return res.status(200).json({ slugs: [] });
         }
 
-        // Upsert provided slugs (insert missing)
+        // Delete any existing rows whose slug is NOT in the new list
+        try {
+          const { error: delErr } = await supabase.from('featured_events').delete().not('slug', 'in', slugs);
+          if (delErr) console.error('Supabase delete featured_events (not in) error:', delErr);
+        } catch (e) {
+          // best-effort delete; log and continue
+          console.error('Error during delete(not in):', e);
+        }
+
+        // Upsert the provided slugs so any missing rows are added
         const rows = slugs.map(s => ({ slug: s }));
-        const { data: insData, error: insErr } = await supabase.from('featured_events').upsert(rows, { onConflict: 'slug' }).select('slug');
+        const { error: insErr } = await supabase.from('featured_events').upsert(rows, { onConflict: 'slug' });
         if (insErr) {
           console.error('Supabase upsert featured_events error:', insErr);
           return res.status(500).json({ error: 'Error saving featured events', details: insErr });
         }
-        return res.status(200).json({ slugs: (insData || []).map(r => r.slug) });
+
+        // Return the canonical list from the DB
+        const { data: allRows, error: selErr } = await supabase.from('featured_events').select('slug').order('created_at', { ascending: true });
+        if (selErr) {
+          console.error('Supabase select featured_events error:', selErr);
+          return res.status(500).json({ error: 'Error fetching featured events after save', details: selErr });
+        }
+        const canonical = (allRows || []).map(r => normalizeSlugValue(r.slug)).filter(Boolean);
+        return res.status(200).json({ slugs: canonical });
       }
 
       if (payload.action === 'add' && payload.slug) {
-        const slug = String(payload.slug).trim();
-        const { data, error } = await supabase.from('featured_events').upsert([{ slug }], { onConflict: 'slug' }).select('slug');
+        const slug = normalizeSlugValue(payload.slug);
+        const { error } = await supabase.from('featured_events').upsert([{ slug }], { onConflict: 'slug' });
         if (error) return res.status(500).json({ error: 'Error adding slug', details: error });
-        return res.status(200).json({ slugs: (data || []).map(r => r.slug) });
+        const { data } = await supabase.from('featured_events').select('slug').order('created_at', { ascending: true });
+        return res.status(200).json({ slugs: (data || []).map(r => normalizeSlugValue(r.slug)) });
       }
 
       if (payload.action === 'remove' && payload.slug) {
-        const slug = String(payload.slug).trim();
+        const slug = normalizeSlugValue(payload.slug);
         const { error } = await supabase.from('featured_events').delete().eq('slug', slug);
         if (error) return res.status(500).json({ error: 'Error removing slug', details: error });
-        const { data } = await supabase.from('featured_events').select('slug');
-        return res.status(200).json({ slugs: (data || []).map(r => r.slug) });
+        const { data } = await supabase.from('featured_events').select('slug').order('created_at', { ascending: true });
+        return res.status(200).json({ slugs: (data || []).map(r => normalizeSlugValue(r.slug)) });
       }
 
       return res.status(400).json({ error: 'Invalid request payload' });
