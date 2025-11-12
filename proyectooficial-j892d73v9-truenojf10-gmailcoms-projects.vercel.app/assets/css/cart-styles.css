@@ -219,3 +219,11 @@ body#cart .cart-title,
 body#cart h2[aria-label="Shopping Cart"] {
     display: none !important;
 }
+
+/* Oculta el mensaje y el enlace "You have nothing in your shopping cart" / "Continue Shopping"
+   generado por el widget de Squarespace en la página del carrito. */
+body#cart [aria-label*="You have nothing in your shopping cart"],
+body#cart [data-test="empty-message"],
+body#cart [data-test="continue-shopping-link"] {
+    display: none !important;
+}
