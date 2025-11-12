@@ -184,13 +184,12 @@
         if(e && e.preventDefault) e.preventDefault();
         var name = document.getElementById('regName') ? document.getElementById('regName').value.trim() : '';
         var email = document.getElementById('regEmail') ? document.getElementById('regEmail').value.trim() : '';
-        var pass = document.getElementById('regPassword') ? document.getElementById('regPassword').value : '';
-        var pass2 = document.getElementById('regConfirmPassword') ? document.getElementById('regConfirmPassword').value : '';
+  var pass = document.getElementById('regPassword') ? document.getElementById('regPassword').value : '';
         var msg = document.getElementById('loginMsg'); if(msg) msg.textContent = '';
         // basic validation
         if(!name){ if(msg){ msg.className='msg error'; msg.textContent='Please enter your full name.'; } return; }
         if(!email || !pass){ if(msg) { msg.className='msg error'; msg.textContent='Please enter email and password.'; } return; }
-        if(pass !== pass2){ if(msg){ msg.className='msg error'; msg.textContent='Passwords do not match.'; } return; }
+  // No confirm-password check: we accept the single password field
         if(regBtn){ regBtn.disabled = true; regBtn.textContent='Registering...'; }
         await registerUser(email, pass, name);
         if(msg){ msg.className='msg success'; msg.textContent='Registered — if email confirmation is required, check your inbox.'; }
