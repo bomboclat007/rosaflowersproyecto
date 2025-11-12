@@ -95,6 +95,47 @@
               })();
               // let other code know the injected content is ready
               try{ document.dispatchEvent(new Event('injectedPageReady')); }catch(e){}
+
+            // Make visible text and navigation read as "Dresses" instead of "Daily Flowers"
+            try{
+              (function(){
+                // Update common meta/title tags
+                try{ document.title = 'Dresses — The Floral Cottage'; }catch(e){}
+                var og = document.querySelector('meta[property="og:title"]'); if(og) og.setAttribute('content','Dresses — The Floral Cottage');
+                var tw = document.querySelector('meta[name="twitter:title"]'); if(tw) tw.setAttribute('content','Dresses — The Floral Cottage');
+
+                // Replace visible text nodes that contain the phrase "Daily Flowers"
+                var reps = [
+                  [/Daily Flowers/g, 'Dresses'],
+                  [/DAILY FLOWERS/g, 'DRESSES'],
+                  [/Daily flowers/g, 'Dresses']
+                ];
+                function walkAndReplace(node){
+                  for(var child=node.firstChild; child; child=child.nextSibling){
+                    if(child.nodeType === 3){ // text node
+                      var v = child.nodeValue;
+                      var nv = v;
+                      reps.forEach(function(r){ nv = nv.replace(r[0], r[1]); });
+                      if(nv !== v) child.nodeValue = nv;
+                    }else if(child.nodeType === 1 && child.tagName !== 'SCRIPT' && child.tagName !== 'STYLE'){
+                      walkAndReplace(child);
+                    }
+                  }
+                }
+                try{ walkAndReplace(document.body); }catch(e){/* best-effort */}
+
+                // Force common collection title selectors to 'Dresses' (best-effort)
+                var titleSel = document.querySelector('h1.collection-title, h1.entry-title, .collection-title, .page-title');
+                if(titleSel) titleSel.textContent = 'Dresses';
+
+                // Mark the Dresses nav link as active/current and remove the class from others
+                var dressesLink = document.querySelector('a[href="/dresses.html"], a[href="dresses.html"]');
+                if(dressesLink){
+                  dressesLink.classList.add('current','active');
+                  document.querySelectorAll('a.current, a.active').forEach(function(a){ if(a !== dressesLink){ a.classList.remove('current','active'); }});
+                }
+              })();
+            }catch(e){ console.warn('post-inject text-replace failed', e); }
             }catch(e){ console.warn('stripe-init failed', e); }
           }catch(err){
             console.error('injection error', err);
