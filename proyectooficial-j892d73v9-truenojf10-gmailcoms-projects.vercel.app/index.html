@@ -6179,10 +6179,24 @@ Louisiana located between Baton Rouge and New Orleans." />
                   }
                 }catch(e){ dateText = ''; }
 
+                // Render a readable title: prefer inv.title, then derive from slug, then fallback to id
+                let displayTitle = (inv && inv.title) ? String(inv.title).trim() : '';
+                if (!displayTitle){
+                  // derive from slug (mslug) if it looks like a filename
+                  try{
+                    let candidate = String(mslug || '').replace(/\.html$/i, '');
+                    if (candidate && candidate !== String(inv.id)){
+                      // replace hyphens with spaces and capitalize first letters
+                      displayTitle = candidate.split('-').map(w=> w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                    }
+                  }catch(e){}
+                }
+                if (!displayTitle) displayTitle = 'Event ' + String(inv.id);
+
                 card.innerHTML = `
                   ${ imgSrc ? ('<div style="height:160px;overflow:hidden;background-image:url(\''+imgSrc+'\');background-size:cover;background-position:center"></div><img src="'+imgSrc+'" alt="" style="display:none;"/>') : '' }
                   <div style="padding:12px">
-                    <a href="${href}" style="color:#333;font-weight:600;text-decoration:none;display:block;margin-bottom:8px">${(inv.title||'').replace(/</g,'&lt;')}</a>
+                    <a href="${href}" style="color:#333;font-weight:600;text-decoration:none;display:block;margin-bottom:8px">${displayTitle.replace(/</g,'&lt;')}</a>
                     ${ dateText ? ('<div style="color:#666;font-size:13px">'+dateText.replace(/</g,'&lt;')+'</div>') : '' }
                   </div>
                 `;
