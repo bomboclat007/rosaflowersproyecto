@@ -8,6 +8,21 @@
     window.showLoginModal = function(){ originalShow(); try { var modal = document.getElementById('loginModal'); if(modal){ var email = modal.querySelector('input[type="email"]'); if(email){ setTimeout(()=>email.focus(), 50); } } } catch(e){} };
   })();
 
+  // Early wiring: attach click handlers to header/login links even before DOMContentLoaded
+  // This ensures pages that don't embed the #loginModal HTML still open the modal when it's added later.
+  (function earlyWireLoginButtons(){
+    try {
+      var selectors = ['#siteLoginBtn', '.site-login', '.login-link', '.user-accounts-link', '.user-accounts-text-link', '.customerAccountLoginDesktop', '.customerAccountLoginMobile', 'a[href="#login"]'];
+      var els = Array.from(document.querySelectorAll(selectors.join(','))).filter(Boolean);
+      var navAnchors = Array.from(document.querySelectorAll('header a, nav a, .header a')) || [];
+      navAnchors.forEach(function(a){ try{ if((a.textContent||'').trim().toLowerCase()==='login') els.push(a); }catch(e){} });
+      // Deduplicate
+      els = els.filter(function(v,i){ return els.indexOf(v)===i; });
+      els.forEach(function(el){ el.addEventListener('click', function(ev){ try{ ev.preventDefault(); showLoginModal(); }catch(e){} }); });
+      console.debug('[login-modal] early wired header login elements count=', els.length);
+    } catch(e){ console.warn('earlyWireLoginButtons failed', e); }
+  })();
+
   // Load a script dynamically
   function loadScript(src){
     return new Promise(function(resolve, reject){
