@@ -204,3 +204,11 @@ td {
         justify-content: center;
     }
 }
+
+/* Oculta la cápsula flotante del carrito (inyectada por el JS de Squarespace)
+   cuando estamos en la página del carrito para evitar un carrito duplicado.
+   Dejamos el carrito principal intacto. */
+body#cart .absolute-cart-box,
+body#cart .sqs-pill-shopping-cart {
+    display: none !important;
+}
