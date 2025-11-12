@@ -49,7 +49,7 @@
                   var s = img.getAttribute('src') || '';
                   if(s.indexOf('//') === 0){ img.src = 'https:' + s; }
                   // Fix simple ../ relative paths by stripping leading ../ segments so they resolve from root
-                  if(/^\.\.(\/.+)+/.test(s)){
+                  if(/^\.{2}(\/.*)+/.test(s)){
                     img.src = s.replace(/^(?:\.\.\/)+/, '/');
                   }
                 });
@@ -74,6 +74,28 @@
                 }
               })();
             }catch(e){ console.warn('logo-fix failed', e); }
+
+            // Ensure Stripe products load on the injected page:
+            // - set the force flag the loader checks
+            // - re-insert the loader script (cache-busted) so it executes in this document context
+            try{
+              window.STRIPE_FORCE_TEST = true;
+              (function(){
+                // Try to locate an existing loader script in the injected HTML
+                var candidate = document.querySelector('script[src*="load_products.js"], script[src*="stripe-products.js"], script[src*="stripe-products"]');
+                var src = candidate && candidate.src ? candidate.src : '/assets/js/load_products.js';
+                // create a fresh script element to re-run the loader in this new context
+                var s = document.createElement('script');
+                s.src = src + (src.indexOf('?') > -1 ? '&' : '?') + 'r=' + Date.now();
+                s.async = true;
+                s.onload = function(){ try{ console.info('Stripe loader reloaded'); }catch(e){} };
+                s.onerror = function(){ console.warn('Stripe loader failed to load', src); };
+                // append to body (or head if body not available)
+                (document.body || document.head || document.documentElement).appendChild(s);
+              })();
+              // let other code know the injected content is ready
+              try{ document.dispatchEvent(new Event('injectedPageReady')); }catch(e){}
+            }catch(e){ console.warn('stripe-init failed', e); }
           }catch(err){
             console.error('injection error', err);
             // fallback: navigate to nested dresses if fetch fails
