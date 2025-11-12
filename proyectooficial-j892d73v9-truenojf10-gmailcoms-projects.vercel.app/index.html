@@ -6166,7 +6166,9 @@ Louisiana located between Baton Rouge and New Orleans." />
                 // create a compact card
                 const card = document.createElement('div');
                 card.className = 'featured-placeholder-card';
-                card.style.width = '280px';
+                // Make the featured cards wider so the images appear large (responsive max-width)
+                card.style.width = '420px';
+                card.style.maxWidth = 'calc(100% - 40px)';
                 card.style.border = '1px solid #eee';
                 card.style.borderRadius = '8px';
                 card.style.overflow = 'hidden';
@@ -6203,7 +6205,7 @@ Louisiana located between Baton Rouge and New Orleans." />
                 if (!displayTitle) displayTitle = 'Event ' + String(inv.id);
 
                 card.innerHTML = `
-                  ${ imgSrc ? ('<div style="height:160px;overflow:hidden;background-image:url(\''+imgSrc+'\');background-size:cover;background-position:center"></div><img src="'+imgSrc+'" alt="" style="display:none;"/>') : '' }
+                  ${ imgSrc ? ('<div style="height:420px;overflow:hidden;background-image:url(\''+imgSrc+'\');background-size:cover;background-position:center"></div><img src="'+imgSrc+'" alt="" style="display:none;"/>') : '' }
                   <div style="padding:12px">
                     <a href="${href}" style="color:#333;font-weight:600;text-decoration:none;display:block;margin-bottom:8px">${displayTitle.replace(/</g,'&lt;')}</a>
                     ${ dateText ? ('<div style="color:#666;font-size:13px">'+dateText.replace(/</g,'&lt;')+'</div>') : '' }
