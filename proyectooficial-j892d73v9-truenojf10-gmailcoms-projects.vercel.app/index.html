@@ -6083,10 +6083,14 @@ Louisiana located between Baton Rouge and New Orleans." />
               const invMap = new Map();
               function slugifyTitle(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') + '.html'; }
               invoices.forEach(inv => {
-                const s = slugifyTitle(inv.title || '') ;
-                invMap.set(s, inv);
-                // also map by id in case featured stored ids
-                invMap.set(String(inv.id), inv);
+                // Only create a slug mapping when a non-empty title exists.
+                // Avoid mapping empty titles to ".html" which would collide across rows.
+                if (inv && inv.title && String(inv.title).trim()){
+                  const s = slugifyTitle(inv.title || '') ;
+                  if (s) invMap.set(s, inv);
+                }
+                // always map by id
+                if (inv && inv.id) invMap.set(String(inv.id), inv);
               });
 
               // If no existing summary items were found (Squarespace may render client-side later),
@@ -6151,9 +6155,14 @@ Louisiana located between Baton Rouge and New Orleans." />
                 return '';
               }
 
+              // avoid creating duplicate placeholder cards when both slug and id
+              // variants point to the same invoice. Track invoice ids already rendered.
+              const renderedInvoiceIds = new Set();
               for (const mslug of missing){
                 const inv = invMap.get(mslug) || invMap.get(String(mslug));
                 if (!inv) continue;
+                if (renderedInvoiceIds.has(String(inv.id))) continue;
+                renderedInvoiceIds.add(String(inv.id));
                 // create a compact card
                 const card = document.createElement('div');
                 card.className = 'featured-placeholder-card';
