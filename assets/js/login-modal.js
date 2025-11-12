@@ -176,6 +176,22 @@
       } catch(e){ console.warn('wireHeaderRegisterButtons failed', e); }
     })();
 
+    // Wire header login buttons across different templates (open login modal)
+    (function wireHeaderLoginButtons(){
+      try {
+        var selectors = ['#siteLoginBtn', '.site-login', '.login-link', 'a[href="#login"]'];
+        var els = Array.from(document.querySelectorAll(selectors.join(','))).filter(Boolean);
+        // Also catch top-nav anchors that have visible text 'Login'
+        var navAnchors = Array.from(document.querySelectorAll('header a, nav a, .header a')) || [];
+        navAnchors.forEach(function(a){ try{ if((a.textContent||'').trim().toLowerCase()==='login') els.push(a); }catch(e){} });
+        // Deduplicate
+        els = els.filter(function(v,i){ return els.indexOf(v)===i; });
+        els.forEach(function(el){ el.addEventListener('click', function(ev){ try{ ev.preventDefault(); showLoginModal(); }catch(e){} }); });
+        console.debug('[login-modal] wired header login elements count=', els.length);
+        if(els.length===0){ console.debug('[login-modal] no header login found; skipping by design'); }
+      } catch(e){ console.warn('wireHeaderLoginButtons failed', e); }
+    })();
+
     var regBtn = document.getElementById('regBtn');
     // Named handler so we can reuse via delegation if direct binding fails
     async function handleRegisterClick(e){
