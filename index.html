@@ -7,12 +7,17 @@
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
 	<title>Redirecting…</title>
-		<!-- Root index should not redirect — Vercel now rewrites '/' to the mirrored site's index.html -->
+	<!-- Immediate redirect to the real index inside the mirrored folder -->
+	<meta http-equiv="refresh" content="0; url=/proyectooficial-j892d73v9-truenojf10-gmailcoms-projects.vercel.app/index.html">
+	<script>
+	  // Use replace so the redirect doesn't remain in history (avoids back-button to this page)
+	  window.location.replace('/proyectooficial-j892d73v9-truenojf10-gmailcoms-projects.vercel.app/index.html');
+	</script>
 	<style>body{font-family:Arial,Helvetica,sans-serif;padding:40px;text-align:center;color:#333}</style>
   </head>
   <body>
 	<h1>Redirigiendo…</h1>
-	<p>Si la página no carga automáticamente, haz clic <a href="/">aquí</a>.</p>
+	<p>Si no eres redirigido automáticamente, haz clic <a href="/proyectooficial-j892d73v9-truenojf10-gmailcoms-projects.vercel.app/index.html">aquí</a>.</p>
   </body>
 </html>
 
