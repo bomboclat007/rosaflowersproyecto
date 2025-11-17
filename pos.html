@@ -259,9 +259,8 @@
                   </div>
                       <script>
                         // --- Stripe Product Autocomplete ---
-                        // Replace with your actual Vercel API endpoint
-                        // Ejemplo: cambia esto por tu URL real de Vercel
-                        const STRIPE_API_URL = 'https://puntorestaurado.vercel.app/api/products';
+                        // Use a relative API path so it works on the same host (dev and prod)
+                        const STRIPE_API_URL = '/api/products';
 
                         let stripeProducts = [];
                         let autocompleteList = document.getElementById('autocompleteList');
@@ -273,8 +272,47 @@
                           try {
                             let res = await fetch(STRIPE_API_URL);
                             let data = await res.json();
-                            // Expecting array of {id, name, price, image}
-                            stripeProducts = Array.isArray(data) ? data : [];
+                            // Some API handlers return { data: [...] } or { products: [...] } or plain [...]
+                            let list = [];
+                            if(Array.isArray(data)) list = data;
+                            else if(Array.isArray(data.data)) list = data.data;
+                            else if(Array.isArray(data.products)) list = data.products;
+                            else list = [];
+
+                            // Helper to extract a display price (tries common Stripe fields)
+                            function extractPrice(p){
+                              if(p == null) return null;
+                              let candidates = [];
+                              if(typeof p.price !== 'undefined') candidates.push(p.price);
+                              if(typeof p.unit_amount !== 'undefined') candidates.push(p.unit_amount);
+                              if(typeof p.unit_price !== 'undefined') candidates.push(p.unit_price);
+                              if(p.default_price && typeof p.default_price.unit_amount !== 'undefined') candidates.push(p.default_price.unit_amount);
+                              if(p.price_data && typeof p.price_data.unit_amount !== 'undefined') candidates.push(p.price_data.unit_amount);
+                              // Support backend's `prices` array (Stripe unit_amount in cents)
+                              if(p.prices && Array.isArray(p.prices) && p.prices.length && typeof p.prices[0].unit_amount !== 'undefined') candidates.push(p.prices[0].unit_amount);
+                              if(p.metadata && p.metadata.display_price) candidates.push(p.metadata.display_price);
+                              if(p.metadata && p.metadata.price) candidates.push(p.metadata.price);
+                              for(let v of candidates){
+                                if(v == null) continue;
+                                if(typeof v === 'string' && v.trim()!=="") return v;
+                                if(typeof v === 'number'){
+                                  // treat as cents when large enough
+                                  if(v > 1000) return (v/100).toFixed(2);
+                                  return Number(v).toFixed(2);
+                                }
+                              }
+                              return null;
+                            }
+
+                            // Normalize products: ensure fields id,name,price,image
+                            stripeProducts = list.map(p=>{
+                              let price = extractPrice(p);
+                              let image = null;
+                              if(p.images && p.images.length) image = p.images[0];
+                              if(!image && p.image) image = p.image;
+                              if(!image && p.metadata && p.metadata.image) image = p.metadata.image;
+                              return Object.assign({}, p, { price: price, image: image });
+                            });
                           } catch (e) {
                             stripeProducts = [];
                           }
@@ -287,15 +325,39 @@
                           if (!stripeProducts.length) return autocompleteList.style.display = 'none';
                           let filtered = val ? stripeProducts.filter(p => p.name.toLowerCase().includes(val) || p.id.toLowerCase().includes(val)) : stripeProducts;
                           if (!filtered.length) return autocompleteList.style.display = 'none';
-                          autocompleteList.innerHTML = filtered.map(p => `
-                            <div class="autocomplete-item" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}" data-img="${p.image}">
-                              <img class="autocomplete-img" src="${p.image}" alt="${p.name}" />
-                              <div>
-                                <div class="autocomplete-title">${p.name}</div>
-                                <div class="autocomplete-price">$${Number(p.price).toFixed(2)}</div>
+                          autocompleteList.innerHTML = filtered.map(p => {
+                            const img = p.image || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"></svg>';
+                            const price = (p.price == null) ? '0.00' : Number(p.price).toFixed(2);
+                            return `
+                              <div class="autocomplete-item" data-id="${p.id}" data-name="${p.name}" data-price="${price}" data-img="${img}">
+                                <img class="autocomplete-img" src="${img}" alt="${p.name}" />
+                                <div>
+                                  <div class="autocomplete-title">${p.name}</div>
+                                  <div class="autocomplete-price">$${price}</div>
+                                </div>
                               </div>
-                            </div>
-                          `).join('');
+                            `;
+                          }).join('');
+                          autocompleteList.style.display = 'block';
+                        });
+
+                        // Show all products on focus
+                        itemSearch.addEventListener('focus', function(){
+                          if(!stripeProducts.length) return;
+                          const filtered = stripeProducts;
+                          autocompleteList.innerHTML = filtered.map(p => {
+                            const img = p.image || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"></svg>';
+                            const price = (p.price == null) ? '0.00' : Number(p.price).toFixed(2);
+                            return `
+                              <div class="autocomplete-item" data-id="${p.id}" data-name="${p.name}" data-price="${price}" data-img="${img}">
+                                <img class="autocomplete-img" src="${img}" alt="${p.name}" />
+                                <div>
+                                  <div class="autocomplete-title">${p.name}</div>
+                                  <div class="autocomplete-price">$${price}</div>
+                                </div>
+                              </div>
+                            `;
+                          }).join('');
                           autocompleteList.style.display = 'block';
                         });
 
