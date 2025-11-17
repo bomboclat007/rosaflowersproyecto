@@ -702,6 +702,44 @@
           // Uncheck copy to billing
           const copy = document.getElementById('copyToBilling'); if(copy) copy.checked = false;
         });
+
+        // Process Payment button behaviour
+        document.querySelector('.processBtn').addEventListener('click', async function(){
+          const selected = document.querySelector('input[name="payType"]:checked')?.value;
+          if(!selected){ alert('Please select a payment method'); return; }
+
+          if(selected === 'card'){
+            // Read grand total from the summary and convert to cents
+            const totalEl = document.getElementById('orderGrandTotal');
+            const text = totalEl ? totalEl.innerText.replace(/[^0-9.-]+/g,'') : '0';
+            const total = parseFloat(text) || 0;
+            if(total <= 0){ alert('Order total must be greater than $0.00'); return; }
+            const cents = Math.round(total * 100);
+
+            try{
+              const res = await fetch('/api/create-checkout-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount: cents, currency: 'usd' })
+              });
+              const data = await res.json();
+              if(data && data.url){
+                // Redirect to Stripe Checkout
+                window.location = data.url;
+              } else {
+                console.error('create-checkout-session failed', data);
+                alert('Unable to start checkout.');
+              }
+            }catch(err){
+              console.error(err);
+              alert('Error creating checkout: ' + (err.message||err));
+            }
+
+          } else {
+            // Fallback behaviour for other payment methods
+            alert('Processing payment method: ' + selected + '. Implement server-side handling as needed.');
+          }
+        });
       </script>
     </body>
   </html>

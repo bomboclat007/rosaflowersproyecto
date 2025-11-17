@@ -1,3 +1,47 @@
+const Stripe = require('stripe');
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || process.env.STRIPE_KEY);
+
+module.exports = async (req, res) => {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  let body = req.body;
+  try {
+    if (!body || Object.keys(body).length === 0) body = JSON.parse(req.rawBody || '{}');
+  } catch (e) {
+    // ignore
+  }
+
+  const amount = parseInt(body.amount, 10);
+  const currency = (body.currency || 'usd').toLowerCase();
+
+  if (!amount || amount <= 0) return res.status(400).json({ error: 'Invalid amount' });
+
+  try {
+    const origin = req.headers.origin || `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`;
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: currency,
+            product_data: { name: 'POS Order' },
+            unit_amount: amount,
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${origin}/pos.html?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/pos.html?canceled=1`,
+    });
+
+    return res.status(200).json({ url: session.url });
+  } catch (err) {
+    console.error('create-checkout-session error', err && err.message);
+    return res.status(500).json({ error: err && err.message });
+  }
+};
 // Prefer env var (Vercel) but fall back to local config for development
 const secretKey = process.env.STRIPE_SECRET_KEY || require('../config/stripe').STRIPE_SECRET_KEY;
 const stripe = require('stripe')(secretKey);
