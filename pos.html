@@ -722,7 +722,23 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ amount: cents, currency: 'usd' })
               });
-              const data = await res.json();
+
+              if(!res.ok){
+                // Try to read text body (might be an HTML error page or plain text)
+                const txt = await res.text().catch(()=>'<no body>');
+                console.error('create-checkout-session error', res.status, txt);
+                alert('Server error: ' + res.status + '\n' + txt);
+                return;
+              }
+
+              let data;
+              try{ data = await res.json(); }catch(e){
+                const txt = await res.text().catch(()=>'<no body>');
+                console.error('create-checkout-session non-json response', txt);
+                alert('Error creating checkout: ' + txt);
+                return;
+              }
+
               if(data && data.url){
                 // Redirect to Stripe Checkout
                 window.location = data.url;
