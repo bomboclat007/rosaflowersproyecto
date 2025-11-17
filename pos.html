@@ -296,21 +296,39 @@
                                 if(v == null) continue;
                                 if(typeof v === 'string' && v.trim()!=="") return v;
                                 if(typeof v === 'number'){
-                                  // treat as cents when large enough
-                                  if(v > 1000) return (v/100).toFixed(2);
-                                  return Number(v).toFixed(2);
+                                  // Stripe returns unit_amount in cents — convert to dollars
+                                  return (v/100).toFixed(2);
                                 }
                               }
                               return null;
                             }
 
                             // Normalize products: ensure fields id,name,price,image
+                            function extractImageField(img){
+                              if(!img) return null;
+                              // if array, take first
+                              if(Array.isArray(img) && img.length) return img[0];
+                              if(typeof img === 'string'){
+                                const s = img.trim();
+                                // if it's an HTML snippet like <img src="..." alt="..." />, extract src
+                                if(s.indexOf('<') !== -1){
+                                  const m = s.match(/src=(?:\"|\')([^\"']+)(?:\"|\')/i);
+                                  if(m && m[1]) return m[1];
+                                  // fallback: try to strip tags
+                                  return s.replace(/<[^>]+>/g,'').trim() || null;
+                                }
+                                return s;
+                              }
+                              return null;
+                            }
+
                             stripeProducts = list.map(p=>{
                               let price = extractPrice(p);
                               let image = null;
                               if(p.images && p.images.length) image = p.images[0];
                               if(!image && p.image) image = p.image;
                               if(!image && p.metadata && p.metadata.image) image = p.metadata.image;
+                              image = extractImageField(image);
                               return Object.assign({}, p, { price: price, image: image });
                             });
                           } catch (e) {
@@ -370,19 +388,102 @@
                         autocompleteList.addEventListener('mousedown', function(e) {
                           let item = e.target.closest('.autocomplete-item');
                           if (!item) return;
-                          itemSearch.value = item.dataset.name;
-                          if (unitPriceInput) unitPriceInput.value = Number(item.dataset.price).toFixed(2);
+                          const prod = { id: item.dataset.id, name: item.dataset.name, price: Number(item.dataset.price), image: item.dataset.img };
+                          // populate fields
+                          itemSearch.value = prod.name;
+                          if (unitPriceInput) unitPriceInput.value = Number(prod.price).toFixed(2);
+                          // add to order
+                          addItemToOrder(prod, Number(document.getElementById('itemQuantity')?.value || 1));
                           autocompleteList.style.display = 'none';
                         });
+
+                        // Order state
+                        const ORDER_TAX_RATE = 0.08; // 8% tax
+                        let orderItems = [];
+
+                        function addItemToOrder(prod, qty){
+                          // check if exists -> increase qty
+                          let existing = orderItems.find(i=>i.id===prod.id);
+                          if(existing){ existing.qty += qty; }
+                          else { orderItems.push({ id: prod.id, name: prod.name, price: Number(prod.price), image: prod.image, qty: qty }); }
+                          renderOrderUI(prod);
+                          renderOrderSummary();
+                        }
+
+                        function renderOrderUI(lastAdded){
+                          // show preview on the left area
+                          const preview = document.getElementById('itemPreview');
+                          const previewImage = document.getElementById('previewImage');
+                          const previewSubtotal = document.getElementById('previewSubtotal');
+                          if(!lastAdded) { preview.style.display='none'; return; }
+                          previewImage.src = lastAdded.image || '';
+                          const subtotal = lastAdded.price * (orderItems.find(i=>i.id===lastAdded.id)?.qty || 1);
+                          previewSubtotal.textContent = 'Subtotal: $' + subtotal.toFixed(2);
+                          preview.style.display = 'block';
+                          // wire remove
+                          document.getElementById('removePreview').onclick = function(){
+                            // remove lastAdded entirely
+                            orderItems = orderItems.filter(i=>i.id !== lastAdded.id);
+                            preview.style.display='none';
+                            renderOrderSummary();
+                          };
+                        }
+
+                        function renderOrderSummary(){
+                          const list = document.getElementById('orderItemsList');
+                          list.innerHTML = '';
+                          let subtotal = 0;
+                          orderItems.forEach(item=>{
+                            const line = document.createElement('div');
+                            line.style.display = 'flex'; line.style.justifyContent = 'space-between'; line.style.padding = '8px 0';
+                            const left = document.createElement('div'); left.style.flex = '1';
+                            left.innerHTML = `<div style="font-weight:600">${escapeHtml(item.name)}</div><div class="muted">x ${item.qty}</div>`;
+                            const right = document.createElement('div'); right.style.minWidth='80px'; right.style.textAlign='right'; right.innerHTML = `$${(item.price*item.qty).toFixed(2)}`;
+                            // quantity controls
+                            const qtyInput = document.createElement('input'); qtyInput.type='number'; qtyInput.value=item.qty; qtyInput.style.width='56px'; qtyInput.min=1;
+                            qtyInput.onchange = function(){ item.qty = Number(qtyInput.value) || 1; renderOrderSummary(); }
+                            left.appendChild(document.createElement('div')).appendChild(qtyInput);
+                            line.appendChild(left); line.appendChild(right);
+                            list.appendChild(line);
+                            subtotal += item.price * item.qty;
+                          });
+                          const taxExempt = document.getElementById('taxExempt')?.checked;
+                          const tax = taxExempt ? 0 : subtotal * ORDER_TAX_RATE;
+                          document.getElementById('orderSubtotal').textContent = '$' + subtotal.toFixed(2);
+                          document.getElementById('orderTax').textContent = '$' + tax.toFixed(2);
+                          document.getElementById('orderGrandTotal').textContent = '$' + (subtotal + tax).toFixed(2);
+                          // also update preview subtotal if preview visible
+                          const preview = document.getElementById('itemPreview');
+                          if(preview.style.display !== 'none'){
+                            const last = orderItems[orderItems.length-1];
+                            if(last){ document.getElementById('previewSubtotal').textContent = 'Subtotal: $' + (last.price*last.qty).toFixed(2); }
+                          }
+                        }
+
+                        // Escape helper
+                        function escapeHtml(str){ return (str||'').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]; }); }
+
+                        // Recalculate when tax exempt toggled
+                        document.getElementById('taxExempt').addEventListener('change', renderOrderSummary);
                       </script>
                 </div>
                 <div style="width:100px">
                   <label>Quantity</label>
-                  <input type="number" value="1" />
+                  <input type="number" value="1" id="itemQuantity" min="1" />
                 </div>
                 <div style="width:120px">
                   <label>Unit Price</label>
-                  <input type="number" placeholder="$" />
+                  <input type="number" placeholder="$" id="itemUnitPrice" />
+                </div>
+              </div>
+              <div id="itemPreviewContainer" style="margin-top:12px;display:flex;justify-content:flex-end">
+                <!-- Preview of selected item will be injected here -->
+                <div id="itemPreview" style="width:260px;display:none;border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center">
+                  <button id="removePreview" style="float:right;background:#fff;border:1px solid var(--border);border-radius:4px;padding:6px;cursor:pointer">Remove</button>
+                  <div id="previewImageWrap" style="height:180px;display:flex;align-items:center;justify-content:center;margin-bottom:8px">
+                    <img id="previewImage" src="" style="max-width:100%;max-height:100%;border-radius:6px" />
+                  </div>
+                  <div id="previewSubtotal" style="text-align:left;font-weight:700">Subtotal: $0.00</div>
                 </div>
               </div>
               <div style="height:12px"></div>
@@ -521,19 +622,23 @@
             <h3>Order Summary</h3>
             <div class="summary-row">
               <div class="muted">Delivery Information</div>
-              <div style="height:8px"></div>
-              <div style="height:1px;background:#f2f2f2;margin-bottom:8px"></div>
-              <div style="display:flex;justify-content:space-between;align-items:center"><div class="muted">Delivery:</div><div class="muted">...</div></div>
             </div>
 
-            <div class="summary-row" style="padding-top:12px">
-              <div class="muted">Tax:</div>
-              <div style="height:8px"></div>
-              <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="taxExempt" /> <span class="muted">Tax-exempt</span></label>
+            <div style="height:8px"></div>
+            <div style="height:1px;background:#f2f2f2;margin-bottom:8px"></div>
+
+            <div id="orderItemsList" style="min-height:60px">
+              <!-- Items will be injected here -->
             </div>
+
+            <div style="height:8px"></div>
+            <div class="summary-row" style="padding-top:6px;display:flex;justify-content:space-between"><div class="muted">Subtotal</div><div id="orderSubtotal">$0.00</div></div>
+            <div class="summary-row" style="display:flex;justify-content:space-between"><div class="muted">Tax</div><div id="orderTax">$0.00</div></div>
+            <div style="height:8px"></div>
+            <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="taxExempt" /> <span class="muted">Tax-exempt</span></label>
 
             <div style="height:12px"></div>
-            <div class="grand">Grand Total <span style="float:right">$0.00</span></div>
+            <div class="grand">Grand Total <span id="orderGrandTotal" style="float:right">$0.00</span></div>
           </div>
         </aside>
       </div>
