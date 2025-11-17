@@ -1,59 +1,551 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>POS - Punto de Venta</title>
-  <link rel="stylesheet" href="/assets/css/pos.css">
-</head>
-<body>
-  <header class="pos-header">
-    <h1>POS - Punto de Venta</h1>
-    <div class="pos-header-actions">
-      <button id="posBack">Volver</button>
-      <button id="posClear">Limpiar</button>
-    </div>
-  </header>
+  <!doctype html>
+  <html lang="en">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>POS — Local Delivery</title>
+      <style>
+        /* Basic reset and layout */
+        :root{--muted:#9aa0a6;--border:#e6e6e6;--accent:#0b9d8b}
+        html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Roboto,Arial,Helvetica,sans-serif;background:#f6f7f8;color:#222}
+        .wrap{display:flex;min-height:100vh}
+        .sidebar{width:260px;background:#fff;border-right:1px solid var(--border);padding:20px 16px}
+        .sidebar h3{margin:0 0 12px 0;font-size:14px;color:var(--muted);}
+        .mode{display:block;padding:12px;margin-bottom:8px;border-radius:6px;background:#fff;border:1px solid var(--border);cursor:pointer;font-weight:600;color:#333}
+        .mode.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+        .content{flex:1;padding:24px}
+        .card{background:#fff;border:1px solid var(--border);border-radius:6px;padding:18px;margin-bottom:18px}
+        .row{display:flex;gap:12px}
+        .col{flex:1}
+        label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+        input[type=text], input[type=tel], input[type=date], input[type=time], input[type=number], select, textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:4px;background:#fff;box-sizing:border-box}
+        textarea{min-height:80px;resize:vertical}
+        .searchBox{display:flex;gap:8px}
+        .searchBox input{flex:1}
+        .small{width:110px}
+        .tiny{width:80px}
+        .muted{color:var(--muted);font-size:13px}
+        .itemsList{border-top:1px solid var(--border);padding-top:12px;margin-top:12px}
+        .divider{height:1px;background:var(--border);margin:18px 0}
+        .recipe{background:#f1fbf9;border:1px solid #e6f3f0;padding:12px;border-radius:6px}
+  .btn{display:inline-block;padding:10px 14px;border-radius:6px;background:var(--accent);color:#fff;border:none;cursor:pointer}
+  .btn.ghost{background:#fff;color:#0b9d8b;border:1px solid var(--border)}
+  /* green outline variant used for Clear Recipient to match screenshot */
+  .btn.ghost.green{background:#fff;color:#0b9d8b;border:1px solid #0b9d8b}
+        .right{margin-left:auto}
+        .paymentList label{display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid var(--border)}
+        .noteCounter{font-size:12px;color:var(--muted);text-align:right}
+        /* Right sidebar */
+        .rightbar{width:320px;padding:18px;box-sizing:border-box}
+        .processBtn{display:block;width:100%;padding:10px 12px;background:#0b9d8b;color:#fff;border-radius:4px;border:1px solid rgba(0,0,0,0.06);font-weight:700;text-align:center}
+        .order-card{border:1px solid #0ea78f00;background:#fff;border-radius:6px;padding:12px;box-shadow:0 0 0 1px rgba(11,157,139,0.06) inset}
+        .order-card h3{margin:0 0 8px 0;font-size:16px}
+        .order-card .summary-row{border-bottom:1px solid #eee;padding:8px 0}
+        .order-card .grand{background:#0b9d8b;color:#fff;padding:10px;border-radius:4px;text-align:left;font-weight:700}
+        .order-card .muted{color:var(--muted);font-size:13px}
+      </style>
+      <style>
+        /* Autocomplete dropdown for products */
+        .autocomplete-list {
+          position: absolute;
+          z-index: 1000;
+          background: #fff;
+          border: 1px solid #e6e6e6;
+          border-radius: 8px;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+          width: 100%;
+          max-height: 320px;
+          overflow-y: auto;
+          margin-top: 2px;
+        }
+        .autocomplete-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 10px 12px;
+          cursor: pointer;
+          border-bottom: 1px solid #f2f2f2;
+        }
+        .autocomplete-item:last-child { border-bottom: none; }
+        .autocomplete-img {
+          width: 48px;
+          height: 48px;
+          object-fit: cover;
+          border-radius: 6px;
+          background: #fafafa;
+        }
+        .autocomplete-title { font-weight: 600; font-size: 15px; }
+        .autocomplete-price { color: var(--muted); font-size: 14px; margin-top: 2px; }
+      </style>
+    </head>
+    <body>
+      <div class="wrap" style="align-items:stretch">
+        <aside class="sidebar">
+          <h3>POS Modes</h3>
+          <div id="modeDelivery" class="mode active">Local Delivery</div>
+          <div id="modePickup" class="mode">Pick-Up</div>
+          <div id="modeInStore" class="mode">In-Store</div>
+          <div id="modeQuick" class="mode">Quick Charge</div>
+        </aside>
 
-  <div class="pos-container">
-    <aside class="pos-sidebar">
-      <nav>
-        <h3>Menú</h3>
-        <ul>
-          <li><a href="#">Orders Snapshot</a></li>
-          <li><a href="/admin-orders.html">All Orders</a></li>
-          <li><a href="#">New Orders</a></li>
-          <li><a href="#">Arrangement Created</a></li>
-          <li><a href="#">Out for Delivery</a></li>
-          <li><a href="#">Completed</a></li>
-        </ul>
-      </nav>
-    </aside>
+        <main class="content">
+          <!-- Local Delivery full form (matches provided screenshots) -->
+          <section id="localDelivery" class="card">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px">
+              <div>
+                <h2 style="margin:0 0 6px 0">Delivery Information</h2>
+                <div class="muted">Recipient Info</div>
+              </div>
+              <div style="min-width:220px;text-align:right">
+                <button class="btn" id="clearRecipientBtn">Clear Recipient</button>
+              </div>
+            </div>
 
-    <main class="pos-main">
-      <section class="products">
-        <div class="products-head">
-            <input id="productSearch" placeholder="Buscar producto..." />
-            <div id="productsStatus" style="margin-top:8px;font-size:13px;color:#666"></div>
-        </div>
-        <div id="productGrid" class="product-grid"></div>
-      </section>
+            <div class="card" style="margin-bottom:12px">
+              <h4 style="margin:0 0 8px 0">Recipient Info</h4>
 
-      <aside class="cart">
-        <h2>Carrito</h2>
-        <div id="cartItems" class="cart-items"></div>
-        <div class="cart-totals">
-          <div><span>Subtotal</span><span id="cartSubtotal">$0.00</span></div>
-          <div><span>Impuestos</span><span id="cartTax">$0.00</span></div>
-          <div class="total-row"><strong>Total</strong><strong id="cartTotal">$0.00</strong></div>
-        </div>
-        <div class="cart-actions">
-          <button id="checkoutBtn">Cobrar</button>
-        </div>
-      </aside>
-    </main>
-  </div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+                <div style="flex:1">
+                  <label style="margin-bottom:6px;display:block">Search customer</label>
+                  <div class="searchBox">
+                    <input type="text" placeholder="Search by customer name, phone, email, house account, recipient name or additional contact" />
+                    <button class="btn ghost">🔍</button>
+                  </div>
+                  <a href="#" style="display:inline-block;margin-top:8px;color:var(--accent);font-weight:600">+ Add a new customer</a>
+                </div>
 
-  <script src="/assets/js/pos.js"></script>
-</body>
-</html>
+                <div style="width:220px;text-align:right">
+                  <button class="btn ghost green" id="clearRecipientBtn">Clear Recipient</button>
+                </div>
+              </div>
+
+              <div style="height:12px"></div>
+
+              <!-- 3-column grid for recipient fields -->
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+                <div>
+                  <label>Recipient Full Name</label>
+                  <input type="text" id="recipient_name" />
+                </div>
+                <div>
+                  <label>Phone Number</label>
+                  <input type="tel" id="recipient_phone" placeholder="(  ) -" />
+                </div>
+                <div>
+                  <label>Company (Optional)</label>
+                  <input type="text" id="recipient_company" />
+                </div>
+              </div>
+
+              <div style="height:12px"></div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+                <div>
+                  <label>Address</label>
+                  <input type="text" id="recipient_address" />
+                </div>
+                <div>
+                  <label>Address Line 2 (Optional)</label>
+                  <input type="text" id="recipient_address2" />
+                </div>
+                <div>
+                  <label>Address Type (Optional)</label>
+                  <select id="recipient_address_type"><option>—</option><option>Residential</option><option>Business</option></select>
+                </div>
+              </div>
+
+              <div style="height:12px"></div>
+
+              <div style="display:grid;grid-template-columns:200px 1fr 120px;gap:12px;align-items:start">
+                <div>
+                  <label>Zip</label>
+                  <input type="text" id="recipient_zip" />
+                </div>
+                <div>
+                  <label>City</label>
+                  <input type="text" id="recipient_city" />
+                </div>
+                <div>
+                  <label>State</label>
+                  <input type="text" id="recipient_state" />
+                </div>
+              </div>
+
+              <div style="height:8px"></div>
+              <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="copyToBilling" /> Copy Recipient Address to Billing Address</label>
+            </div>
+
+            <div class="card">
+              <h4 style="margin:0 0 8px 0">Delivery Details</h4>
+              <div class="row">
+                <div style="width:220px">
+                  <label>Delivery Date</label>
+                  <input type="date" />
+                </div>
+                <div style="width:140px">
+                  <label>Delivery Fee</label>
+                  <input type="number" placeholder="$" />
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;margin-left:12px">
+                  <label style="margin:0"><input type="checkbox" /> Free Delivery</label>
+                </div>
+              </div>
+
+              <div style="height:12px"></div>
+              <label>Delivery Notes (Optional)</label>
+              <textarea placeholder=""></textarea>
+              <div class="noteCounter">0/500</div>
+            </div>
+
+          </section>
+
+          <!-- Pick-Up mode content (customer + pickup info) -->
+          <section id="pickup" class="card" style="display:none">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px">
+              <div>
+                <h2 style="margin:0 0 6px 0">Customer Information</h2>
+                <div class="muted">Assign Designer</div>
+              </div>
+              <div style="min-width:220px;text-align:right">
+                <!-- reserved for actions -->
+              </div>
+            </div>
+
+            <div class="card" style="margin-bottom:12px">
+              <label style="margin-bottom:6px;display:block">Search customer</label>
+              <div class="searchBox">
+                <input type="text" placeholder="Search by customer name, phone, email, house account, recipient name or additional contact" />
+                <button class="btn ghost">🔍</button>
+              </div>
+              <a href="#" style="display:inline-block;margin-top:8px;color:var(--accent);font-weight:600">+ Add a new customer</a>
+            </div>
+
+            <div class="card">
+              <h4 style="margin:0 0 8px 0">Pickup Information</h4>
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="width:220px">
+                  <label>Pickup Date</label>
+                  <input type="date" />
+                </div>
+                <div style="flex:1"></div>
+              </div>
+
+              <div style="height:12px"></div>
+              <a href="#" style="display:inline-block;margin-top:8px;color:var(--accent);font-weight:600">+ Add alternate pickup person</a>
+
+              <div style="height:12px"></div>
+              <label>Pickup Notes (Optional)</label>
+              <textarea placeholder=""></textarea>
+              <div class="noteCounter">0/500</div>
+            </div>
+          </section>
+
+          <section id="instore" class="card" style="display:none"><h2>In-Store</h2><p>In-Store mode content.</p></section>
+          <section id="quick" class="card" style="display:none"><h2>Quick Charge</h2><p>Quick Charge content.</p></section>
+
+          <!-- Common sections: Items, Recipe, Card, Payment (shared across modes) -->
+          <section id="orderCommon" style="flex-basis:100%">
+            <div class="card itemsList">
+              <h4 style="margin:0 0 8px 0">Items</h4>
+              <div class="row">
+                <div class="col">
+                  <label>Search for Item Name or ID</label>
+                  <div style="position:relative">
+                    <input type="text" id="itemSearch" autocomplete="off" />
+                    <div id="autocompleteList" class="autocomplete-list" style="display:none"></div>
+                  </div>
+                      <script>
+                        // --- Stripe Product Autocomplete ---
+                        // Replace with your actual Vercel API endpoint
+                        // Ejemplo: cambia esto por tu URL real de Vercel
+                        const STRIPE_API_URL = 'https://puntorestaurado.vercel.app/api/products';
+
+                        let stripeProducts = [];
+                        let autocompleteList = document.getElementById('autocompleteList');
+                        let itemSearch = document.getElementById('itemSearch');
+                        let unitPriceInput = itemSearch.parentElement.parentElement.querySelector('input[placeholder="$"]');
+
+                        // Fetch Stripe products once on page load
+                        async function fetchStripeProducts() {
+                          try {
+                            let res = await fetch(STRIPE_API_URL);
+                            let data = await res.json();
+                            // Expecting array of {id, name, price, image}
+                            stripeProducts = Array.isArray(data) ? data : [];
+                          } catch (e) {
+                            stripeProducts = [];
+                          }
+                        }
+                        fetchStripeProducts();
+
+                        // Show autocomplete dropdown
+                        itemSearch.addEventListener('input', function() {
+                          let val = this.value.trim().toLowerCase();
+                          if (!stripeProducts.length) return autocompleteList.style.display = 'none';
+                          let filtered = val ? stripeProducts.filter(p => p.name.toLowerCase().includes(val) || p.id.toLowerCase().includes(val)) : stripeProducts;
+                          if (!filtered.length) return autocompleteList.style.display = 'none';
+                          autocompleteList.innerHTML = filtered.map(p => `
+                            <div class="autocomplete-item" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}" data-img="${p.image}">
+                              <img class="autocomplete-img" src="${p.image}" alt="${p.name}" />
+                              <div>
+                                <div class="autocomplete-title">${p.name}</div>
+                                <div class="autocomplete-price">$${Number(p.price).toFixed(2)}</div>
+                              </div>
+                            </div>
+                          `).join('');
+                          autocompleteList.style.display = 'block';
+                        });
+
+                        // Hide dropdown on blur (with delay for click)
+                        itemSearch.addEventListener('blur', function() {
+                          setTimeout(()=>autocompleteList.style.display = 'none', 150);
+                        });
+
+                        // Select product from dropdown
+                        autocompleteList.addEventListener('mousedown', function(e) {
+                          let item = e.target.closest('.autocomplete-item');
+                          if (!item) return;
+                          itemSearch.value = item.dataset.name;
+                          if (unitPriceInput) unitPriceInput.value = Number(item.dataset.price).toFixed(2);
+                          autocompleteList.style.display = 'none';
+                        });
+                      </script>
+                </div>
+                <div style="width:100px">
+                  <label>Quantity</label>
+                  <input type="number" value="1" />
+                </div>
+                <div style="width:120px">
+                  <label>Unit Price</label>
+                  <input type="number" placeholder="$" />
+                </div>
+              </div>
+              <div style="height:12px"></div>
+              <label>Notes</label>
+              <textarea placeholder=""></textarea>
+              <div class="noteCounter">0/1000</div>
+            </div>
+
+            <div class="recipe card" style="margin-top:12px">
+              <h4 style="margin:0 0 8px 0">Recipe & Stem Counter</h4>
+              <div style="display:flex;gap:12px;align-items:flex-start">
+                <div style="flex:1">
+                  <label>Markup</label>
+                  <select><option>Default Markup Settings</option></select>
+
+                  <div style="height:12px"></div>
+                  <label>Recipe</label>
+                  <table style="width:100%;border-collapse:collapse">
+                    <thead style="font-size:12px;color:var(--muted)"><tr><th style="text-align:left;padding:8px;border-bottom:1px solid #e9f0ef">Ingredient</th><th style="padding:8px;border-bottom:1px solid #e9f0ef">Quantity</th><th style="padding:8px;border-bottom:1px solid #e9f0ef">Cost Per Unit</th><th style="padding:8px;border-bottom:1px solid #e9f0ef">Subtotal</th></tr></thead>
+                    <tbody>
+                      <tr><td style="padding:8px"><input type="text" placeholder="Enter ingredient" /></td><td style="padding:8px"><input type="text" /></td><td style="padding:8px"><input type="text" /></td><td style="padding:8px">$0.00</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style="width:260px;text-align:right">
+                  <div style="margin-top:24px">Recipe Total (Cost): <strong>$0.00</strong></div>
+                  <div>Suggested Total (Markup): <strong>$0.00</strong></div>
+                  <div style="height:18px"></div>
+                  <button class="btn">Apply Suggested Total</button>
+                </div>
+              </div>
+
+              <div style="height:12px"></div>
+              <div class="row">
+                <div style="width:140px">
+                  <label>Estimated Prep Time (Optional)</label>
+                  <div style="display:flex;gap:8px"><input type="number" /><select><option>min</option></select></div>
+                </div>
+                <div class="col">
+                  <label>Size (Optional)</label>
+                  <div class="row">
+                    <div class="col"><input placeholder="Length" /></div>
+                    <div class="col"><input placeholder="Width" /></div>
+                    <div class="col"><input placeholder="Height" /></div>
+                  </div>
+                  <div style="margin-top:8px"><textarea placeholder="Enter any notes or instructions for your recipe here..."></textarea></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top:12px">
+              <h4 style="margin:0 0 8px 0">Card (Optional)</h4>
+              <label>Occasion</label>
+              <select><option>Choose an occasion</option></select>
+              <div style="height:8px"></div>
+              <label>Card Message</label>
+              <textarea></textarea>
+              <div class="noteCounter">0/210</div>
+              <div style="height:8px"></div>
+              <label>Signature</label>
+              <textarea></textarea>
+              <div class="noteCounter">0/80</div>
+            </div>
+
+            <div class="card" style="margin-top:12px">
+              <h4 style="margin:0 0 8px 0">Payment Type</h4>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><label style="display:flex;align-items:center;gap:8px"><input type="checkbox" /> Split Payment</label></div>
+              <div class="paymentList">
+                <label><input type="radio" name="payType" value="reader" /> Send to Card Reader <span class="muted right">Offline</span></label>
+
+                <label><input type="radio" name="payType" value="card" checked /> Credit or Debit Card</label>
+                <div id="panel-card" style="padding:12px 16px;border-bottom:1px solid var(--border)">
+                  <label style="display:block;margin-bottom:6px"><input type="checkbox" /> Same as Customer Name</label>
+                  <label>Card Label</label>
+                  <input type="text" />
+                  <label>Cardholder Name</label>
+                  <input type="text" />
+                  <label>Card Number</label>
+                  <div style="display:flex;gap:8px;align-items:center"><input type="text" placeholder="4242 4242 4242 4242" style="flex:1" /><button class="btn ghost">Usar link</button></div>
+                  <div style="display:flex;gap:12px;margin-top:8px"><div style="flex:1"><label>Expiration</label><input type="text" placeholder="MM/AA" /></div><div style="width:120px"><label>CVC</label><input type="text" placeholder="CVC" /></div></div>
+                </div>
+
+                <label><input type="radio" name="payType" value="cash" /> Cash</label>
+                <div id="panel-cash" style="display:none;padding:12px 16px;border-bottom:1px solid var(--border)">
+                  <p class="muted">Amount must be paid in full</p>
+                  <label style="display:block;margin-top:8px">Cash Paid</label>
+                  <div style="max-width:260px">
+                    <div style="display:flex;align-items:center;border:1px solid var(--border);border-radius:6px;overflow:hidden">
+                      <span style="display:inline-block;padding:10px 12px;background:#fafafa;border-right:1px solid var(--border);color:var(--muted)">$</span>
+                      <input type="number" value="0" style="flex:1;border:0;padding:10px;outline:none" />
+                    </div>
+                  </div>
+                </div>
+
+                <label><input type="radio" name="payType" value="check" /> Check</label>
+                <div id="panel-check" style="display:none;padding:12px 16px;border-bottom:1px solid var(--border)">
+                  <p class="muted">Amount must be paid in full</p>
+                  <label style="display:block;margin-top:8px">Check Number</label>
+                  <input type="text" style="max-width:260px" />
+                </div>
+
+                <label><input type="radio" name="payType" value="gift" /> Gift Card</label>
+                <div id="panel-gift" style="display:none;padding:12px 16px;border-bottom:1px solid var(--border)">
+                  <label>Gift Card Code</label>
+                  <input type="text" />
+                </div>
+
+                <label><input type="radio" name="payType" value="paylater" /> Pay Later (at Pickup / Delivery)</label>
+                <div id="panel-paylater" style="display:none;padding:12px 16px;border-bottom:1px solid var(--border)">
+                  <p class="muted">Payment will be collected at a later time.</p>
+                  <div style="margin-top:8px;display:flex;align-items:center;gap:8px">
+                    <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" checked /> Include Payment Link in Receipt</label>
+                    <span title="Include a secure payment link in the receipt sent to the customer." style="color:var(--muted);font-size:12px">ⓘ</span>
+                  </div>
+                </div>
+
+                <label><input type="radio" name="payType" value="other" /> Other</label>
+                <div id="panel-other" style="display:none;padding:12px 16px;border-bottom:1px solid var(--border)">
+                  <p class="muted">Amount must be paid in full</p>
+                  <label style="display:block;margin-top:8px">Specify Method</label>
+                  <input type="text" style="max-width:360px" />
+                </div>
+              </div>
+
+            </div>
+          </section>
+        </main>
+        <!-- Right sidebar: Order Summary -->
+        <aside class="rightbar">
+          <div style="margin-bottom:12px">
+            <button class="processBtn">Process Payment</button>
+          </div>
+
+          <div class="order-card">
+            <h3>Order Summary</h3>
+            <div class="summary-row">
+              <div class="muted">Delivery Information</div>
+              <div style="height:8px"></div>
+              <div style="height:1px;background:#f2f2f2;margin-bottom:8px"></div>
+              <div style="display:flex;justify-content:space-between;align-items:center"><div class="muted">Delivery:</div><div class="muted">...</div></div>
+            </div>
+
+            <div class="summary-row" style="padding-top:12px">
+              <div class="muted">Tax:</div>
+              <div style="height:8px"></div>
+              <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="taxExempt" /> <span class="muted">Tax-exempt</span></label>
+            </div>
+
+            <div style="height:12px"></div>
+            <div class="grand">Grand Total <span style="float:right">$0.00</span></div>
+          </div>
+        </aside>
+      </div>
+
+      <script>
+        // Mode switching
+        function showMode(mode){
+          document.querySelectorAll('.mode').forEach(el=>el.classList.remove('active'));
+          document.getElementById('modeDelivery').classList.toggle('active', mode==='delivery');
+          document.getElementById('modePickup').classList.toggle('active', mode==='pickup');
+          document.getElementById('modeInStore').classList.toggle('active', mode==='instore');
+          document.getElementById('modeQuick').classList.toggle('active', mode==='quick');
+
+          document.getElementById('localDelivery').style.display = mode==='delivery' ? 'block' : 'none';
+          document.getElementById('pickup').style.display = mode==='pickup' ? 'block' : 'none';
+          document.getElementById('instore').style.display = mode==='instore' ? 'block' : 'none';
+          document.getElementById('quick').style.display = mode==='quick' ? 'block' : 'none';
+        }
+
+        document.getElementById('modeDelivery').addEventListener('click',()=>showMode('delivery'));
+        document.getElementById('modePickup').addEventListener('click',()=>showMode('pickup'));
+        document.getElementById('modeInStore').addEventListener('click',()=>showMode('instore'));
+        document.getElementById('modeQuick').addEventListener('click',()=>showMode('quick'));
+
+        // Payment panels: show/hide detailed panel depending on selected radio
+        function updatePaymentPanels(){
+          const panels = {
+            'reader': 'panel-reader',
+            'card': 'panel-card',
+            'cash': 'panel-cash',
+            'check': 'panel-check',
+            'gift': 'panel-gift',
+            'paylater': 'panel-paylater',
+            'other': 'panel-other'
+          };
+          const radios = document.querySelectorAll('input[name="payType"]');
+          let selected = null;
+          radios.forEach(r=>{ if(r.checked) selected = r.value; });
+
+          // hide all panels first
+          Object.values(panels).forEach(id=>{
+            const el = document.getElementById(id);
+            if(el) el.style.display = 'none';
+          });
+
+          // show the selected panel if present
+          if(selected && panels[selected]){
+            const el = document.getElementById(panels[selected]);
+            if(el) el.style.display = 'block';
+          }
+        }
+
+        // Attach change listeners to payment radios
+        document.querySelectorAll('input[name="payType"]').forEach(r=>r.addEventListener('change', updatePaymentPanels));
+
+        // Initialize panels on load
+        updatePaymentPanels();
+
+        // Small UX helpers: prevent form submission and keep counts simple
+        document.addEventListener('submit', e=>e.preventDefault());
+
+        // Clear recipient button behaviour (reset the recipient fields in the form)
+        document.getElementById('clearRecipientBtn').addEventListener('click', function(){
+          const section = document.getElementById('localDelivery');
+          if(!section) return;
+          // Clear only the recipient-specific inputs we added (by id)
+          ['recipient_name','recipient_phone','recipient_company','recipient_address','recipient_address2','recipient_address_type','recipient_zip','recipient_city','recipient_state'].forEach(id=>{
+            const el = document.getElementById(id);
+            if(!el) return;
+            if(el.tagName === 'SELECT') el.selectedIndex = 0; else el.value = '';
+          });
+          // Uncheck copy to billing
+          const copy = document.getElementById('copyToBilling'); if(copy) copy.checked = false;
+        });
+      </script>
+    </body>
+  </html>

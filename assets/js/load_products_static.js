@@ -1,5 +1,5 @@
-// Proxy copy of assets/assets/js/load_products.js
-// Simple loader: fetch /products.json and render cards into #stripe-product-list
+// Static copy of load_products.js to bypass possible injection/CSP issues
+// Identical behavior to load_products.js
 (function(){
   async function load(){
     try{
@@ -37,11 +37,11 @@
       const data = await res.json();
       const container = document.getElementById('stripe-product-list');
       if(!container) {
-        console.warn('load_products: #stripe-product-list not found in DOM');
+        console.warn('load_products_static: #stripe-product-list not found in DOM');
         return;
       }
       // debug: log the raw products payload
-      console.info('load_products: fetched products', data && data.products ? data.products.length : 0, data);
+      console.info('load_products_static: fetched products', data && data.products ? data.products.length : 0, data);
       container.innerHTML = '';
 
       // --- Modal de detalles (creado una vez) ---

@@ -1,0 +1,338 @@
+<html lang="es"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Events &amp; Invoices</title>
+  <link rel="stylesheet" href="/assets/css/admin.css">
+  <style>
+    .events-header{display:flex;align-items:center;justify-content:space-between;margin:18px 0}
+    .controls{display:flex;gap:12px;align-items:center}
+    .controls input[type="search"]{padding:10px 12px;border-radius:8px;border:1px solid #e6e6e6;min-width:300px}
+    .controls select{padding:10px;border-radius:8px;border:1px solid #e6e6e6}
+    .controls .date{padding:10px;border-radius:8px;border:1px solid #e6e6e6}
+    .top-actions{display:flex;gap:10px;align-items:center}
+    .top-actions .btn{background:#0b5cff;color:#fff;padding:8px 12px;border-radius:8px;border:none;cursor:pointer}
+    .top-actions .btn.secondary{background:#06c15f}
+    .events-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #eee;border-radius:8px;overflow:hidden}
+    .events-table thead{background:#f7f8fa;color:#444}
+    .events-table th, .events-table td{padding:10px 12px;border-bottom:1px solid #f1f1f1;text-align:left;font-size:13px}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .need-help{color:#0b5cff;text-decoration:none;margin-right:12px}
+    .columns-toggle{color:#666}
+    .empty-placeholder{height:420px;display:flex;align-items:center;justify-content:center;color:#aaa}
+  </style>
+</head>
+<body>
+  <header class="admin-header">
+    <h1>Events &amp; Invoices</h1>
+    <div class="admin-actions">
+      <button id="adminLogout">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main class="admin-main" style="max-width:1200px;margin:18px auto;padding:0 18px">
+    <div class="toolbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <a class="need-help" href="#">Need Help?</a>
+      </div>
+      <div class="top-actions">
+        <button class="btn">Create Quick Invoice</button>
+        <a class="btn secondary" href="/create-event-invoice.html" target="_self" rel="noopener">Create Event Invoice</a>
+      </div>
+    </div>
+
+    <div class="events-header">
+      <div class="controls">
+        <input type="search" placeholder="Search Title, Customer, Event ID" aria-label="search">
+        <select aria-label="Event Status">
+          <option value="">Event Status</option>
+          <option value="upcoming">Upcoming</option>
+          <option value="completed">Completed</option>
+        </select>
+        <select aria-label="Payment Status">
+          <option value="">Payment Status</option>
+          <option value="paid">Paid</option>
+          <option value="unpaid">Unpaid</option>
+        </select>
+        <input type="date" class="date" aria-label="Event Date">
+        <div class="columns-toggle">Columns</div>
+      </div>
+    </div>
+
+    <table class="events-table" role="table" aria-label="Events table">
+      <thead>
+        <tr>
+          <th>Featured</th>
+          <th>Event ID</th>
+          <th>Status</th>
+          <th>Payment Status</th>
+          <th>Title</th>
+          <th>Created On</th>
+          <th>Customer</th>
+          <th>Event Date</th>
+          <th>Amount</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody><tr>
+            <td><input type="checkbox" class="featured-checkbox" data-id="6fad7016-7807-461d-819b-14ae7d64646f" data-slug="delorian.html" checked=""></td>
+            <td>6fad7016-7807-461d-819b-14ae7d64646f</td>
+            <td>draft</td>
+            <td></td>
+            <td>delorian</td>
+            <td>11/11/2025, 19:23:37</td>
+            <td></td>
+            <td>24/11/2025</td>
+            <td></td>
+            <td><a href="/create-event-invoice.html?id=6fad7016-7807-461d-819b-14ae7d64646f">Edit</a> • <a href="/event/6fad7016-7807-461d-819b-14ae7d64646f">View</a></td>
+          </tr><tr>
+            <td><input type="checkbox" class="featured-checkbox" data-id="c94a6415-943f-4205-b0fa-a213d67d282f" data-slug="titi.html" checked=""></td>
+            <td>c94a6415-943f-4205-b0fa-a213d67d282f</td>
+            <td>draft</td>
+            <td></td>
+            <td>titi</td>
+            <td>11/11/2025, 12:49:11</td>
+            <td></td>
+            <td>10/11/2025</td>
+            <td></td>
+            <td><a href="/create-event-invoice.html?id=c94a6415-943f-4205-b0fa-a213d67d282f">Edit</a> • <a href="/event/c94a6415-943f-4205-b0fa-a213d67d282f">View</a></td>
+          </tr></tbody>
+    </table>
+
+  </main>
+
+  <script>
+    document.getElementById('adminLogout').addEventListener('click', function(){
+      try { localStorage.removeItem('site_session'); } catch(e){}
+      window.location.href = '/';
+    });
+
+    // Fetch and render invoices
+    (function(){
+      const tableBody = document.querySelector('.events-table tbody');
+      const searchInput = document.querySelector('input[type=search]');
+      const statusSelect = document.querySelector('select[aria-label="Event Status"]');
+      let page = 1;
+      const FEATURED_KEY = 'featuredUpcomingEvents';
+      let featured = [];
+
+      async function loadFeatured(){
+        // try server first, fall back to localStorage
+        try {
+          const r = await fetch('/api/featured-events');
+          if (r.ok){
+            const j = await r.json();
+            featured = Array.isArray(j.slugs) ? j.slugs : [];
+            // normalize and dedupe
+            featured = normalizeAndDedupe(featured);
+            try { localStorage.setItem(FEATURED_KEY, JSON.stringify(featured)); } catch(e){}
+            return;
+          }
+        } catch (err) {
+          // continue to localStorage fallback
+        }
+        try {
+          const raw = localStorage.getItem(FEATURED_KEY);
+          featured = raw ? JSON.parse(raw) : [];
+          featured = normalizeAndDedupe(featured);
+        } catch(e){ featured = []; }
+      }
+
+      async function saveFeatured(){
+        // normalize and dedupe before saving
+        featured = normalizeAndDedupe(featured);
+        try { localStorage.setItem(FEATURED_KEY, JSON.stringify(featured)); } catch(e){}
+        try {
+          const res = await fetch('/api/featured-events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ slugs: featured })
+          });
+          if (res.ok){
+            try {
+              const j = await res.json();
+              if (Array.isArray(j.slugs)){
+                // trust the server canonical list (normalize/unique) to avoid races
+                featured = normalizeAndDedupe(j.slugs);
+                try { localStorage.setItem(FEATURED_KEY, JSON.stringify(featured)); } catch(e){}
+              }
+            } catch(e){}
+            // notify other parts of the site (homepage) that featured list changed
+            try { window.dispatchEvent(new Event('featured-updated')); } catch(e){}
+            return true;
+          } else {
+            console.warn('Could not save featured to server, saved locally only');
+            try { window.dispatchEvent(new Event('featured-updated')); } catch(e){}
+            return false;
+          }
+        } catch (err) {
+          console.warn('Could not save featured to server, saved locally only');
+          try { window.dispatchEvent(new Event('featured-updated')); } catch(e){}
+          return false;
+        }
+      }
+
+      async function load(){
+        await loadFeatured();
+        const q = new URLSearchParams();
+        q.set('page', page);
+        q.set('page_size', 50);
+        if (searchInput.value) q.set('search', searchInput.value);
+        if (statusSelect.value) q.set('status', statusSelect.value);
+
+        tableBody.innerHTML = '<tr><td colspan="10"><div class="empty-placeholder">Loading…</div></td></tr>';
+        try {
+          const r = await fetch('/api/event-invoice?' + q.toString());
+          const j = await r.json();
+          if (!r.ok) throw new Error(j.error || 'Error fetching');
+          renderRows(j.invoices || []);
+        } catch (err) {
+          console.error(err);
+          tableBody.innerHTML = '<tr><td colspan="10"><div class="empty-placeholder">Error loading events</div></td></tr>';
+        }
+      }
+
+      function renderRows(rows){
+        if (!rows || rows.length === 0){
+          tableBody.innerHTML = '<tr><td colspan="10"><div class="empty-placeholder">No events to display</div></td></tr>';
+          return;
+        }
+        tableBody.innerHTML = '';
+        rows.forEach(r => {
+          const tr = document.createElement('tr');
+          const created = r.created_at ? new Date(r.created_at).toLocaleString() : '';
+          const eventDate = r.event_start ? new Date(r.event_start).toLocaleDateString() : '';
+          const customer = (r.customer && (typeof r.customer === 'string' ? r.customer : (r.customer.name || JSON.stringify(r.customer)))) || '';
+          const amount = (r.totals && r.totals.grand_total) ? r.totals.grand_total : '';
+          // compute a homepage-style slug for this event from title (used by the homepage filter)
+          function slugify(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
+          const titleSlug = slugify(r.title || '');
+          const lastSegment = titleSlug ? (titleSlug + '.html') : String(r.id);
+          // whether this row is currently featured: allow either previously-stored ids or the new slug
+          const checked = (Array.isArray(featured) && (featured.indexOf(String(r.id)) !== -1 || featured.indexOf(lastSegment) !== -1 || featured.indexOf(normalizeSlug(lastSegment)) !== -1)) ? 'checked' : '';
+          tr.innerHTML = `
+            <td><input type="checkbox" class="featured-checkbox" data-id="${r.id}" data-slug="${lastSegment}" ${checked}></td>
+            <td>${r.id}</td>
+            <td>${r.status || ''}</td>
+            <td>${(r.totals && r.totals.payment_status) || ''}</td>
+            <td>${escapeHtml(r.title || '')}</td>
+            <td>${created}</td>
+            <td>${escapeHtml(customer)}</td>
+            <td>${eventDate}</td>
+            <td>${amount}</td>
+            <td><a href="/create-event-invoice.html?id=${r.id}">Edit</a> • <a href="/event/${r.id}">View</a></td>
+          `;
+          tableBody.appendChild(tr);
+        });
+
+        // migrate any previously-saved ids into slugs (so homepage filter works) and persist once
+          try{
+          let migrated = false;
+          rows.forEach(r => {
+            function slugify(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
+            const titleSlug = slugify(r.title || '');
+            const lastSegment = titleSlug ? (titleSlug + '.html') : String(r.id);
+            const idIndex = featured.indexOf(String(r.id));
+            // if id exists, replace it with normalized slug (avoid duplicates)
+            if (idIndex !== -1){
+              const normalized = normalizeSlug(lastSegment);
+              // only replace if normalized not already present
+              if (featured.indexOf(normalized) === -1){
+                featured.splice(idIndex, 1);
+                featured.push(normalized);
+                migrated = true;
+              } else {
+                // remove the id-only entry if normalized already present
+                featured.splice(idIndex, 1);
+                migrated = true;
+              }
+            }
+          });
+          if (migrated) saveFeatured();
+        }catch(e){}
+
+        // wire checkbox listeners
+        tableBody.querySelectorAll('.featured-checkbox').forEach(cb => {
+          cb.addEventListener('change', async function(e){
+            const checkbox = this;
+            const id = String(checkbox.getAttribute('data-id'));
+            const slug = String(checkbox.getAttribute('data-slug'));
+            // optimistic UI: apply change locally, but await server confirmation
+            checkbox.disabled = true;
+            const previouslyChecked = !checkbox.checked; // before change, checked state was inverse
+            if (checkbox.checked){
+              // remove any old id entry and add slug (store slugs for homepage compatibility)
+              const byId = featured.indexOf(id);
+              if (byId !== -1) featured.splice(byId, 1);
+              if (featured.indexOf(slug) === -1) featured.push(slug);
+            } else {
+              // remove slug and id if present
+              const i1 = featured.indexOf(slug);
+              if (i1 !== -1) featured.splice(i1, 1);
+              const i2 = featured.indexOf(id);
+              if (i2 !== -1) featured.splice(i2, 1);
+            }
+            const ok = await saveFeatured();
+            if (!ok){
+              // revert UI and local state on failure
+              if (previouslyChecked){
+                checkbox.checked = true;
+                // ensure featured contains slug/id
+                if (featured.indexOf(slug) === -1) featured.push(slug);
+              } else {
+                checkbox.checked = false;
+                // ensure featured does not contain slug/id
+                const i1 = featured.indexOf(slug); if (i1 !== -1) featured.splice(i1, 1);
+                const i2 = featured.indexOf(id); if (i2 !== -1) featured.splice(i2, 1);
+              }
+              alert('No se pudo guardar el cambio en el servidor. Intenta de nuevo o revisa la consola para más detalles.');
+            }
+            checkbox.disabled = false;
+          });
+        });
+      }
+
+      // helper to normalize slug strings (lowercase, trim, ensure .html suffix for slugs)
+      function normalizeSlug(s){
+        if (!s) return s;
+        s = String(s).trim().toLowerCase();
+        // if looks like a uuid (hex with dashes) keep as-is
+        if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s)) return s;
+        // ensure .html suffix
+        if (!s.endsWith('.html')) s = s + '.html';
+        return s;
+      }
+
+      function normalizeAndDedupe(arr){
+        if (!Array.isArray(arr)) return [];
+        const seen = new Set();
+        const out = [];
+        arr.forEach(item => {
+          try{
+            let v = String(item).trim();
+            // keep uuids as-is, normalize others to slug form
+            if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)){
+              v = normalizeSlug(v);
+            }
+            if (!seen.has(v)){
+              seen.add(v);
+              out.push(v);
+            }
+          }catch(e){}
+        });
+        return out;
+      }
+
+      function escapeHtml(s){ return String(s).replace(/[&<>\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+      // wire search
+      let debounce;
+      searchInput.addEventListener('input', ()=>{ clearTimeout(debounce); debounce = setTimeout(()=>{ page=1; load(); }, 350); });
+      statusSelect.addEventListener('change', ()=>{ page=1; load(); });
+
+      // initial load
+      load();
+    })();
+  </script>
+
+
+</body></html>

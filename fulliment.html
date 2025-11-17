@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fulliment</title>
+  <style>
+    :root{ --sidebar:#313443; --muted:#9aa0a6; --bg:#f4f6f8 }
+    body{ margin:0;font-family:Inter, system-ui, Arial, Helvetica, sans-serif;background:var(--bg);color:#222 }
+    .layout{ display:flex; min-height:100vh }
+    .sidebar{ width:260px;background:var(--sidebar);color:#fff;padding:18px 12px;box-sizing:border-box }
+    .sidebar h3{ margin:0 0 12px;font-weight:600 }
+    .side-menu{ list-style:none;padding:0;margin:12px 0 }
+    .side-menu li{ padding:12px 10px;border-radius:4px;color:#e6e7ea;cursor:pointer }
+    .side-menu li:hover{ background:rgba(255,255,255,0.03) }
+    .side-menu li.active{ background:#232530 }
+    .main{ flex:1;padding:28px }
+    .card{ background:#fff;padding:18px;border-radius:8px;box-shadow:0 4px 20px rgba(16,24,40,0.04) }
+    .submenu{ background:#f7f8fa;padding:12px;border-radius:6px;margin-top:8px }
+    @media (max-width:880px){ .sidebar{ display:none } .layout{ flex-direction:column } .main{ padding:12px } }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <h3>Fulfillment</h3>
+      <ul class="side-menu" id="fulMenu">
+        <li data-key="delivery-settings">Delivery Settings</li>
+        <li data-key="delivery-zones">Delivery Zones</li>
+        <li data-key="pickup-settings">Pickup Settings</li>
+      </ul>
+    </aside>
+
+    <main class="main">
+      <div id="contentArea">
+        <div class="card">
+          <h2 id="panelTitle">Delivery Settings</h2>
+          <p style="color:var(--muted)" id="panelDesc">Configura zonas, tarifas y horarios de entrega.</p>
+
+          <div class="submenu" id="panelBody">
+            <p>Selecciona una opción en el menú lateral para ver y editar la configuración.</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function(){
+      const menu = document.getElementById('fulMenu');
+      const items = Array.from(menu.querySelectorAll('li'));
+      const title = document.getElementById('panelTitle');
+      const desc = document.getElementById('panelDesc');
+      const body = document.getElementById('panelBody');
+
+      function setActive(key){
+        items.forEach(i=> i.classList.toggle('active', i.getAttribute('data-key')===key));
+        if(key==='delivery-settings'){
+          title.textContent = 'Delivery Settings';
+          desc.textContent = 'Configura zonas, tarifas y horarios de entrega.';
+          body.innerHTML = `
+            <h3>General</h3>
+            <p>Activa o desactiva entregas, define horarios y condiciones.</p>
+            <div style="margin-top:12px"><button id="editDelivery" style="padding:8px 12px;border-radius:6px;border:1px solid #e6e9ee;background:#fff;cursor:pointer">Editar Delivery Settings</button></div>
+          `;
+        }
+        if(key==='delivery-zones'){
+          title.textContent = 'Delivery Zones';
+          desc.textContent = 'Ver y editar zonas de entrega en el mapa.';
+          body.innerHTML = `
+            <h3>Zonas</h3>
+            <p>Lista de zonas con tarifas asociadas.</p>
+            <ul>
+              <li>Zona 1 — $5.00</li>
+              <li>Zona 2 — $8.00</li>
+            </ul>
+          `;
+        }
+        if(key==='pickup-settings'){
+          title.textContent = 'Pickup Settings';
+          desc.textContent = 'Configura los puntos y horarios de recogida.';
+          body.innerHTML = `
+            <h3>Pickup Points</h3>
+            <p>Agregar y editar ubicaciones de pickup.</p>
+          `;
+        }
+      }
+
+      items.forEach(li=> li.addEventListener('click', function(){ setActive(this.getAttribute('data-key')); }));
+
+      // default
+      setActive('delivery-settings');
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,833 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Reputation — Admin</title>
+    <style>
+      :root{ --bg:#f7f7f8; --sidebar:#2f3640; --accent:#ff4d7a; --panel:#fff }
+      body{ margin:0; font-family:system-ui,Arial,Helvetica,sans-serif; background:var(--bg); color:#222 }
+      .topbar{ height:60px; background:var(--sidebar); color:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 18px }
+      .topbar h1{ font-size:18px; margin:0 }
+      .container{ display:flex; max-width:1200px; margin:18px auto; gap:18px; padding:0 18px }
+      .sidebar{ width:220px; background:var(--panel); border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,0.06); padding:12px }
+      .sidebar .brand{ font-weight:700; color:var(--sidebar); display:flex; gap:8px; align-items:center; margin-bottom:8px }
+      .nav{ list-style:none; margin:0; padding:0 }
+      .nav li{ margin-bottom:6px }
+      .nav a{ display:block; padding:10px 12px; border-radius:6px; color:#333; text-decoration:none }
+      .nav a.active{ background:linear-gradient(90deg, rgba(255,77,122,0.08), rgba(255,77,122,0.02)); color:var(--accent); font-weight:600 }
+      .main{ flex:1 }
+      .panel{ background:var(--panel); border-radius:8px; padding:18px; box-shadow:0 1px 4px rgba(0,0,0,0.06) }
+      .crumbs{ color:#666; font-size:14px; margin-bottom:8px }
+      .section-title{ display:flex; align-items:center; justify-content:space-between; gap:12px }
+      .section-title h2{ margin:0 }
+      .grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin-top:12px }
+      .card{ background:#fff; border-radius:8px; padding:12px; box-shadow:0 1px 2px rgba(0,0,0,0.04) }
+      a.back{ color:#666; text-decoration:none; font-size:13px }
+      @media (max-width:880px){ .container{ flex-direction:column } .sidebar{ width:100% } }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <h1>Reputation</h1>
+      <div><a class="back" href="/admin.html">&larr; Volver al admin</a></div>
+    </div>
+
+    <div class="container">
+      <aside class="sidebar panel">
+        <div class="brand">📣 <span>Reputation</span></div>
+        <ul class="nav" id="repNav">
+          <li><a href="#overview" data-section="overview" class="active">Overview</a></li>
+          <li><a href="#connections" data-section="connections">Connections</a></li>
+          <li><a href="#reviews" data-section="reviews">Reviews</a></li>
+          <li><a href="#listings" data-section="listings">Listings</a></li>
+        </ul>
+      </aside>
+
+      <main class="main">
+        <div class="panel">
+          <div class="crumbs">Admin / Reputation</div>
+          <!-- Connection modal (hidden) -->
+          <div id="connectModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); align-items:center; justify-content:center; z-index:1200">
+            <div style="background:#fff; width:520px; max-width:96%; border-radius:8px; padding:18px; box-shadow:0 6px 24px rgba(0,0,0,0.2)">
+              <h3 id="connectModalTitle">Connect</h3>
+              <div style="color:#666; font-size:13px; margin-bottom:8px">Introduce las credenciales para conectar este proveedor. Estas credenciales se guardarán localmente en tu navegador.</div>
+              <div style="display:flex; flex-direction:column; gap:8px">
+                <div id="yelpFields">
+                  <label style="font-weight:600">Yelp API Key</label>
+                  <input id="modalApiKey" type="text" style="padding:8px; border:1px solid #ddd; border-radius:6px" placeholder="sk-... o dejar vacío para usar variable de servidor" />
+                  <label style="font-weight:600">Business name</label>
+                  <input id="modalBusinessName" type="text" style="padding:8px; border:1px solid #ddd; border-radius:6px" placeholder="Ej: Rosa's Flowers Events" />
+                  <label style="font-weight:600">Location (city, state)</label>
+                  <input id="modalLocation" type="text" style="padding:8px; border:1px solid #ddd; border-radius:6px" placeholder="Ej: Philadelphia, PA" />
+                </div>
+                <div id="googleFields" style="display:none">
+                  <label style="font-weight:600">Google Places API Key</label>
+                  <input id="modalGoogleApiKey" type="text" style="padding:8px; border:1px solid #ddd; border-radius:6px" placeholder="AIza... or leave blank to use server env" />
+                  <label style="font-weight:600">Place ID or Business name</label>
+                  <input id="modalPlaceIdOrName" type="text" style="padding:8px; border:1px solid #ddd; border-radius:6px" placeholder="Ej: Rosa's Flowers Events or ChIJ... (Place ID)" />
+                </div>
+                <div id="facebookFields" style="display:none">
+                  <label style="font-weight:600">Facebook Page Access Token</label>
+                  <input id="modalPageToken" type="text" style="padding:8px; border:1px solid #ddd; border-radius:6px" placeholder="EAA..." />
+                  <label style="font-weight:600">Page ID or Page URL</label>
+                  <input id="modalPageId" type="text" style="padding:8px; border:1px solid #ddd; border-radius:6px" placeholder="Ej: 123456789 or https://facebook.com/yourpage" />
+                </div>
+              </div>
+              <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px">
+                <button id="modalCancel" class="small-btn">Cancel</button>
+                <button id="modalSave" class="small-btn">Save & Connect</button>
+              </div>
+            </div>
+          </div>
+          <div id="content">
+            <section id="overview">
+              <div class="section-title"><h2>Overview</h2></div>
+              <p style="color:#666">Resumen de la reputación: puntuaciones promedio, reseñas recientes, y métricas clave.</p>
+
+              <!-- Platform cards -->
+              <div class="grid" id="platformCards" style="margin-top:12px">
+                <!-- Card template replicated for Google, Yelp, Facebook -->
+
+                <div class="card" style="text-align:center">
+                  <div style="font-size:18px; font-weight:700">Google</div>
+                  <div style="height:120px; display:flex; align-items:center; justify-content:center">
+                    <svg width="120" height="120" viewBox="0 0 120 120">
+                      <circle cx="60" cy="60" r="48" stroke="#e6e6e6" stroke-width="8" fill="none" />
+                      <circle cx="60" cy="60" r="48" stroke="#2ecc71" stroke-width="8" fill="none" stroke-dasharray="301" stroke-dashoffset="30" transform="rotate(-90 60 60)" />
+                      <line x1="60" y1="60" x2="60" y2="18" stroke="#444" stroke-width="4" transform="rotate(200 60 60)" style="transform-origin:60px 60px" />
+                    </svg>
+                  </div>
+                  <div style="margin-top:6px"><strong style="font-size:18px">5.0</strong> <span style="color:#f5c518">★★★★★</span> <small style="color:#666">(38)</small></div>
+                  <div style="margin-top:10px"><button class="small-btn">See Your Reviews</button></div>
+                </div>
+
+                <div class="card" style="text-align:center">
+                  <div style="font-size:18px; font-weight:700">Yelp</div>
+                  <div style="height:120px; display:flex; align-items:center; justify-content:center">
+                    <svg width="120" height="120" viewBox="0 0 120 120">
+                      <circle cx="60" cy="60" r="48" stroke="#e6e6e6" stroke-width="8" fill="none" />
+                      <circle cx="60" cy="60" r="48" stroke="#e74c3c" stroke-width="8" fill="none" stroke-dasharray="301" stroke-dashoffset="30" transform="rotate(-90 60 60)" />
+                      <line x1="60" y1="60" x2="60" y2="18" stroke="#444" stroke-width="4" transform="rotate(200 60 60)" style="transform-origin:60px 60px" />
+                    </svg>
+                  </div>
+                  <div style="margin-top:6px"><strong style="font-size:18px">5.0</strong> <span style="color:#e74c3c">★★★★★</span> <small style="color:#666">(1)</small></div>
+                  <div style="margin-top:10px"><button class="small-btn">See Your Reviews</button></div>
+                </div>
+
+                <div class="card" style="text-align:center">
+                  <div style="font-size:18px; font-weight:700">Facebook</div>
+                  <div style="height:120px; display:flex; align-items:center; justify-content:center">
+                    <svg width="120" height="120" viewBox="0 0 120 120">
+                      <circle cx="60" cy="60" r="48" stroke="#e6e6e6" stroke-width="8" fill="none" />
+                      <circle cx="60" cy="60" r="48" stroke="#2ecc71" stroke-width="8" fill="none" stroke-dasharray="301" stroke-dashoffset="30" transform="rotate(-90 60 60)" />
+                      <line x1="60" y1="60" x2="60" y2="18" stroke="#444" stroke-width="4" transform="rotate(200 60 60)" style="transform-origin:60px 60px" />
+                    </svg>
+                  </div>
+                  <div style="margin-top:6px"><strong style="font-size:18px">5.0</strong> <span style="color:#f5c518">★★★★★</span> <small style="color:#666">(1)</small></div>
+                  <div style="margin-top:10px"><button class="small-btn">See Your Reviews</button></div>
+                </div>
+              </div>
+
+              <!-- Charts -->
+              <div style="margin-top:18px" class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px">
+                  <div>
+                    <h3 style="margin:0">Review Rating Trend</h3>
+                    <div style="color:#666; font-size:14px">Check out how your reviews have been over the selected time period.</div>
+                  </div>
+                  <div style="display:flex; gap:8px; align-items:center">
+                    <button class="small-toggle active" data-range="3">3 month</button>
+                    <button class="small-toggle" data-range="6">6 month</button>
+                    <button class="small-toggle" data-range="12">12 month</button>
+                    <button class="small-toggle" data-range="lifetime">Lifetime</button>
+                  </div>
+                </div>
+                <canvas id="ratingChart" height="120"></canvas>
+              </div>
+
+              <div style="margin-top:18px" class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px">
+                  <div>
+                    <h3 style="margin:0">Review Count Trend</h3>
+                    <div style="color:#666; font-size:14px">Check out how many reviews you have over the selected time period.</div>
+                  </div>
+                  <div style="display:flex; gap:8px; align-items:center">
+                    <button class="small-toggle active" data-range="3">3 month</button>
+                    <button class="small-toggle" data-range="6">6 month</button>
+                    <button class="small-toggle" data-range="12">12 month</button>
+                    <button class="small-toggle" data-range="lifetime">Lifetime</button>
+                  </div>
+                </div>
+                <canvas id="countChart" height="120"></canvas>
+              </div>
+            </section>
+
+            <section id="connections" style="display:none; margin-top:12px">
+              <h2>Connections</h2>
+              <p style="color:#666">Conecta tus cuentas externas para sincronizar reseñas y listados.</p>
+
+              <div class="card" style="margin-top:12px">
+                <h3 style="margin-top:0">Manage Your Connections</h3>
+                <div style="display:flex; justify-content:flex-end; margin-top:-34px; margin-bottom:8px">
+                  <button id="syncAllBtn" class="small-btn">Sync All Connected</button>
+                </div>
+                <div id="connectionsList">
+                  <!-- Connections will be rendered here -->
+                </div>
+              </div>
+
+              <template id="connTpl">
+                <div class="conn-row" style="display:flex; gap:12px; align-items:center; padding:14px 0; border-bottom:1px solid #eee">
+                  <div class="icon" style="width:40px">ICON</div>
+                  <div style="flex:1">
+                    <div style="font-weight:700" class="name">Provider</div>
+                    <div class="meta" style="color:#666; font-size:13px">Status text</div>
+                    <div class="syncInfo" style="color:#999; font-size:12px; margin-top:8px">Last synced: never</div>
+                  </div>
+                  <div style="display:flex; gap:8px; align-items:center">
+                    <button class="syncBtn small-btn">Sync Now</button>
+                    <button class="connectBtn small-btn">Connect</button>
+                  </div>
+                </div>
+              </template>
+
+            </section>
+
+            <section id="reviews" style="display:none; margin-top:12px">
+              <h2>Reviews</h2>
+              <p style="color:#666">Ver y gestionar reseñas de clientes. Conecta cuentas en <strong>Connections</strong> y haz click en <em>Sync Now</em> para importar reseñas reales.</p>
+
+              <div class="card" style="margin-top:12px">
+                <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center">
+                  <div>
+                    <label style="font-weight:600; font-size:13px">Rating</label><br>
+                    <select id="filterRating">
+                      <option value="all">All</option>
+                      <option value="5">5</option>
+                      <option value="4">4</option>
+                      <option value="3">3</option>
+                      <option value="2">2</option>
+                      <option value="1">1</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style="font-weight:600; font-size:13px">Reply Status</label><br>
+                    <select id="filterReply">
+                      <option value="all">All</option>
+                      <option value="replied">Replied</option>
+                      <option value="unreplied">Unreplied</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style="font-weight:600; font-size:13px">Review Source</label><br>
+                    <select id="filterSource">
+                      <option value="all">All</option>
+                      <option value="google">Google</option>
+                      <option value="yelp">Yelp</option>
+                      <option value="facebook">Facebook</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style="font-weight:600; font-size:13px">Time</label><br>
+                    <select id="filterTime">
+                      <option value="all">All Time</option>
+                      <option value="30">Last 30 days</option>
+                      <option value="90">Last 90 days</option>
+                      <option value="365">Last 12 months</option>
+                    </select>
+                  </div>
+
+                  <div style="margin-left:auto">
+                    <button id="resetFilters" class="small-btn">Reset Filters</button>
+                  </div>
+                </div>
+
+                <div id="reviewsList" style="margin-top:18px"></div>
+                <div id="reviewsEmpty" style="color:#666; margin-top:12px; display:none">No reviews found. Conecta y sincroniza tus cuentas para importar reseñas.</div>
+              </div>
+            </section>
+
+            <section id="listings" style="display:none; margin-top:12px">
+              <h2>Listings</h2>
+              <p style="color:#666">We help you keep your business listing data up to date across the web.</p>
+
+              <div class="card" style="margin-top:12px">
+                <div id="listingsList"></div>
+              </div>
+
+              <!-- Listing row template -->
+              <template id="listingTpl">
+                <div style="padding:18px 0; border-bottom:1px solid #eee; display:flex; align-items:center; gap:12px">
+                  <div class="l-icon" style="width:40px">ICON</div>
+                  <div style="flex:1">
+                    <div style="font-weight:700" class="l-name">Provider connected to Rosa's Flowers Events</div>
+                    <div class="l-note" style="color:#d33; margin-top:6px">Some of your data doesn't match</div>
+                  </div>
+                  <div>
+                    <button class="small-btn seeDetailsBtn">See Details</button>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Listing detail (hidden until opened) -->
+              <div id="listingDetail" style="display:none; margin-top:18px">
+                <div style="margin-bottom:12px"><a href="#listings" id="backToListings" class="back">&larr; Back to Listings</a></div>
+                <div class="card">
+                  <h3 id="detailTitle">Listing Detail</h3>
+                  <div style="display:flex; gap:18px; flex-wrap:wrap; margin-top:12px">
+                    <div style="flex:1; min-width:280px">
+                      <h4 style="margin-top:0">Your Information</h4>
+                      <div id="yourInfo"></div>
+                    </div>
+                    <div style="flex:1; min-width:280px; background:#fafafa; padding:12px; border-radius:6px">
+                      <h4 style="margin-top:0">Your <span id="providerNameShort">Provider</span> Business Profile</h4>
+                      <div id="providerInfo"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      // Sidebar navigation: show related section and mark active
+      (function(){
+        const nav = document.getElementById('repNav');
+        if(!nav) return;
+        nav.addEventListener('click', function(e){
+          const a = e.target.closest('a'); if(!a) return;
+          e.preventDefault();
+          const section = a.dataset.section;
+          // mark active
+          nav.querySelectorAll('a').forEach(x=>x.classList.remove('active'));
+          a.classList.add('active');
+          // show/hide
+          document.querySelectorAll('#content section').forEach(s=>{ s.style.display = (s.id===section)?'block':'none'; });
+          // scroll into view
+          try{ document.getElementById(section).scrollIntoView({behavior:'smooth'}); }catch(e){}
+        });
+      })();
+
+      // Small button styles injection
+      (function(){
+        const css = `
+          .small-btn{ background:#fff; border:1px solid #d6d6d6; padding:8px 12px; border-radius:6px; cursor:pointer }
+          .small-toggle{ background:#fff; border:1px solid #d6d6d6; padding:6px 8px; border-radius:6px; cursor:pointer }
+          .small-toggle.active{ background:rgba(0,123,255,0.08); border-color:#80bdff }
+        `;
+        const s = document.createElement('style'); s.appendChild(document.createTextNode(css)); document.head.appendChild(s);
+      })();
+
+      // Sample time labels (dates) for the past months
+      function generateLabels(months){
+        const labels = [];
+        const now = new Date();
+        for(let i=months-1;i>=0;i--){
+          const d = new Date(now); d.setMonth(now.getMonth()-i);
+          labels.push(d.toISOString().slice(0,10));
+        }
+        return labels;
+      }
+
+      // Sample datasets (ratings and counts) - static example data
+      const sample = {
+        labels3: generateLabels(3),
+        labels6: generateLabels(6),
+        labels12: generateLabels(12),
+        ratings: {
+          bloom: [4.6,4.7,4.8,4.8,4.8,4.8,4.8,4.8,4.8,4.8,4.8,4.8].slice(-12),
+          google: [4.9,4.95,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0].slice(-12),
+          yelp: [5,5,5,5,5,5,5,5,5,5,5,5].slice(-12),
+          fb: [5,5,5,5,5,5,5,5,5,5,5,5].slice(-12)
+        },
+        counts: {
+          bloom: [6,6,7,7,8,8,8,8,8,8,8,8].slice(-12),
+          google: [31,32,33,34,34,35,36,37,38,38,38,38].slice(-12),
+          yelp: [1,1,1,1,1,1,1,1,1,1,1,1].slice(-12),
+          fb: [1,1,1,1,1,1,1,1,1,1,1,1].slice(-12)
+        }
+      };
+
+      // Chart instances
+      let ratingChart = null, countChart = null;
+
+      function createCharts(range){
+        const months = range === '3' ? 3 : range === '6' ? 6 : range === '12' ? 12 : 12;
+        const labels = (months===3)? sample.labels3 : (months===6)? sample.labels6 : sample.labels12;
+
+        const rateDatasets = [
+          { label: 'Google', data: sample.ratings.google.slice(-months), borderColor:'#2ecc71', tension:0.2, fill:false },
+          { label: 'Yelp', data: sample.ratings.yelp.slice(-months), borderColor:'#e74c3c', tension:0.2, fill:false },
+          { label: 'Facebook', data: sample.ratings.fb.slice(-months), borderColor:'#007bff', tension:0.2, fill:false }
+        ];
+
+        const countDatasets = [
+          { label: 'Google ('+sample.counts.google.slice(-months).reduce((a,b)=>b,0)+' reviews)', data: sample.counts.google.slice(-months), borderColor:'#2ecc71', tension:0.2, fill:false },
+          { label: 'Yelp ('+sample.counts.yelp.slice(-months).reduce((a,b)=>b,0)+' review)', data: sample.counts.yelp.slice(-months), borderColor:'#e74c3c', tension:0.2, fill:false },
+          { label: 'Facebook ('+sample.counts.fb.slice(-months).reduce((a,b)=>b,0)+' review)', data: sample.counts.fb.slice(-months), borderColor:'#007bff', tension:0.2, fill:false }
+        ];
+
+        // Rating chart
+        const rCtx = document.getElementById('ratingChart').getContext('2d');
+        if(ratingChart) ratingChart.destroy();
+        ratingChart = new Chart(rCtx, {
+          type: 'line', data: { labels: labels, datasets: rateDatasets },
+          options: { responsive:true, plugins:{legend:{display:true, position:'right'}}, scales:{ y:{ min:1, max:5 } } }
+        });
+
+        // Count chart
+        const cCtx = document.getElementById('countChart').getContext('2d');
+        if(countChart) countChart.destroy();
+        countChart = new Chart(cCtx, {
+          type: 'line', data: { labels: labels, datasets: countDatasets },
+          options: { responsive:true, plugins:{legend:{display:true, position:'right'}}, scales:{ y:{ beginAtZero:true } } }
+        });
+      }
+
+      // init charts with 3 month view
+      document.addEventListener('DOMContentLoaded', function(){
+        // create sample short labels if needed
+        sample.labels3 = generateLabels(3);
+        sample.labels6 = generateLabels(6);
+        sample.labels12 = generateLabels(12);
+        createCharts('3');
+
+        // toggle buttons
+        document.querySelectorAll('.small-toggle').forEach(btn=>{
+          btn.addEventListener('click', function(){
+            document.querySelectorAll('.small-toggle').forEach(x=>x.classList.remove('active'));
+            // set active only on the clicked type group
+            const group = this.parentNode.parentNode.parentNode; // approximate
+            // activate only buttons in the same group
+            Array.from(this.parentNode.children).forEach(x=>x.classList.remove('active'));
+            this.classList.add('active');
+            createCharts(this.dataset.range);
+          });
+        });
+        // initialize connections UI
+        initConnections();
+      });
+
+      // --- Connections UI & simulation ---
+      function initConnections(){
+        const providers = [
+          { id: 'google', name: 'Google', icon: 'G', required: false },
+          { id: 'yelp', name: 'Yelp', icon: '⭐', required: false },
+          { id: 'facebook', name: 'Facebook', icon: 'f', required: false }
+        ];
+
+        const list = document.getElementById('connectionsList');
+        const tpl = document.getElementById('connTpl');
+        if(!list || !tpl) return;
+
+        // load saved state or initialize defaults
+        const state = JSON.parse(localStorage.getItem('rep_connections')||'{}');
+        providers.forEach(p=>{ if(!state[p.id]) state[p.id] = { connected: !!p.required, lastSynced: null }; });
+
+        // render
+        list.innerHTML = '';
+        providers.forEach(p=>{
+          const node = tpl.content.cloneNode(true);
+          const row = node.querySelector('.conn-row');
+          row.querySelector('.icon').textContent = p.icon;
+          row.querySelector('.name').textContent = p.name + (p.required? '':'');
+          const meta = row.querySelector('.meta');
+          const syncInfo = row.querySelector('.syncInfo');
+          const connectBtn = row.querySelector('.connectBtn');
+          const syncBtn = row.querySelector('.syncBtn');
+
+          const s = state[p.id];
+          // show extra info about credentials (per-provider credential hint)
+          if(s.connected){
+            let credText = '';
+            if(s.apiKey) credText = ' — API key configured';
+            if(s.page_access_token) credText = ' — Page token configured';
+            if(s.place_id) credText = ' — Place ID configured';
+            meta.textContent = 'Connected' + credText;
+          } else {
+            meta.textContent = 'Not connected';
+          }
+          syncInfo.textContent = s.lastSynced ? ('Last synced: ' + new Date(s.lastSynced).toLocaleString()) : 'Last synced: never';
+
+          if(p.required){
+            connectBtn.textContent = 'Connected'; connectBtn.disabled = true; connectBtn.style.opacity = '0.7';
+            syncBtn.disabled = false;
+          } else {
+            connectBtn.textContent = s.connected ? 'Disconnect' : 'Connect';
+            connectBtn.disabled = false;
+            syncBtn.disabled = !s.connected;
+          }
+
+          connectBtn.addEventListener('click', function(){
+            if(s.connected){ // disconnect
+              if(p.required) return; // never disconnect required
+              if(!confirm('Disconnect '+p.name+'?')) return;
+              s.connected = false; s.lastSynced = null; // remove any stored credentials
+              // remove provider-specific stored credentials
+              delete s.apiKey; delete s.business_name; delete s.location;
+              delete s.page_access_token; delete s.page_id; delete s.page_url;
+              delete s.place_id; delete s.place_name;
+              localStorage.setItem('rep_connections', JSON.stringify(state));
+              initConnections();
+            } else {
+              // For ease of use: ask the user for an API key or let them leave blank to use server env vars
+              if(p.id === 'yelp' || p.id === 'google' || p.id === 'facebook'){
+                // open modal for UI-based connection instead of prompts
+                openConnectModal(p.id);
+              } else {
+                // generic simulate connect
+                const ok = confirm('Simulate connecting to ' + p.name + ' (OAuth flow)?');
+                if(ok){ s.connected = true; s.lastSynced = Date.now(); localStorage.setItem('rep_connections', JSON.stringify(state)); initConnections(); }
+              }
+            }
+          });
+
+          syncBtn.addEventListener('click', async function(){
+            if(!s.connected){ alert('Connect '+p.name+' first.'); return; }
+            syncBtn.disabled = true; const origText = syncBtn.textContent; syncBtn.textContent = 'Syncing...';
+            try{
+              if(p.id === 'yelp'){
+                // call our serverless sync endpoint with the provided api key (if any) and business info
+                const payload = { provider: 'yelp', apiKey: s.apiKey, business_name: s.business_name, location: s.location };
+                const resp = await fetch('/api/reputation-sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if(!resp.ok){ const txt = await resp.text(); throw new Error('Sync failed: '+txt); }
+                const data = await resp.json();
+                // merge into UI datasets (replace sample arrays)
+                if(window.sampleReviews && Array.isArray(data.reviews)){
+                  // remove existing reviews from this provider and prepend new
+                  window.sampleReviews = (window.sampleReviews||[]).filter(r=>r.provider !== 'yelp').concat(data.reviews);
+                }
+                if(window.sampleListings){ window.sampleListings = window.sampleListings || {}; window.sampleListings['yelp'] = data.listing; }
+                s.lastSynced = data.lastSynced || Date.now();
+                localStorage.setItem('rep_connections', JSON.stringify(state));
+                initConnections();
+                alert(p.name + ' synced successfully.');
+                // re-render lists
+                try{ renderReviews(); renderListings(); }catch(e){}
+              } else if (p.id === 'facebook'){
+                // Facebook sync using stored page access token and page id
+                const payload = { provider: 'facebook', page_access_token: s.page_access_token, page_id: s.page_id, page_url: s.page_url };
+                const resp = await fetch('/api/reputation-sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if(!resp.ok){ const txt = await resp.text(); throw new Error('Facebook sync failed: '+txt); }
+                const data = await resp.json();
+                if(window.sampleReviews && Array.isArray(data.reviews)){
+                  window.sampleReviews = (window.sampleReviews||[]).filter(r=>r.provider !== 'facebook').concat(data.reviews);
+                }
+                window.sampleListings = window.sampleListings || {}; window.sampleListings['facebook'] = data.listing;
+                s.lastSynced = data.lastSynced || Date.now();
+                localStorage.setItem('rep_connections', JSON.stringify(state));
+                initConnections();
+                alert(p.name + ' synced successfully.');
+                try{ renderReviews(); renderListings(); }catch(e){}
+              } else if (p.id === 'google'){
+                // Google Places sync using API key and place id/name
+                const payload = { provider: 'google', apiKey: s.apiKey, place_id: s.place_id || s.place_name };
+                const resp = await fetch('/api/reputation-sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if(!resp.ok){ const txt = await resp.text(); throw new Error('Google sync failed: '+txt); }
+                const data = await resp.json();
+                if(window.sampleReviews && Array.isArray(data.reviews)){
+                  window.sampleReviews = (window.sampleReviews||[]).filter(r=>r.provider !== 'google').concat(data.reviews);
+                }
+                window.sampleListings = window.sampleListings || {}; window.sampleListings['google'] = data.listing;
+                s.lastSynced = data.lastSynced || Date.now();
+                localStorage.setItem('rep_connections', JSON.stringify(state));
+                initConnections();
+                alert(p.name + ' synced successfully.');
+                try{ renderReviews(); renderListings(); }catch(e){}
+              } else {
+                // other providers: simulate
+                await new Promise(r=>setTimeout(r,900));
+                s.lastSynced = Date.now(); localStorage.setItem('rep_connections', JSON.stringify(state)); initConnections(); alert(p.name + ' synced successfully. (simulated)');
+              }
+            }catch(err){ console.error(err); alert('Sync error: '+err.message); }
+            finally{ syncBtn.disabled = false; syncBtn.textContent = origText || 'Sync Now'; }
+          });
+
+          list.appendChild(node);
+        });
+        // persist initial state
+        localStorage.setItem('rep_connections', JSON.stringify(state));
+        // re-render reviews when connections/state changes
+        try{ if(typeof renderReviews==='function') renderReviews(); }catch(e){}
+      }
+
+      // --- Modal helpers for UI-based connection ---
+      function openConnectModal(providerId){
+        const state = JSON.parse(localStorage.getItem('rep_connections')||'{}');
+        const s = state[providerId] || { connected: false };
+        document.getElementById('connectModalTitle').textContent = 'Connect ' + (providerId==='yelp' ? 'Yelp' : providerId);
+      // show/hide fields depending on provider
+      document.getElementById('yelpFields').style.display = (providerId==='yelp') ? 'block' : 'none';
+      document.getElementById('facebookFields').style.display = (providerId==='facebook') ? 'block' : 'none';
+      document.getElementById('googleFields').style.display = (providerId==='google') ? 'block' : 'none';
+      // populate fields
+      if(providerId==='yelp'){
+        document.getElementById('modalApiKey').value = s.apiKey || '';
+        document.getElementById('modalBusinessName').value = s.business_name || '';
+        document.getElementById('modalLocation').value = s.location || '';
+      } else if(providerId==='facebook'){
+        document.getElementById('modalPageToken').value = s.page_access_token || '';
+        document.getElementById('modalPageId').value = s.page_id || '';
+      } else if(providerId === 'google'){
+        document.getElementById('modalGoogleApiKey').value = s.apiKey || '';
+        document.getElementById('modalPlaceIdOrName').value = s.place_id || '';
+      }
+        document.getElementById('connectModal').style.display = 'flex';
+        // store current editing provider on modal element
+        document.getElementById('connectModal').dataset.provider = providerId;
+      }
+
+      function closeConnectModal(){
+        document.getElementById('connectModal').style.display = 'none';
+        delete document.getElementById('connectModal').dataset.provider;
+      }
+
+      // wire modal buttons
+      (function(){
+        const cancel = document.getElementById('modalCancel');
+        const save = document.getElementById('modalSave');
+        if(cancel) cancel.addEventListener('click', function(){ closeConnectModal(); });
+        if(save) save.addEventListener('click', function(){
+          const providerId = document.getElementById('connectModal').dataset.provider;
+          if(!providerId) return closeConnectModal();
+          const state = JSON.parse(localStorage.getItem('rep_connections')||'{}');
+          state[providerId] = state[providerId] || {};
+          state[providerId].connected = true;
+          if(providerId === 'yelp'){
+            state[providerId].apiKey = document.getElementById('modalApiKey').value.trim() || null;
+            state[providerId].business_name = document.getElementById('modalBusinessName').value.trim() || '';
+            state[providerId].location = document.getElementById('modalLocation').value.trim() || '';
+          } else if(providerId === 'facebook'){
+            state[providerId].page_access_token = document.getElementById('modalPageToken').value.trim() || null;
+            state[providerId].page_id = document.getElementById('modalPageId').value.trim() || '';
+          } else if(providerId === 'google'){
+            state[providerId].apiKey = document.getElementById('modalGoogleApiKey').value.trim() || null;
+            // user can provide either a place_id or a freeform business name
+            state[providerId].place_id = document.getElementById('modalPlaceIdOrName').value.trim() || '';
+          }
+          state[providerId].lastSynced = null;
+          localStorage.setItem('rep_connections', JSON.stringify(state));
+          initConnections();
+          closeConnectModal();
+          alert((providerId==='yelp'? 'Yelp' : providerId==='facebook'?'Facebook':providerId==='google'?'Google':providerId) + ' connected (credentials saved locally). Use Sync Now to import data.');
+        });
+      })();
+
+      // Sync All button wiring (calls every visible Sync Now button)
+      (function(){
+        const allBtn = document.getElementById('syncAllBtn');
+        if(!allBtn) return;
+        allBtn.addEventListener('click', function(){
+          const syncs = Array.from(document.querySelectorAll('.syncBtn'));
+          if(syncs.length === 0) return alert('No connections available to sync.');
+          if(!confirm('Sync all connected providers now?')) return;
+          // click each sync button in sequence to avoid rate bursts
+          (async function(){
+            for(const btn of syncs){
+              try{ if(!btn.disabled) btn.click(); await new Promise(r=>setTimeout(r,700)); }catch(e){ /* continue */ }
+            }
+          })();
+        });
+      })();
+
+
+      // --- Reviews UI: sample data, filters and rendering ---
+      const sampleReviews = [
+        { id: 'r1', provider: 'google', date: '2025-10-26', author: 'Carol Turcios', rating: 5, text: 'I was having a hard time finding a Quinceañera dress but Rosita was great solving all my questions and issues. Very friendly and dress was delivered in a short time with no problem even though we are in Utah. Prices with Rosa\'s Flowers were fair enough! I totally recommend them.', replied: false },
+        { id: 'r2', provider: 'google', date: '2025-07-18', author: 'Glenda Gonzalez', rating: 5, text: 'Muy contenta con el arreglo de Rosas Flowers, lo hicieron muy bien, muy puntual y estoy muy agradecida.', replied: true },
+        { id: 'r3', provider: 'google', date: '2025-06-13', author: 'Thomas Simon', rating: 5, text: 'Great place. Not too pricey. Rosa made me a last minute wreath for funeral at very low cost.', replied: false },
+        { id: 'r4', provider: 'yelp', date: '2025-10-01', author: 'Trio Lash', rating: 5, text: 'Couldn\'t be happier. Thanks Rosa', replied: false },
+        { id: 'r5', provider: 'facebook', date: '2025-09-05', author: 'María López', rating: 4, text: 'Buen servicio, pero llegó un poco tarde.', replied: false }
+      ];
+
+      function parseDateISO(d){ return new Date(d+'T00:00:00'); }
+
+      function getConnectedProviderIds(){
+        const state = JSON.parse(localStorage.getItem('rep_connections')||'{}');
+        return Object.keys(state).filter(k=>state[k] && state[k].connected);
+      }
+
+      function setupReviewFilters(){
+        const els = ['filterRating','filterReply','filterSource','filterTime','resetFilters'];
+        els.forEach(id=>{ const el=document.getElementById(id); if(!el) return; if(id==='resetFilters'){
+          el.addEventListener('click', function(){ document.getElementById('filterRating').value='all'; document.getElementById('filterReply').value='all'; document.getElementById('filterSource').value='all'; document.getElementById('filterTime').value='all'; renderReviews(); });
+        } else {
+          el.addEventListener('change', renderReviews);
+        }});
+      }
+
+      function renderReviews(){
+        const list = document.getElementById('reviewsList');
+        const empty = document.getElementById('reviewsEmpty');
+        if(!list) return;
+
+        const connected = getConnectedProviderIds();
+
+        // filters
+        const fRating = document.getElementById('filterRating')?.value || 'all';
+        const fReply = document.getElementById('filterReply')?.value || 'all';
+        const fSource = document.getElementById('filterSource')?.value || 'all';
+        const fTime = document.getElementById('filterTime')?.value || 'all';
+
+  // start with reviews source (use synced data if present) but only for connected providers
+  const reviewsSource = window.sampleReviews || sampleReviews;
+  let rows = (reviewsSource||[]).filter(r => connected.includes(r.provider));
+
+        // apply source filter
+        if(fSource !== 'all') rows = rows.filter(r=>r.provider === fSource);
+
+        // rating
+        if(fRating !== 'all') rows = rows.filter(r=>String(r.rating) === String(fRating));
+
+        // reply status
+        if(fReply === 'replied') rows = rows.filter(r=>r.replied);
+        if(fReply === 'unreplied') rows = rows.filter(r=>!r.replied);
+
+        // time filter (days)
+        if(fTime !== 'all'){
+          const days = parseInt(fTime,10);
+          const cutoff = new Date(); cutoff.setDate(cutoff.getDate()-days);
+          rows = rows.filter(r => parseDateISO(r.date) >= cutoff);
+        }
+
+        // sort newest first
+        rows.sort((a,b)=> parseDateISO(b.date) - parseDateISO(a.date));
+
+        // render
+        list.innerHTML = '';
+        if(rows.length === 0){ empty.style.display = 'block'; return; } else { empty.style.display = 'none'; }
+
+        rows.forEach(r=>{
+          const div = document.createElement('div');
+          div.className = 'card';
+          div.style.marginBottom = '12px';
+          div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start">
+              <div style="display:flex; gap:12px; align-items:center">
+                <div style="width:36px;height:36px;border-radius:18px;background:#fff;display:flex;align-items:center;justify-content:center;border:1px solid #eee;font-weight:700">${r.provider==='google'?'G': r.provider==='yelp'?'Y':'f'}</div>
+                <div>
+                  <div style="font-size:13px;color:#999">${new Date(r.date).toLocaleDateString()}</div>
+                  <div style="font-weight:700;font-size:15px">${r.author}</div>
+                </div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-weight:700">${r.rating.toFixed(1)} <span style="color:#f5c518">★★★★★</span></div>
+              </div>
+            </div>
+            <div style="margin-top:10px;color:#333">${r.text}</div>
+            <div style="display:flex; justify-content:flex-end; margin-top:8px">
+              <button data-id="${r.id}" class="replyBtn small-btn">${r.replied? 'Replied' : 'Reply'}</button>
+            </div>
+          `;
+
+          list.appendChild(div);
+        });
+
+        // wire reply buttons
+        list.querySelectorAll('.replyBtn').forEach(b=>{
+          b.addEventListener('click', function(){
+            const id = this.dataset.id; const rv = sampleReviews.find(x=>x.id===id); if(!rv) return;
+            if(rv.replied){ alert('This review already has a reply.'); return; }
+            const msg = prompt('Write a reply to '+rv.author+':');
+            if(msg && msg.trim().length>0){ rv.replied = true; // mark locally
+              // persist replies simple: store ids in localStorage
+              const replied = JSON.parse(localStorage.getItem('rep_replied')||'[]'); replied.push(rv.id); localStorage.setItem('rep_replied', JSON.stringify(replied));
+              alert('Reply saved (simulated).'); renderReviews(); }
+          });
+        });
+      }
+
+      // when the page loads, wire filters and render
+      document.addEventListener('DOMContentLoaded', function(){ setupReviewFilters(); renderReviews(); renderListings();
+        // also re-render when rep_connections changes (simple interval watcher)
+        let lastConn = localStorage.getItem('rep_connections');
+        setInterval(function(){ const cur = localStorage.getItem('rep_connections'); if(cur !== lastConn){ lastConn = cur; renderReviews(); renderListings(); } }, 800);
+      });
+
+      // --- Listings: sample data, render list and detail view ---
+      const sampleListings = {
+        google: {
+          id: 'google', name: "Google", connectedName: "Rosa's Flowers Events", website: 'https://rosasflowersevents.com/', address: '8950 Krewstown Rd\nPhiladelphia, PA, US\n19115', phone: '215-552-5113', hours: ['Monday: 10:00 - 18:00','Tuesday: 10:00 - 18:00','Wednesday: 10:00 - 18:00','Thursday: 10:00 - 18:00','Friday: 10:00 - 18:00','Saturday: 10:00 - 18:00','Sunday: Closed'], serviceAreas: ['Philadelphia, PA, USA'], attributes: ['Small business'], profile: { name: "Rosa's Flowers Events", address: '8950 Krewstown Rd\nPhiladelphia, PA, US\n19115', phone: '215-552-5113', website: 'https://rosasflowersevents.com/' }
+        },
+        yelp: {
+          id: 'yelp', name: 'Yelp', connectedName: "Rosa's Flowers Events", website: '', address: '8950 Krewstown Rd\nPhiladelphia, PA, US\n19115', phone: '215-552-5113', hours: ['Monday: 10:00 - 18:00'], serviceAreas: ['Philadelphia, PA, USA'], attributes: ['Delivery','In-store pickup'], profile: { name: "Rosa's Flowers Events", address: '8950 Krewstown Rd\nPhiladelphia, PA, US\n19115', phone: '215-552-5113', website: '' }
+        },
+        facebook: {
+          id: 'facebook', name: 'Facebook', connectedName: "Rosa's Flowers Events LLC", website: 'https://rosasflowersevents.com/', address: '8950 Krewstown Rd\nPhiladelphia, PA, US\n19115', phone: '215-552-5113', hours: ['Monday: 10:00 - 18:00'], serviceAreas: ['Philadelphia, PA, USA'], attributes: ['Facebook','Instagram'], profile: { name: "Rosa's Flowers Events LLC", address: '8950 Krewstown Rd\nPhiladelphia, PA, US\n19115', phone: '215-552-5113', website: 'https://rosasflowersevents.com/' }
+        }
+      };
+
+      function renderListings(){
+        const list = document.getElementById('listingsList'); if(!list) return;
+        const tpl = document.getElementById('listingTpl'); if(!tpl) return;
+        const state = JSON.parse(localStorage.getItem('rep_connections')||'{}');
+        list.innerHTML = '';
+        const dataSource = window.sampleListings || sampleListings;
+        Object.keys(dataSource).forEach(k=>{
+          const data = dataSource[k] || sampleListings[k];
+          const node = tpl.content.cloneNode(true);
+          node.querySelector('.l-icon').textContent = data.id==='google'?'G': data.id==='yelp'?'Y':'f';
+          node.querySelector('.l-name').textContent = `${data.name} connected to ${data.connectedName}`;
+          node.querySelector('.l-note').style.display = 'block';
+          // if not connected, change note
+          const s = state[data.id];
+          if(!s || !s.connected){ node.querySelector('.l-note').textContent = 'Not connected'; node.querySelector('.l-note').style.color = '#666'; }
+          const btn = node.querySelector('.seeDetailsBtn');
+          btn.addEventListener('click', function(){ showListingDetail(data.id); });
+          list.appendChild(node);
+        });
+      }
+
+      function formatInfo(htmlLines){ return htmlLines.map(l=>`<div style="margin-bottom:8px">${l}</div>`).join(''); }
+
+      function showListingDetail(id){
+        const detail = document.getElementById('listingDetail'); const title = document.getElementById('detailTitle');
+        const yourInfo = document.getElementById('yourInfo'); const providerInfo = document.getElementById('providerInfo'); const providerNameShort = document.getElementById('providerNameShort');
+  const ds = window.sampleListings || sampleListings;
+  const data = ds[id] || sampleListings[id]; if(!data) return;
+        // title/provider
+        title.textContent = `${data.name} connected to ${data.connectedName}`;
+        providerNameShort.textContent = data.name;
+
+        // left column: your info
+        const leftHtml = [];
+        leftHtml.push(`<strong>Name</strong><div>${data.connectedName}</div>`);
+        leftHtml.push(`<strong>Address</strong><div style="white-space:pre-line">${data.address}</div>`);
+        leftHtml.push(`<strong>Phone Number</strong><div>${data.phone}</div>`);
+        if(data.website) leftHtml.push(`<strong>Website Link</strong><div><a href="${data.website}" target="_blank">${data.website}</a></div>`);
+        leftHtml.push(`<hr>`);
+        leftHtml.push(`<strong>Store Hours</strong><div>${formatInfo(data.hours)}</div>`);
+        leftHtml.push(`<strong>Service Areas</strong><div>${data.serviceAreas.map(s=>`<span style="background:#0b63d6;color:#fff;padding:6px 10px;border-radius:20px;display:inline-block;margin:6px 6px 0 0">${s}</span>`).join('')}</div>`);
+        leftHtml.push(`<strong>Attributes</strong><div>${data.attributes.map(a=>`<span style="background:#0b63d6;color:#fff;padding:6px 10px;border-radius:20px;display:inline-block;margin:6px 6px 0 0">${a}</span>`).join('')}</div>`);
+
+        // right column: provider profile (simulated remote profile)
+        const rightHtml = [];
+        rightHtml.push(`<strong>Name</strong><div>${data.profile.name}</div>`);
+        rightHtml.push(`<strong>Address</strong><div style="white-space:pre-line">${data.profile.address}</div>`);
+        rightHtml.push(`<strong>Phone Number</strong><div>${data.profile.phone}</div>`);
+        if(data.profile.website) rightHtml.push(`<strong>Website Link</strong><div><a href="${data.profile.website}" target="_blank">${data.profile.website}</a></div>`);
+        rightHtml.push(`<hr>`);
+        rightHtml.push(`<strong>Store Hours</strong><div>${formatInfo(data.hours)}</div>`);
+        rightHtml.push(`<strong>Service Areas</strong><div>${data.serviceAreas.map(s=>`<span style="background:#0b63d6;color:#fff;padding:6px 10px;border-radius:20px;display:inline-block;margin:6px 6px 0 0">${s}</span>`).join('')}</div>`);
+
+        yourInfo.innerHTML = leftHtml.join('');
+        providerInfo.innerHTML = rightHtml.join('');
+
+        // show detail and scroll into view
+        detail.style.display = 'block';
+        try{ detail.scrollIntoView({behavior:'smooth'}); }catch(e){}
+
+        // wire back link
+        document.getElementById('backToListings').addEventListener('click', function(e){ e.preventDefault(); document.getElementById('listingDetail').style.display='none'; document.getElementById('listingsList').scrollIntoView({behavior:'smooth'}); });
+      }
+    </script>
+  </body>
+</html>

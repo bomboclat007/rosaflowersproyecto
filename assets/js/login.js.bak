@@ -1,0 +1,52 @@
+// Backup of previous login.js (created automatically by site-login conversion)
+// Original contents preserved for safety.
+// -------------------------------------------------------------------------
+// Desactivar funcionalidad de login
+document.addEventListener('DOMContentLoaded', function() {
+    const loginButtons = document.querySelectorAll('.user-accounts-link');
+    loginButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault(); // Prevenir la redirección
+            console.log('Login temporalmente deshabilitado');
+            return false;
+        });
+    });
+});
+
+// Ensure 'Dresses' nav link exists site-wide and fix header active state when needed
+document.addEventListener('DOMContentLoaded', function(){
+    try{
+        var headerNav = document.querySelector('#header');
+        if(!headerNav) headerNav = document.body;
+
+        // If there's no dresses link in the header nav, insert one near other nav items
+        if(!document.querySelector('a[href="dresses.html"]')){
+            var navContainer = document.querySelector('.header-nav');
+            if(!navContainer) navContainer = document.querySelector('#header');
+            if(navContainer){
+                var wrapper = document.createElement('div');
+                wrapper.className = 'header-nav-item';
+                wrapper.innerHTML = '<a href="dresses.html" data-animation-role="header-element"><span class="header-nav-folder-title-text">Dresses</span></a>';
+                // append at end of navContainer so it's visible across pages
+                navContainer.appendChild(wrapper);
+            }
+        }
+
+        // If current path is dresses, make Dresses link visibly active and update any header title
+        var path = (window.location && window.location.pathname) || '';
+        if(path.indexOf('dresses') !== -1){
+            var daily = document.querySelector('a[href="dailyflowers.html"]');
+            var dress = document.querySelector('a[href="dresses.html"]');
+            if(daily) daily.classList.remove('active','is-active');
+            if(dress) dress.classList.add('active','is-active');
+
+            var mentions = document.querySelectorAll('h1, h2, .collection-title, .folder-title, .header-nav-folder-title-text');
+            mentions.forEach(function(n){
+                if(!n || !n.textContent) return;
+                if(n.textContent.trim().toLowerCase().indexOf('daily flowers') !== -1){
+                    n.textContent = n.textContent.replace(/Daily Flowers/gi, 'Dresses');
+                }
+            });
+        }
+    }catch(e){ console.warn('nav dresses fixer failed', e); }
+});

@@ -6,56 +6,7 @@
 
 <!-- Removed HTTrack metadata -->
 <head>
-    <!-- Prevent flash of HTTrack/placeholder content: hide until DOM is ready -->
-    <style id="initial-hide">
-      html{visibility:hidden!important;}
-      /* Hide the background/hero image for the products section that creates the "half" image under the header */
-      [data-section-id="66b10672d2bc4439d6758775"] .section-background,
-      [data-section-id="66b10672d2bc4439d6758775"] .background-image-fx {
-        display: none !important;
-        visibility: hidden !important;
-        height: 0 !important;
-        overflow: hidden !important;
-      }
-    </style>
-    <!-- Persistent hero-hide style (kept after DOM ready) -->
-    <style id="hero-hide">
-      /* Keep this rule permanent so the hero/banner stays hidden even after initial-hide is removed */
-      [data-section-id="66b10672d2bc4439d6758775"] .section-background,
-      [data-section-id="66b10672d2bc4439d6758775"] .background-image-fx {
-        display: none !important;
-        visibility: hidden !important;
-        height: 0 !important;
-        overflow: hidden !important;
-      }
-
-      /* Adjust cart position */
-      .absolute-cart-box {
-        top: 80px !important; /* Move cart down from the top */
-      }
-      
-      /* Ensure top banner is fully hidden */
-      .sqs-announcement-bar {
-        display: none !important;
-      }
-      /* Also ensure any background-image set on the section wrapper is removed */
-      [data-section-id="66b10672d2bc4439d6758775"] {
-        background-image: none !important;
-      }
-    </style>
-    <script>
-      (function(){
-        function show(){
-          try{document.documentElement.style.visibility='';}
-          catch(e){}
-          var s=document.getElementById('initial-hide'); if(s) s.parentNode.removeChild(s);
-        }
-        if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', show);
-        else show();
-        // Safety: in case DOMContentLoaded doesn't fire, unhide after 2s
-        setTimeout(show, 2000);
-      })();
-    </script>
+    <!-- removed initial-hide/hero-hide hacks so page header/hero behaves like index.html -->
     <script>
       // Intercept clicks on product links and redirect straight to site index to avoid intermediate HTTrack pages
       (function(){
@@ -146,7 +97,43 @@ for pick up or delivery in Prairieville, Louisiana." />
 <!-- /sqs:beyondspace--pinchable-installer --><script>Static.COOKIE_BANNER_CAPABLE = true;</script>
 <!-- End of Squarespace Headers -->
     <link rel="stylesheet" type="text/css" href="../static1.squarespace.com/static/vta/5c5a519771c10ba3470d8101/versioned-assets/1761320932483-K8SZQ0RD368CXZIE5HY9/static.css">
-      <script src='/assets/js/login.js' defer></script>
+  <script src="/assets/js/site-login.js" defer></script>
+  
+  <!-- Small override: remove underlines from header navigation links -->
+  <style data-generated="dailyflowers-nav-fix">
+    /* Remove underlines and decorative underlines from header navigation */
+    .header-nav a,
+    .header-nav-item a,
+    #header a,
+    .header-nav-folder-title-text,
+    .header-nav a:link,
+    .header-nav a:visited {
+      text-decoration: none !important;
+      border-bottom: none !important;
+      box-shadow: none !important;
+      background-image: none !important;
+    }
+  </style>
+  <!-- Stronger overrides to neutralize background-image-based underlines -->
+  <style data-generated="dailyflowers-nav-strong-fix">
+    body:not(.header--menu-open) .header-nav-item .header-nav-folder-item--active .header-nav-folder-item-content,
+    body:not(.header--menu-open) [data-header-style="solid"].header .header-nav-wrapper .header-nav-item--active a,
+    body:not(.header--menu-open) [data-header-style="solid"].header .header-nav-wrapper a,
+    :not(.header--menu-open) .header-nav-wrapper .header-nav-item--active a,
+    :not(.header--menu-open) .header-nav-wrapper a,
+    .header-nav .header-nav-item--folder .header-nav-folder-content .header-nav-folder-item,
+    .header-nav .header-nav-item--folder .header-nav-folder-content {
+      background-image: none !important;
+      background-repeat: no-repeat !important;
+      background-size: 0 0 !important;
+      background-position: 0 100% !important;
+      box-shadow: none !important;
+      text-decoration: none !important;
+      border-bottom: none !important;
+    }
+    /* also remove pseudo-element decorations if present */
+    .header-nav a::after, .header-nav a::before, #header a::after, #header a::before { display: none !important; content: none !important; }
+  </style>
 </head>
 
   <body
@@ -449,9 +436,9 @@ for pick up or delivery in Prairieville, Louisiana." />
   <script>
     function shouldShowAnnouncementBar() {
       try {
-        if (!window.Static.SQUARESPACE_CONTEXT.showAnnouncementBar) {
-          return false;
-        }
+  
+  
+    <div class="header-nav-item header-nav-item--folder">
         var localDataStr = localStorage.getItem('squarespace-announcement-bar');
         if (localDataStr && JSON.parse(localDataStr).closed) {
           return false;
@@ -778,9 +765,15 @@ for pick up or delivery in Prairieville, Louisiana." />
   
   
 
-
   
-    <div class="header-nav-item header-nav-item--folder">
+  
+      <div class="header-nav-item">
+        <a href="dresses.html" data-animation-role="header-element">
+          <span class="header-nav-folder-title-text">Dresses</span>
+        </a>
+      </div>
+
+      <div class="header-nav-item header-nav-item--folder">
       <a
         class="header-nav-folder-title"
         href="weddings.html"
@@ -2528,6 +2521,9 @@ data-product-list-layout="grid"data-meta-text-alignment="center"data-meta-vertic
           // Force the loader to treat this page as test-mode by default.
           // This makes `/dailyflowers.html` behave like `/dailyflowers.html?stripe_test=1`.
           window.STRIPE_FORCE_TEST = true;
+          // Ensure the Stripe product loader only requests the dailyflowers collection
+          // when on the Daily Flowers page. This prevents Dresses items appearing here.
+          try { window.STRIPE_COLLECTION = window.STRIPE_COLLECTION || 'dailyflowers'; } catch (e) { }
 
           // Función para filtrar productos por precio
           function filterProductsByPrice(min, max) {
@@ -2567,6 +2563,43 @@ data-product-list-layout="grid"data-meta-text-alignment="center"data-meta-vertic
         </script>
         <script src="assets/js/load_products.js"></script>
       </div>
+
+      <script>
+        // Header correction for when `dresses.html` performs a fetch+inject of this page.
+        // dresses.html keeps the browser location as '/dresses.html', but the injected
+        // header comes from dailyflowers and may show 'Daily Flowers' as active. Fix it.
+        (function(){
+          function fixHeaderForDresses(){
+            try{
+              // If we're on dresses path, mark Dresses link active and de-activate Daily Flowers
+              var path = (window.location && window.location.pathname) || '';
+              if (path.indexOf('dresses') === -1) return;
+
+              // Find header nav links
+              var dailyLink = document.querySelector('a[href="dailyflowers.html"]');
+              var dressesLink = document.querySelector('a[href="dresses.html"]');
+
+              // Visual active class used by Squarespace headers can vary; as a robust fallback,
+              // add an explicit 'is-active' class and update any visible text label.
+              if (dailyLink) dailyLink.classList.remove('active', 'is-active');
+              if (dressesLink) dressesLink.classList.add('active', 'is-active');
+
+              // If there is a header title or breadcrumb that contains 'Daily Flowers', replace text
+              var mentions = document.querySelectorAll('h1, h2, .collection-title, .folder-title, .header-nav-folder-title-text');
+              mentions.forEach(function(n){
+                if(!n || !n.textContent) return;
+                if(n.textContent.trim().toLowerCase().indexOf('daily flowers') !== -1){
+                  n.textContent = n.textContent.replace(/Daily Flowers/gi, 'Dresses');
+                }
+              });
+
+            }catch(e){ console.warn('fixHeaderForDresses failed', e); }
+          }
+
+          if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fixHeaderForDresses);
+          else fixHeaderForDresses();
+        })();
+      </script>
 
       <!-- Removed static Squarespace product list so only Stripe products are shown -->
       <div 
@@ -8502,7 +8535,107 @@ data-product-list-layout="grid"data-meta-text-alignment="center"data-meta-vertic
   <div id="stripe-product-list" style="display:flex;flex-wrap:wrap;gap:12px;margin:18px 0;justify-content:flex-start;"></div>
   <script src="/assets/js/load_products.js" defer></script>
 
+  <script>
+  // Homepage banner override: look for an active banner in localStorage.website_banners and apply it to the hero
+  (function(){
+    function applyActiveBanner(){
+      try{
+        var raw = localStorage.getItem('website_banners');
+        if(!raw) return;
+        var banners = JSON.parse(raw || '[]');
+        if(!Array.isArray(banners) || banners.length===0) return;
+        var active = banners.find(function(b){ return b && b.active; });
+        if(!active) return;
+
+        var textBlock = document.getElementById('block-96652979e357f4b552a4') || document.querySelector('.fe-block-96652979e357f4b552a4');
+        if(!textBlock) return;
+        var container = textBlock.closest('.fluid-engine') || textBlock.parentElement;
+        if(!container) container = document.body;
+
+        container.style.backgroundImage = 'url("' + active.data + '")';
+        container.style.backgroundSize = 'cover';
+        container.style.backgroundPosition = 'center';
+        container.style.backgroundRepeat = 'no-repeat';
+
+        try{
+          var prevPos = container.style.position;
+          if(!prevPos || prevPos === '' || prevPos === 'static'){
+            container.style.position = 'relative';
+          }
+          var existing = container.querySelector('.active-banner-overlay');
+          if(existing) existing.remove();
+
+          var overlay = document.createElement('div');
+          overlay.className = 'active-banner-overlay';
+          overlay.style.position = 'absolute';
+          overlay.style.top = '0';
+          overlay.style.left = '0';
+          overlay.style.width = '100%';
+          overlay.style.height = '100%';
+          overlay.style.pointerEvents = 'none';
+          overlay.style.backgroundImage = 'url("' + active.data + '")';
+          overlay.style.backgroundSize = 'cover';
+          overlay.style.backgroundPosition = 'center';
+          overlay.style.backgroundRepeat = 'no-repeat';
+          overlay.style.transform = 'scale(1.06)';
+          overlay.style.transformOrigin = 'center';
+          overlay.style.zIndex = '10000';
+          overlay.style.boxSizing = 'border-box';
+
+          if(container.firstChild) container.insertBefore(overlay, container.firstChild);
+          else container.appendChild(overlay);
+
+          try{ if(textBlock && textBlock.style){ if(!textBlock.style.position || textBlock.style.position === 'static') textBlock.style.position = 'relative'; textBlock.style.zIndex = '10001'; } }catch(e){}
+
+          try{
+            var imgs = container.querySelectorAll('img');
+            imgs.forEach(function(i){
+              try{ if(!i.hasAttribute('data-prev-style')) i.setAttribute('data-prev-style', i.getAttribute('style')||''); i.style.opacity = '0'; i.style.visibility = 'hidden'; i.style.pointerEvents = 'none'; }catch(e){}
+            });
+          }catch(e){ console.warn('applyActiveBanner: could not hide template imgs', e); }
+        }catch(e){ console.warn('applyActiveBanner: could not create overlay', e); }
+
+        try{ if(!container.style.minHeight) container.style.minHeight = '360px'; }catch(e){}
+      }catch(e){ console.warn('applyActiveBanner error', e); }
+    }
+
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyActiveBanner);
+    else applyActiveBanner();
+  })();
+  </script>
+
   <script defer="true" src="../static1.squarespace.com/static/vta/5c5a519771c10ba3470d8101/scripts/site-bundle.b5b3fbf6826f9d2f8a86db2c7d2e44ab.js" type="text/javascript"></script>
+
+  <!-- Login modal and scripts -->
+  <link rel="stylesheet" href="/assets/css/login-modal.css">
+  <div id="loginModal" style="display:none;">
+    <div class="modal-backdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="tabs">
+          <div id="loginTab" class="tab active">Login</div>
+          <div id="registerTab" class="tab">Register</div>
+        </div>
+        <div class="close">×</div>
+      </div>
+      <div class="modal-body">
+        <div class="login-pane">
+          <div class="form-row"><input id="loginEmail" type="email" placeholder="Email"></div>
+          <div class="form-row"><input id="loginPassword" type="password" placeholder="Password"></div>
+          <div class="actions"><button id="loginBtn" class="btn">Login</button></div>
+        </div>
+        <div class="register-pane" style="display:none;">
+          <div class="form-row"><input id="regName" type="text" placeholder="Full name"></div>
+          <div class="form-row"><input id="regEmail" type="email" placeholder="Email"></div>
+          <div class="form-row"><input id="regPassword" type="password" placeholder="Password"></div>
+          <div class="form-row"><input id="regConfirmPassword" type="password" placeholder="Confirm password"></div>
+          <div class="actions"><button id="regBtn" class="btn">Register</button></div>
+        </div>
+        <div id="loginMsg" style="margin-top:8px;color:#a00"></div>
+      </div>
+    </div>
+  </div>
+  <script src="/assets/js/login-modal.js" defer></script>
     <!-- sqs:beyondspace--datepicker-field -->
 <script src="../static1.squarespace.com/static/56aa9020d51cd471ca1987f8/t/67aa18052ead3a10f55f1ddc/1739200517542/beyondspace-datepicker.js_%3b%20filename_%3dUTF-8%27%27beyondspace-datepicker.js" id="beyondspace--datepicker-field" data-widget-config='{"rules":[{"name":"Delivery Date","displayInline":true,"showInCart":true,"dateFormat":"m-d-Y","cutoffTime":"12:00","leadTime":0,"timezone":"America/Antigua","disabledWeekday":["saturday","sunday"],"disabledDates":[{"startDate":"2025-01-01","endDate":"2025-01-01"},{"startDate":"2025-02-10","endDate":"2025-02-14"},{"startDate":"2025-04-18","endDate":"2025-04-19"},{"startDate":"2025-04-25","endDate":"2025-04-27"},{"startDate":"2025-05-05","endDate":"2025-05-11"},{"startDate":"2025-06-30","endDate":"2025-07-07"},{"startDate":"2025-05-26","endDate":"2025-05-27"},{"startDate":"2025-09-01","endDate":"2025-09-01"},{"startDate":"2025-11-27","endDate":"2025-11-27"},{"startDate":"2025-12-24","endDate":"2025-12-25"}],"enabledDates":[{"startDate":"2024-11-30","endDate":"2024-11-30"},{"startDate":"2024-12-07","endDate":"2024-12-07"},{"startDate":"2024-12-14","endDate":"2024-12-14"},{"startDate":"2025-01-02","endDate":"2025-01-02"},{"startDate":"2025-03-15","endDate":"2025-03-15"},{"startDate":"2025-03-22","endDate":"2025-03-22"},{"startDate":"2025-03-29","endDate":"2025-03-29"},{"startDate":"2025-04-05","endDate":"2025-04-05"},{"startDate":"2025-04-12","endDate":"2025-04-12"},{"startDate":"2025-04-26","endDate":"2025-04-26"},{"startDate":"2025-05-03","endDate":"2025-05-03"}]},{"displayInline":true,"showInCart":true,"dateFormat":"m-d-Y","cutoffTime":"4:00 pm","timezone":"Default","disabledWeekday":["sunday","saturday","monday"],"name":"Celebration of Life Delivery","leadTime":2,"enabledDates":[{"startDate":"2025-07-19","endDate":"2025-07-19"}],"disabledDates":[{"startDate":"2025-05-05","endDate":"2025-05-11"},{"startDate":"2025-06-30","endDate":"2025-07-05"},{"startDate":"2025-05-27","endDate":"2025-05-27"},{"startDate":"2025-06-01","endDate":"2025-06-07"},{"startDate":"2025-11-27","endDate":"2025-11-27"},{"startDate":"2025-12-24","endDate":"2025-12-25"}]},{"displayInline":true,"showInCart":true,"dateFormat":"m-d-Y","leadTime":0,"timezone":"Default","disabledWeekday":["saturday","sunday"],"name":"Grad, Recital, First Communion","cutoffTime":"1:00 pm","disabledDates":[{"startDate":"2025-06-30","endDate":"2025-07-07"},{"startDate":"2025-05-26","endDate":"2025-05-27"},{"startDate":"2025-09-01","endDate":"2025-09-01"},{"startDate":"2025-11-27","endDate":"2025-11-27"},{"startDate":"2025-12-24","endDate":"2025-12-25"}]},{"displayInline":true,"showInCart":true,"dateFormat":"m-d-Y","cutoffTime":"12:00","leadTime":0,"timezone":"Default","disabledWeekday":["monday","tuesday","sunday"],"name":"Pink Arrangements","disabledDates":[{"startDate":"2025-09-23","endDate":"2025-09-30"},{"startDate":"2025-10-05","endDate":"2025-12-31"}]}],"color":"#fad1ea","headerColor":"#f294cd","headerBackground":"#faf5f5"}'></script>
 <!-- /sqs:beyondspace--datepicker-field --><svg xmlns="http://www.w3.org/2000/svg" version="1.1" style="display:none" data-usage="social-icons-svg"><symbol id="facebook-unauth-icon" viewBox="0 0 64 64"><path d="M34.1,47V33.3h4.6l0.7-5.3h-5.3v-3.4c0-1.5,0.4-2.6,2.6-2.6l2.8,0v-4.8c-0.5-0.1-2.2-0.2-4.1-0.2 c-4.1,0-6.9,2.5-6.9,7V28H24v5.3h4.6V47H34.1z"/></symbol><symbol id="facebook-unauth-mask" viewBox="0 0 64 64"><path d="M0,0v64h64V0H0z M39.6,22l-2.8,0c-2.2,0-2.6,1.1-2.6,2.6V28h5.3l-0.7,5.3h-4.6V47h-5.5V33.3H24V28h4.6V24 c0-4.6,2.8-7,6.9-7c2,0,3.6,0.1,4.1,0.2V22z"/></symbol><symbol id="email-icon" viewBox="0 0 64 64"><path d="M17,22v20h30V22H17z M41.1,25L32,32.1L22.9,25H41.1z M20,39V26.6l12,9.3l12-9.3V39H20z"/></symbol><symbol id="email-mask" viewBox="0 0 64 64"><path d="M41.1,25H22.9l9.1,7.1L41.1,25z M44,26.6l-12,9.3l-12-9.3V39h24V26.6z M0,0v64h64V0H0z M47,42H17V22h30V42z"/></symbol><symbol id="instagram-unauth-icon" viewBox="0 0 64 64"><path d="M46.91,25.816c-0.073-1.597-0.326-2.687-0.697-3.641c-0.383-0.986-0.896-1.823-1.73-2.657c-0.834-0.834-1.67-1.347-2.657-1.73c-0.954-0.371-2.045-0.624-3.641-0.697C36.585,17.017,36.074,17,32,17s-4.585,0.017-6.184,0.09c-1.597,0.073-2.687,0.326-3.641,0.697c-0.986,0.383-1.823,0.896-2.657,1.73c-0.834,0.834-1.347,1.67-1.73,2.657c-0.371,0.954-0.624,2.045-0.697,3.641C17.017,27.415,17,27.926,17,32c0,4.074,0.017,4.585,0.09,6.184c0.073,1.597,0.326,2.687,0.697,3.641c0.383,0.986,0.896,1.823,1.73,2.657c0.834,0.834,1.67,1.347,2.657,1.73c0.954,0.371,2.045,0.624,3.641,0.697C27.415,46.983,27.926,47,32,47s4.585-0.017,6.184-0.09c1.597-0.073,2.687-0.326,3.641-0.697c0.986-0.383,1.823-0.896,2.657-1.73c0.834-0.834,1.347-1.67,1.73-2.657c0.371-0.954,0.624-2.045,0.697-3.641C46.983,36.585,47,36.074,47,32S46.983,27.415,46.91,25.816z M44.21,38.061c-0.067,1.462-0.311,2.257-0.516,2.785c-0.272,0.7-0.597,1.2-1.122,1.725c-0.525,0.525-1.025,0.85-1.725,1.122c-0.529,0.205-1.323,0.45-2.785,0.516c-1.581,0.072-2.056,0.087-6.061,0.087s-4.48-0.015-6.061-0.087c-1.462-0.067-2.257-0.311-2.785-0.516c-0.7-0.272-1.2-0.597-1.725-1.122c-0.525-0.525-0.85-1.025-1.122-1.725c-0.205-0.529-0.45-1.323-0.516-2.785c-0.072-1.582-0.087-2.056-0.087-6.061s0.015-4.48,0.087-6.061c0.067-1.462,0.311-2.257,0.516-2.785c0.272-0.7,0.597-1.2,1.122-1.725c0.525-0.525,1.025-0.85,1.725-1.122c0.529-0.205,1.323-0.45,2.785-0.516c1.582-0.072,2.056-0.087,6.061-0.087s4.48,0.015,6.061,0.087c1.462,0.067,2.257,0.311,2.785,0.516c0.7,0.272,1.2,0.597,1.725,1.122c0.525,0.525,0.85,1.025,1.122,1.725c0.205,0.529,0.45,1.323,0.516,2.785c0.072,1.582,0.087,2.056,0.087,6.061S44.282,36.48,44.21,38.061z M32,24.297c-4.254,0-7.703,3.449-7.703,7.703c0,4.254,3.449,7.703,7.703,7.703c4.254,0,7.703-3.449,7.703-7.703C39.703,27.746,36.254,24.297,32,24.297z M32,37c-2.761,0-5-2.239-5-5c0-2.761,2.239-5,5-5s5,2.239,5,5C37,34.761,34.761,37,32,37z M40.007,22.193c-0.994,0-1.8,0.806-1.8,1.8c0,0.994,0.806,1.8,1.8,1.8c0.994,0,1.8-0.806,1.8-1.8C41.807,22.999,41.001,22.193,40.007,22.193z"/></symbol><symbol id="instagram-unauth-mask" viewBox="0 0 64 64"><path d="M43.693,23.153c-0.272-0.7-0.597-1.2-1.122-1.725c-0.525-0.525-1.025-0.85-1.725-1.122c-0.529-0.205-1.323-0.45-2.785-0.517c-1.582-0.072-2.056-0.087-6.061-0.087s-4.48,0.015-6.061,0.087c-1.462,0.067-2.257,0.311-2.785,0.517c-0.7,0.272-1.2,0.597-1.725,1.122c-0.525,0.525-0.85,1.025-1.122,1.725c-0.205,0.529-0.45,1.323-0.516,2.785c-0.072,1.582-0.087,2.056-0.087,6.061s0.015,4.48,0.087,6.061c0.067,1.462,0.311,2.257,0.516,2.785c0.272,0.7,0.597,1.2,1.122,1.725s1.025,0.85,1.725,1.122c0.529,0.205,1.323,0.45,2.785,0.516c1.581,0.072,2.056,0.087,6.061,0.087s4.48-0.015,6.061-0.087c1.462-0.067,2.257-0.311,2.785-0.516c0.7-0.272,1.2-0.597,1.725-1.122s0.85-1.025,1.122-1.725c0.205-0.529,0.45-1.323,0.516-2.785c0.072-1.582,0.087-2.056,0.087-6.061s-0.015-4.48-0.087-6.061C44.143,24.476,43.899,23.682,43.693,23.153z M32,39.703c-4.254,0-7.703-3.449-7.703-7.703s3.449-7.703,7.703-7.703s7.703,3.449,7.703,7.703S36.254,39.703,32,39.703z M40.007,25.793c-0.994,0-1.8-0.806-1.8-1.8c0-0.994,0.806-1.8,1.8-1.8c0.994,0,1.8,0.806,1.8,1.8C41.807,24.987,41.001,25.793,40.007,25.793z M0,0v64h64V0H0z M46.91,38.184c-0.073,1.597-0.326,2.687-0.697,3.641c-0.383,0.986-0.896,1.823-1.73,2.657c-0.834,0.834-1.67,1.347-2.657,1.73c-0.954,0.371-2.044,0.624-3.641,0.697C36.585,46.983,36.074,47,32,47s-4.585-0.017-6.184-0.09c-1.597-0.073-2.687-0.326-3.641-0.697c-0.986-0.383-1.823-0.896-2.657-1.73c-0.834-0.834-1.347-1.67-1.73-2.657c-0.371-0.954-0.624-2.044-0.697-3.641C17.017,36.585,17,36.074,17,32c0-4.074,0.017-4.585,0.09-6.185c0.073-1.597,0.326-2.687,0.697-3.641c0.383-0.986,0.896-1.823,1.73-2.657c0.834-0.834,1.67-1.347,2.657-1.73c0.954-0.371,2.045-0.624,3.641-0.697C27.415,17.017,27.926,17,32,17s4.585,0.017,6.184,0.09c1.597,0.073,2.687,0.326,3.641,0.697c0.986,0.383,1.823,0.896,2.657,1.73c0.834,0.834,1.347,1.67,1.73,2.657c0.371,0.954,0.624,2.044,0.697,3.641C46.983,27.415,47,27.926,47,32C47,36.074,46.983,36.585,46.91,38.184z M32,27c-2.761,0-5,2.239-5,5s2.239,5,5,5s5-2.239,5-5S34.761,27,32,27z"/></symbol></svg>

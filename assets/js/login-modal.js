@@ -145,7 +145,9 @@
     try{
       console.debug('[login-modal] DOMContentLoaded handler start');
       var modal = document.getElementById('loginModal'); if (!modal) { console.debug('[login-modal] modal not found'); return; }
-    modal.querySelectorAll('.close, .modal-backdrop').forEach(function(el){ el.addEventListener('click', function(e){ e.preventDefault(); hideLoginModal(); }); });
+  // Close/backdrop clicks should NOT bubble to the page (prevents accidental clicks
+  // falling through to underlying handlers — e.g. product loader buttons).
+  modal.querySelectorAll('.close, .modal-backdrop').forEach(function(el){ el.addEventListener('click', function(e){ try{ e.preventDefault(); e.stopPropagation(); }catch(_){ } hideLoginModal(); }); });
     var loginTab = document.getElementById('loginTab'); var registerTab = document.getElementById('registerTab');
     // Helper to set active tab visually and show/hide panes. Uses class + inline style fallback for robustness.
     function setActiveTab(name){ try{

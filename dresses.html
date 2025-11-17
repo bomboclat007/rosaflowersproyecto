@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dresses — The Floral Cottage</title>
+    <link rel="canonical" href="dresses.html" />
+    <meta name="robots" content="index,follow" />
+    <style>/* minimal style while we fetch */body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:0;padding:1rem}#loader{max-width:900px;margin:3rem auto;text-align:center;color:#444}</style>
+  </head>
+  <body>
+    <div id="loader">Cargando página de Dresses…</div>
+    <!-- Static loader fallback: load the static product loader directly so that
+      browsers or extensions that block inline JS still fetch the product script. -->
+    <script src="/assets/js/load_products_static.js?cb=1" integrity="" crossorigin="anonymous"></script>
+    <script>
+      // Tell the product loader to only request the 'dresses' collection from the API.
+      // This must be set before the fetched page scripts are re-executed.
+      try{ window.STRIPE_COLLECTION = window.STRIPE_COLLECTION || 'dresses'; }catch(e){}
+
+      // Robust fetch+inject: parse remote HTML, replace head/body, and re-run scripts.
+      // This avoids wiping document.documentElement which can leave the page in a blank state.
+      (async function(){
+        try{
+          const res = await fetch('/dailyflowers.html');
+          if(!res.ok) throw new Error('fetch failed ' + res.status);
+          const text = await res.text();
+
+          const parser = new DOMParser();
+          const newDoc = parser.parseFromString(text, 'text/html');
+
+          // Replace head contents (styles, meta, links). Insert a base tag so relative URLs resolve.
+          const base = document.createElement('base');
+          base.href = '/';
+          // Clear existing head then populate
+          document.title = newDoc.title || document.title;
+          // Remove existing head children then append new ones to ensure clean state
+          while (document.head.firstChild) document.head.removeChild(document.head.firstChild);
+          document.head.appendChild(base);
+          // Copy head children from fetched document
+          newDoc.head && Array.from(newDoc.head.children).forEach(n => {
+            // Don't duplicate base if present
+            if (n.tagName && n.tagName.toLowerCase() === 'base') return;
+            document.head.appendChild(document.importNode(n, true));
+          });
+
+          // Inject small override to remove underlines from header navigation links
+          try{
+            var fix = document.createElement('style');
+            fix.setAttribute('data-generated','dresses-nav-fix');
+            fix.appendChild(document.createTextNode('\n/* Remove underlines from header navigation links */\n.header-nav a, .header-nav-item a, #header a, .header-nav-folder-title-text, .header-nav a:link, .header-nav a:visited {\n  text-decoration: none !important;\n  border-bottom: none !important;\n  box-shadow: none !important;\n  background-image: none !important;\n}\n'));
+            document.head.appendChild(fix);
+          }catch(e){/* ignore */}
+
+          // Stronger overrides to neutralize background-image-based underlines
+          try{
+            var fix2 = document.createElement('style');
+            fix2.setAttribute('data-generated','dresses-nav-strong-fix');
+            fix2.appendChild(document.createTextNode('\n/* Strong overrides: cover various header selectors that draw decorative underlines */\nbody:not(.header--menu-open) .header-nav-item .header-nav-folder-item--active .header-nav-folder-item-content,\nbody:not(.header--menu-open) [data-header-style="solid"].header .header-nav-wrapper .header-nav-item--active a,\nbody:not(.header--menu-open) [data-header-style="solid"].header .header-nav-wrapper a,\n:not(.header--menu-open) .header-nav-wrapper .header-nav-item--active a,\n:not(.header--menu-open) .header-nav-wrapper a,\n.header-nav .header-nav-item--folder .header-nav-folder-content .header-nav-folder-item,\n.header-nav .header-nav-item--folder .header-nav-folder-content {\n  background-image: none !important;\n  background-repeat: no-repeat !important;\n  background-size: 0 0 !important;\n  background-position: 0 100% !important;\n  box-shadow: none !important;\n  text-decoration: none !important;\n  border-bottom: none !important;\n}\n/* also remove pseudo-element decorations if present */\n.header-nav a::after, .header-nav a::before, #header a::after, #header a::before { display: none !important; content: none !important; }\n'));
+            document.head.appendChild(fix2);
+          }catch(e){/* ignore */}
+
+          // Restore underline for the active nav item on the Dresses page only
+          try{
+            var restore = document.createElement('style');
+            restore.setAttribute('data-generated','dresses-nav-restore');
+            restore.appendChild(document.createTextNode('\n/* On Dresses page: restore decorative underline for active nav item */\n.header-nav-item--active > a, .header-nav-wrapper .header-nav-item--active > a {\n  background-image: linear-gradient(currentcolor, currentcolor) !important;\n  background-repeat: repeat-x !important;\n  background-size: 1px 1px !important;\n  background-position: 0 100% !important;\n}\n'));
+            document.head.appendChild(restore);
+          }catch(e){/* ignore */}
+
+          // Extra: target the Dresses nav link by href to guarantee underline
+          try{
+            var byHref = document.createElement('style');
+            byHref.setAttribute('data-generated','dresses-nav-href-restore');
+            byHref.appendChild(document.createTextNode('\n/* Force decorative underline on the Dresses nav link (by href) */\n#header a[href$="dresses.html"], #header a[href*="/dresses"], .header-nav-wrapper a[href$="dresses.html"] {\n  background-image: linear-gradient(currentcolor, currentcolor) !important;\n  background-repeat: repeat-x !important;\n  background-size: 1px 1px !important;\n  background-position: 0 100% !important;\n  text-decoration: none !important;\n}\n'));
+            document.head.appendChild(byHref);
+          }catch(e){/* ignore */}
+
+          // Replace body HTML
+          document.body.innerHTML = newDoc.body ? newDoc.body.innerHTML : '';
+
+          // Re-execute scripts from the fetched page: create new script elements so they run.
+          const scripts = newDoc.querySelectorAll('script');
+          for (const s of scripts) {
+            try {
+              const ns = document.createElement('script');
+              // copy attributes
+              for (const attr of s.attributes || []) ns.setAttribute(attr.name, attr.value);
+              // if external script, set src (browser will fetch)
+              if (s.src) {
+                ns.src = s.src;
+                // preserve execution order by loading synchronously
+                // ensure dynamic script executes immediately: remove defer if present
+                ns.async = false;
+                try{ ns.removeAttribute('defer'); }catch(e){}
+                document.body.appendChild(ns);
+                // wait for external script to load before continuing
+                await new Promise((resolve, reject) => { ns.onload = resolve; ns.onerror = resolve; });
+              } else {
+                // inline script: set textContent so it executes
+                ns.textContent = s.textContent;
+                document.body.appendChild(ns);
+              }
+            } catch (errScript) {
+              // continue even if a script fails
+              console.warn('script inject failed', errScript);
+            }
+          }
+
+          // Force-load the product loader script without defer to guarantee it runs.
+          try{
+            const force = document.createElement('script');
+            // add cache-busting query param so stale cached copies are bypassed
+            force.src = '/assets/js/load_products.js?cb=' + Date.now();
+            force.async = false;
+            document.body.appendChild(force);
+            // wait briefly for it to load
+            await new Promise((resolve)=>{ force.onload = resolve; setTimeout(resolve, 1500); });
+          }catch(e){ console.warn('force load_products failed', e); }
+
+        } catch (err) {
+          console.error('dresses fetch/inject failed', err);
+          // fallback: navigate to original page so user sees content
+          window.location.href = '/dailyflowers.html';
+        }
+      })();
+    </script>
+  </body>
+</html>

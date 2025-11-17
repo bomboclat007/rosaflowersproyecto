@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My Shop — Admin</title>
+  <style>
+    :root{ --bg:#f4f6f8; --sidebar:#313443; --accent:#ff6aa3; --muted:#9aa0a6 }
+    body{ margin:0; font-family:Inter, system-ui, Arial, Helvetica, sans-serif; background:var(--bg); color:#222 }
+    .layout{ display:flex; min-height:100vh }
+    .sidebar{ width:260px; background:var(--sidebar); color:#fff; padding:18px 12px; box-sizing:border-box }
+    .sidebar .brand{ display:flex; align-items:center; gap:10px; font-weight:600; margin-bottom:18px }
+    .sidebar .brand .icon{ width:34px; height:34px; background:#fff1; border-radius:8px; display:inline-flex; align-items:center; justify-content:center }
+    .side-nav{ margin:8px 0; padding:0; list-style:none }
+    .side-nav li{ padding:10px 12px; border-radius:6px; color:#e6e7ea; cursor:pointer; margin-bottom:6px }
+    .side-nav li.active{ background:#3a3d4f; color:#fff }
+    .side-nav li .badge{ background: #ffd666; color:#2b2b2b; padding:4px 8px; border-radius:999px; font-size:12px; margin-left:8px }
+    .main{ flex:1; padding:28px }
+    .top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px }
+    .card{ background:#fff; padding:18px; border-radius:8px; box-shadow:0 4px 20px rgba(16,24,40,0.04) }
+    @media (max-width:880px){ .sidebar{ display:none } .layout{ flex-direction:column } .main{ padding:12px } }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><div class="icon">🏬</div><div>My Shop</div></div>
+      <nav>
+        <ul class="side-nav" id="shopNav">
+          <li data-id="info" class="active">Shop Info</li>
+          <li data-id="hours">Shop Hours</li>
+          <li data-id="faq">FAQ <span class="badge">New</span></li>
+          <li data-id="hardware">Hardware Setup</li>
+          <li data-id="hyper">HyperTicket Settings</li>
+          <li data-id="email">Email Preferences</li>
+          <li data-id="orders">Orders Integrations</li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="top">
+        <h1>My Shop</h1>
+        <div style="color:var(--muted)">Administración de tienda</div>
+      </div>
+
+
+      <section id="info">
+        <div class="card" style="padding:20px">
+          <h2 style="margin-top:0">Shop info</h2>
+          <div style="background:#eef6ff; border:1px solid #cfe3ff; padding:12px 16px; border-radius:6px; color:#164e9a; margin:12px 0">Some fields are locked for security purposes. To update the locked shop location information, please contact our support team.</div>
+
+          <div style="display:flex; gap:18px; flex-wrap:wrap">
+            <div style="flex:1; min-width:340px">
+              <div style="background:#fff; border:1px solid #eee; padding:18px; border-radius:6px; margin-bottom:12px">
+                <h3 style="margin-top:0">Shop Contact Info</h3>
+                <div style="display:flex; gap:12px; flex-wrap:wrap">
+                  <div style="flex:1 1 220px">
+                    <label style="font-weight:600; font-size:13px">Phone</label>
+                    <input id="shopPhone" class="field" placeholder="(215) 552-5113" />
+                  </div>
+                  <div style="flex:1 1 220px">
+                    <label style="font-weight:600; font-size:13px">Phone #2</label>
+                    <input id="shopPhone2" class="field" placeholder="(215) 552-5113" />
+                  </div>
+                </div>
+
+                <div style="margin-top:12px">
+                  <label style="font-weight:600; font-size:13px">Cellphone</label>
+                  <input id="shopCell" class="field" placeholder="(267) 498-6668" />
+                </div>
+
+                <div style="margin-top:12px">
+                  <label style="font-weight:600; font-size:13px">Additional Cellphones</label>
+                  <div id="additionalList" style="margin-top:8px"></div>
+                  <div style="display:flex; gap:8px; margin-top:8px">
+                    <input id="addCellInput" placeholder="Enter phone" style="flex:1; padding:8px; border:1px solid #e6e9ee; border-radius:6px" />
+                    <button id="addCellBtn" class="small-btn">+</button>
+                  </div>
+                </div>
+
+                <div style="margin-top:12px">
+                  <label style="font-weight:600; font-size:13px">Email</label>
+                  <input id="shopEmail" class="field" placeholder="rosasflowers.events@gmail.com" />
+                </div>
+
+                <div style="margin-top:12px">
+                  <label style="font-weight:600; font-size:13px">Emails Copied on Customer Orders</label>
+                  <input id="copiedEmails" placeholder="rosasflowers.events@gmail.com" />
+                </div>
+
+                <div style="margin-top:12px">
+                  <label style="font-weight:600; font-size:13px">Payment Notification Emails</label>
+                  <input id="paymentEmails" class="field" placeholder="rosasflowers.events@gmail.com" />
+                </div>
+              </div>
+
+              <div style="background:#fff; border:1px solid #eee; padding:18px; border-radius:6px">
+                <h3 style="margin-top:0">Service Area Settings</h3>
+                <div style="margin-top:8px">
+                  <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px"><span style="background:#0b63d6;color:#fff;padding:6px 10px;border-radius:20px">Philadelphia, PA, USA</span></div>
+                  <input id="serviceAreaInput" placeholder="Enter a location" style="width:100%; padding:10px; border:1px solid #e6e9ee; border-radius:6px" />
+                  <div style="margin-top:10px"><label><input type="checkbox" id="displayServiceAreas" /> Display Service Areas Instead of Address Pin on Google Maps</label></div>
+                </div>
+              </div>
+            </div>
+
+            <div style="flex:1; min-width:360px">
+              <div style="background:#fff; border:1px solid #eee; padding:18px; border-radius:6px; margin-bottom:12px">
+                <h3 style="margin-top:0">Shop Address</h3>
+                <div style="display:flex; gap:12px; flex-wrap:wrap">
+                  <div style="flex:1 1 100%">
+                    <label style="font-weight:600">Street Line 1</label>
+                    <input id="street1" class="field" placeholder="8950 Krewstown Rd" />
+                  </div>
+                  <div style="flex:1 1 100%">
+                    <label style="font-weight:600">Street Line 2</label>
+                    <input id="street2" class="field" />
+                  </div>
+                  <div style="flex:1 1 48%">
+                    <label style="font-weight:600">City</label>
+                    <input id="city" class="field" placeholder="Philadelphia" />
+                  </div>
+                  <div style="flex:1 1 24%">
+                    <label style="font-weight:600">Zip Code</label>
+                    <input id="zip" class="field" placeholder="19115" />
+                  </div>
+                  <div style="flex:1 1 24%">
+                    <label style="font-weight:600">State</label>
+                    <select id="state" style="width:100%; padding:8px; border:1px solid #e6e9ee; border-radius:6px">
+                      <option>PA</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div style="background:#fff; border:1px solid #eee; padding:18px; border-radius:6px">
+                <h3 style="margin-top:0">Shop Profile</h3>
+                <div style="display:flex; gap:12px;">
+                  <div style="flex:1">
+                    <label style="font-weight:700">About the Shop</label>
+                    <input id="shopNameFull" placeholder="Name of Shop" style="width:100%; padding:8px; margin-top:6px; border:1px solid #e6e9ee; border-radius:6px" />
+                    <select id="floristType" style="width:100%; margin-top:8px; padding:8px; border:1px solid #e6e9ee; border-radius:6px">
+                      <option>Studio Designer</option>
+                    </select>
+                    <textarea id="shopDescription" placeholder="Description" style="width:100%; margin-top:8px; min-height:120px; padding:8px; border:1px solid #e6e9ee; border-radius:6px"></textarea>
+                    <div style="margin-top:12px">Logo<br><div style="margin-top:8px"><img src="" id="logoPreview" alt="logo" style="max-width:120px; display:block; background:#fafafa; padding:12px; border:1px dashed #e6e9ee" /></div>
+                    <button id="uploadLogo" class="small-btn" style="margin-top:8px">Upload New</button></div>
+                  </div>
+                  <div style="flex:1">
+                    <label style="font-weight:700">About the Owner</label>
+                    <select id="ownerPosition" style="width:100%; margin-top:6px; padding:8px; border:1px solid #e6e9ee; border-radius:6px"><option>Head Designer</option></select>
+                    <input id="ownerName" placeholder="Head Designer" style="width:100%; padding:8px; margin-top:8px; border:1px solid #e6e9ee; border-radius:6px" />
+                    <textarea id="ownerAbout" placeholder="About the Head Designer / Design Team" style="width:100%; margin-top:8px; min-height:260px; padding:8px; border:1px solid #e6e9ee; border-radius:6px"></textarea>
+                    <div style="margin-top:12px">Designer Photo<br><img id="designerPhoto" src="" alt="designer" style="width:120px; margin-top:8px; display:block" /><button id="uploadDesigner" class="small-btn" style="margin-top:8px">Upload New</button></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="position:fixed; right:18px; bottom:18px">
+            <button id="saveShop" style="background:#fff; border:1px solid #e6e9ee; color:#999; padding:12px 18px; border-radius:8px; cursor:not-allowed" disabled>Save</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="hours" style="display:none; margin-top:12px">
+        <div class="card" style="padding:24px">
+          <h3 style="margin-top:0">Shop Hours</h3>
+          <p style="color:var(--muted)">Select whether or not your store is open on that day and the hours that it will be open.</p>
+
+          <div style="display:flex; gap:24px; margin-top:18px">
+            <div style="flex:1; min-width:420px">
+              <div id="hoursList" style="background:#fff; border:1px solid #eee; padding:18px; border-radius:6px">
+                <!-- rows generated by JS -->
+              </div>
+              <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:12px; align-items:center">
+                <button id="copyToAll" class="small-btn">Copy to All</button>
+              </div>
+            </div>
+
+            <div style="flex:1; min-width:420px">
+              <div style="background:#fff; border:1px solid #eee; padding:18px; border-radius:6px; margin-bottom:12px">
+                <h4 style="margin-top:0">Holidays</h4>
+                <p style="color:var(--muted); margin-top:6px">Select whether or not you are open for that holiday.</p>
+                <div id="holidaysList" style="margin-top:12px; display:grid; grid-template-columns:1fr 1fr; gap:8px">
+                  <!-- holidays rendered here -->
+                </div>
+              </div>
+
+              <div style="background:#fff; border:1px solid #eee; padding:18px; border-radius:6px">
+                <h4 style="margin-top:0">Shop Hour Overrides</h4>
+                <p style="color:var(--muted); margin-top:6px">Select dates for when your shop will be open or closed both online and in stores. These dates will override the store hours that you set above.</p>
+                <div style="display:flex; gap:12px; margin-top:12px; flex-wrap:wrap">
+                  <div style="flex:1; min-width:220px; background:#fbfbfe; padding:12px; border-radius:6px">
+                    <strong>Close Your Shop</strong>
+                    <div style="margin-top:8px"><label>Where will your store be closed?</label>
+                      <select id="overrideCloseWhere" style="width:100%; padding:8px; margin-top:6px; border:1px solid #e6e9ee; border-radius:6px">
+                        <option>Online and Physical Store</option>
+                        <option>Online Only</option>
+                        <option>Physical Store Only</option>
+                      </select>
+                    </div>
+                    <div style="margin-top:10px"><label>What days will the store be closed?</label>
+                      <input id="overrideCloseRange" placeholder="MM/DD/YYYY – MM/DD/YYYY" style="width:100%; padding:10px; border:1px solid #e6e9ee; border-radius:6px; margin-top:6px" />
+                    </div>
+                    <div style="margin-top:10px"><button id="addClosedHours" class="small-btn">Add Closed Hours</button></div>
+                  </div>
+
+                  <div style="flex:1; min-width:220px; background:#fbfbfe; padding:12px; border-radius:6px">
+                    <strong>Keep Your Shop Open</strong>
+                    <div style="margin-top:8px"><label>What days will the store be open?</label>
+                      <input id="overrideOpenRange" placeholder="MM/DD/YYYY – MM/DD/YYYY" style="width:100%; padding:10px; border:1px solid #e6e9ee; border-radius:6px; margin-top:6px" />
+                    </div>
+                    <div style="margin-top:10px"><button id="addOpenHours" class="small-btn">Add Open Hours</button></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="position:fixed; right:18px; bottom:18px; display:none" id="saveHoursWrap">
+            <button id="saveHours" style="background:#fff; border:1px solid #e6e9ee; color:#999; padding:12px 18px; border-radius:8px; cursor:not-allowed" disabled>Save</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="faq" style="display:none; margin-top:12px">
+        <div class="card"><h3>FAQ</h3><p>Preguntas frecuentes y ayuda para clientes.</p></div>
+      </section>
+
+      <section id="hardware" style="display:none; margin-top:12px">
+        <div class="card"><h3>Hardware Setup</h3><p>Instrucciones para impresoras y lectores.</p></div>
+      </section>
+
+      <section id="hyper" style="display:none; margin-top:12px">
+        <div class="card" style="padding:18px">
+          <h3 style="margin-top:0">HyperTicket Settings</h3>
+          <p style="color:var(--muted)">Print Settings for HyperTickets or Order Details</p>
+          <p style="color:var(--muted); margin-top:6px">Select the types of orders for which you would like to automatically print either a HyperTicket or Order Details. This will apply to all POS and web orders (Premium Site, Marketplace, F2F).</p>
+
+          <div style="background:#fff; border:1px solid #eee; padding:18px; border-radius:6px; margin-top:12px">
+            <div style="margin-bottom:12px">
+              <label style="font-weight:700">Which template should automatically print?</label>
+              <select id="hyperticketTemplate" style="width:100%; padding:10px; margin-top:8px; border:1px solid #e6e9ee; border-radius:6px">
+                <option value="hyperticket">Hyperticket</option>
+                <option value="order_details">Order Details</option>
+              </select>
+            </div>
+
+            <div style="margin-top:8px">
+              <div style="display:flex; gap:12px; align-items:center; margin-bottom:8px">
+                <input type="checkbox" id="ht_delivery" />
+                <label for="ht_delivery">Delivery Orders</label>
+              </div>
+              <div style="display:flex; gap:12px; align-items:center; margin-bottom:8px">
+                <input type="checkbox" id="ht_pickup" />
+                <label for="ht_pickup">Pickup Orders</label>
+              </div>
+              <div style="display:flex; gap:12px; align-items:center; margin-bottom:8px">
+                <input type="checkbox" id="ht_instore" />
+                <label for="ht_instore">In-Store & Quick Charge Orders</label>
+              </div>
+            </div>
+          </div>
+
+          <div style="position:fixed; right:18px; bottom:18px; display:none" id="saveHyperWrap">
+            <button id="saveHyper" style="background:#fff; border:1px solid #e6e9ee; color:#999; padding:12px 18px; border-radius:8px; cursor:not-allowed" disabled>Save</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="email" style="display:none; margin-top:12px">
+        <div class="card" style="padding:18px">
+          <h3 style="margin-top:0">Retention Marketing</h3>
+          <p style="color:var(--muted)">Customize your marketing preferences here to let us know when you want us to contact your customers on your behalf!</p>
+          <p style="color:var(--muted); margin-top:6px">Please note: Email and SMS marketing is essential for e-commerce. It drives sales, increases customer retention, and builds brand awareness. To ensure your campaigns are effective and engaging, we track key metrics to make data-driven decisions and closely monitor unsubscribes, bounces, and spam complaints.</p>
+          <p style="color:var(--muted); margin-top:6px">To opt out, please select each category separately.</p>
+
+          <div style="background:#fff; border:1px solid #eee; padding:18px; border-radius:6px; margin-top:12px">
+            <div style="margin-bottom:12px">
+              <label style="display:flex; gap:12px; align-items:center"><input type="checkbox" id="mr_all" /> <span>All retention marketing (BloomNation recommends opting into all campaigns to increase revenue)</span></label>
+            </div>
+
+            <div style="margin-left:18px; margin-top:10px">
+              <label style="display:flex; gap:12px; align-items:center"><input type="checkbox" id="mr_holiday_all" /> <strong>All Holiday Emails</strong></label>
+              <div style="margin-left:20px; margin-top:8px">
+                <label style="display:flex; gap:12px; align-items:center"><input type="checkbox" class="mr_holiday_sub" id="mr_holidays" /> Holidays (e.g. Valentine's Day, Mother's Day, Christmas, Hanukkah)</label>
+                <label style="display:flex; gap:12px; align-items:center; margin-top:6px"><input type="checkbox" class="mr_holiday_sub" id="mr_micro" /> Micro Holidays (e.g. Women's Day, Grandparents Day)</label>
+                <label style="display:flex; gap:12px; align-items:center; margin-top:6px"><input type="checkbox" class="mr_holiday_sub" id="mr_allothers" /> All others (e.g. Birthday of the Month, Seasonal Campaigns)</label>
+              </div>
+            </div>
+
+            <div style="margin-left:18px; margin-top:12px">
+              <label style="display:flex; gap:12px; align-items:center"><input type="checkbox" id="mr_occasion" /> <strong>Occasion-based Reminders</strong></label>
+              <div style="margin-left:20px; margin-top:8px">
+                <label style="display:flex; gap:12px; align-items:center"><input type="checkbox" class="mr_occasion_sub" id="mr_birthday" /> Birthday</label>
+                <label style="display:flex; gap:12px; align-items:center; margin-top:6px"><input type="checkbox" class="mr_occasion_sub" id="mr_anniversary" /> Anniversary</label>
+              </div>
+            </div>
+
+            <div style="margin-top:12px">
+              <label style="display:flex; gap:12px; align-items:center"><input type="checkbox" id="mr_coupons" /> <span>Coupons/Discounts (discounts go out on a limited basis and have proven to substantially increase conversion)</span></label>
+              <div style="margin-left:20px; margin-top:8px">
+                <label style="display:flex; gap:12px; align-items:center"><input type="checkbox" class="mr_coupons_sub" id="mr_10" /> 10%</label>
+                <label style="display:flex; gap:12px; align-items:center; margin-top:6px"><input type="checkbox" class="mr_coupons_sub" id="mr_15" /> 15%</label>
+                <label style="display:flex; gap:12px; align-items:center; margin-top:6px"><input type="checkbox" class="mr_coupons_sub" id="mr_20" /> 20%</label>
+                <label style="display:flex; gap:12px; align-items:center; margin-top:6px"><input type="checkbox" class="mr_coupons_sub" id="mr_freedelivery" /> Free delivery</label>
+              </div>
+            </div>
+
+            <div style="margin-top:12px">
+              <label style="display:flex; gap:12px; align-items:center"><input type="checkbox" id="mr_lifecycle" /> <span>Consumer Lifecycle (e.g. reengagement campaigns, welcome series, post-purchase cross-selling, etc.)</span></label>
+            </div>
+
+            <div style="margin-top:12px">
+              <label style="display:flex; gap:12px; align-items:center"><input type="checkbox" id="mr_sms" /> <span>SMS (Text messages sent on your behalf to customers opted in)</span></label>
+            </div>
+
+          </div>
+
+          <div style="margin-top:18px">
+            <button id="updateMarketing" style="background:#0ca678; color:#fff; border:none; padding:10px 18px; border-radius:6px; box-shadow:0 4px 12px rgba(12,166,120,0.15);">Update Preferences</button>
+          </div>
+
+        </div>
+      </section>
+
+      <section id="orders" style="display:none; margin-top:12px">
+        <div class="card"><h3>Orders Integrations</h3><p>Integraciones con marketplaces y canales de pedidos.</p></div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    // sidebar navigation
+    const nav = document.getElementById('shopNav');
+    nav.addEventListener('click', function(e){
+      const li = e.target.closest('li'); if(!li) return;
+      // set active class
+      nav.querySelectorAll('li').forEach(x=>x.classList.remove('active'));
+      li.classList.add('active');
+      // show corresponding section
+      const id = li.dataset.id;
+      document.querySelectorAll('main section').forEach(s=>{ s.style.display = (s.id===id)?'block':'none'; });
+      // toggle save buttons
+      const saveInfo = document.getElementById('saveShop');
+      const saveHoursWrap = document.getElementById('saveHoursWrap');
+      const saveHyperWrap = document.getElementById('saveHyperWrap');
+      if(id === 'info'){
+        if(saveInfo) saveInfo.style.display = 'block';
+        if(saveHoursWrap) saveHoursWrap.style.display = 'none';
+        if(saveHyperWrap) saveHyperWrap.style.display = 'none';
+      } else if(id === 'hours'){
+        if(saveInfo) saveInfo.style.display = 'none';
+        if(saveHoursWrap) saveHoursWrap.style.display = 'block';
+        if(saveHyperWrap) saveHyperWrap.style.display = 'none';
+      } else if(id === 'hyper'){
+        if(saveInfo) saveInfo.style.display = 'none';
+        if(saveHoursWrap) saveHoursWrap.style.display = 'none';
+        if(saveHyperWrap) saveHyperWrap.style.display = 'block';
+        if(saveEmailWrap) saveEmailWrap.style.display = 'none';
+      } else if(id === 'email'){
+        if(saveInfo) saveInfo.style.display = 'none';
+        if(saveHoursWrap) saveHoursWrap.style.display = 'none';
+        if(saveHyperWrap) saveHyperWrap.style.display = 'none';
+        if(saveEmailWrap) saveEmailWrap.style.display = 'block';
+      } else {
+        if(saveInfo) saveInfo.style.display = 'block';
+        if(saveHoursWrap) saveHoursWrap.style.display = 'none';
+        if(saveHyperWrap) saveHyperWrap.style.display = 'none';
+        if(saveEmailWrap) saveEmailWrap.style.display = 'none';
+      }
+    });
+
+    // enhanced save/load for detailed shop info (matches admin UI screenshot)
+    (function(){
+      const load = () => JSON.parse(localStorage.getItem('myshop_info_detailed')||'{}');
+      const save = (v) => localStorage.setItem('myshop_info_detailed', JSON.stringify(v));
+
+      // find fields
+      const shopPhone = document.getElementById('shopPhone');
+      const shopPhone2 = document.getElementById('shopPhone2');
+      const shopCell = document.getElementById('shopCell');
+      const additionalList = document.getElementById('additionalList');
+      const addCellInput = document.getElementById('addCellInput');
+      const addCellBtn = document.getElementById('addCellBtn');
+      const shopEmail = document.getElementById('shopEmail');
+      const copiedEmails = document.getElementById('copiedEmails');
+      const paymentEmails = document.getElementById('paymentEmails');
+      const serviceAreaInput = document.getElementById('serviceAreaInput');
+      const displayServiceAreas = document.getElementById('displayServiceAreas');
+      const street1 = document.getElementById('street1');
+      const street2 = document.getElementById('street2');
+      const city = document.getElementById('city');
+      const zip = document.getElementById('zip');
+      const state = document.getElementById('state');
+      const shopNameFull = document.getElementById('shopNameFull');
+      const floristType = document.getElementById('floristType');
+      const shopDescription = document.getElementById('shopDescription');
+      const ownerPosition = document.getElementById('ownerPosition');
+      const ownerName = document.getElementById('ownerName');
+      const ownerAbout = document.getElementById('ownerAbout');
+      const saveBtn = document.getElementById('saveShop');
+
+      function renderAdditional(arr){
+        additionalList.innerHTML = '';
+        (arr||[]).forEach((p, idx) => {
+          const row = document.createElement('div');
+          row.style.display='flex'; row.style.gap='8px'; row.style.alignItems='center'; row.style.marginTop='6px';
+          const box = document.createElement('div'); box.style.flex='1'; box.style.padding='10px'; box.style.border='1px solid #e6e9ee'; box.style.borderRadius='6px'; box.textContent = p;
+          const btn = document.createElement('button'); btn.className='small-btn removeCell'; btn.textContent='-'; btn.dataset.idx = idx;
+          row.appendChild(box); row.appendChild(btn); additionalList.appendChild(row);
+          btn.addEventListener('click', function(){ const data = load(); data.additional = data.additional || []; data.additional.splice(idx,1); save(data); renderAdditional(data.additional); markDirty(); });
+        });
+      }
+
+      // load
+      const d = load();
+      shopPhone.value = d.phone || '(215) 552-5113';
+      shopPhone2.value = d.phone2 || '';
+      shopCell.value = d.cell || '(267) 498-6668';
+      shopEmail.value = d.email || 'rosasflowers.events@gmail.com';
+      copiedEmails.value = d.copied || '';
+      paymentEmails.value = d.payment || '';
+      renderAdditional(d.additional || []);
+      serviceAreaInput.value = d.serviceArea || '';
+      displayServiceAreas.checked = !!d.displayServiceAreas;
+      street1.value = d.street1 || '8950 Krewstown Rd';
+      street2.value = d.street2 || '';
+      city.value = d.city || 'Philadelphia';
+      zip.value = d.zip || '19115';
+      state.value = d.state || 'PA';
+      shopNameFull.value = d.name || "Rosa's Flowers Events";
+      floristType.value = d.floristType || 'Studio Designer';
+      shopDescription.value = d.description || '';
+      ownerPosition.value = d.ownerPosition || 'Head Designer';
+      ownerName.value = d.ownerName || 'Rosa Flores';
+      ownerAbout.value = d.ownerAbout || '';
+
+      const markDirty = () => {
+        saveBtn.disabled = false; saveBtn.style.cursor='pointer'; saveBtn.style.background='#ff6aa3'; saveBtn.style.color='#fff'; saveBtn.style.border='none';
+      };
+
+      document.querySelectorAll('#info input,#info textarea,#info select').forEach(el => el.addEventListener('input', markDirty));
+
+      addCellBtn.addEventListener('click', function(){ const v = addCellInput.value.trim(); if(!v) return; const data = load(); data.additional = data.additional||[]; data.additional.push(v); save(data); addCellInput.value=''; renderAdditional(data.additional); markDirty(); });
+
+      saveBtn.addEventListener('click', function(){
+        const payload = {
+          phone: shopPhone.value, phone2: shopPhone2.value, cell: shopCell.value,
+          additional: (load().additional||[]), email: shopEmail.value, copied: copiedEmails.value, payment: paymentEmails.value,
+          serviceArea: serviceAreaInput.value, displayServiceAreas: displayServiceAreas.checked,
+          street1: street1.value, street2: street2.value, city: city.value, zip: zip.value, state: state.value,
+          name: shopNameFull.value, floristType: floristType.value, description: shopDescription.value,
+          ownerPosition: ownerPosition.value, ownerName: ownerName.value, ownerAbout: ownerAbout.value
+        };
+        save(payload);
+        alert('Shop info saved.');
+        saveBtn.disabled = true; saveBtn.style.cursor='not-allowed'; saveBtn.style.background='#fff'; saveBtn.style.color='#999'; saveBtn.style.border='1px solid #e6e9ee';
+      });
+    })();
+
+    // Shop Hours: render and persist
+    (function(){
+      const daysDef = [
+        {key:'monday',label:'Monday'},
+        {key:'tuesday',label:'Tuesday'},
+        {key:'wednesday',label:'Wednesday'},
+        {key:'thursday',label:'Thursday'},
+        {key:'friday',label:'Friday'},
+        {key:'saturday',label:'Saturday'},
+        {key:'sunday',label:'Sunday'}
+      ];
+
+      const holidaysDef = [
+        {id:'thanksgiving',name:"Thanksgiving",date:'11/27/25'},
+        {id:'christmas',name:"Christmas",date:'12/25/25'},
+        {id:'newyear',name:"New Year's",date:'1/1/26'},
+        {id:'mlk',name:"MLK Day",date:'1/19/26'},
+        {id:'valentine',name:"Valentine\'s Day",date:'2/14/26'},
+        {id:'presidents',name:"Presidents' Day",date:'2/16/26'},
+        {id:'mothers',name:"Mother's Day",date:'5/10/26'},
+        {id:'memorial',name:"Memorial Day",date:'5/25/26'},
+        {id:'fourth',name:"4th of July",date:'7/4/26'},
+        {id:'labor',name:"Labor Day",date:'9/7/26'},
+        {id:'columbus',name:"Columbus Day",date:'10/12/26'},
+        {id:'veterans',name:"Veterans Day",date:'11/11/26'}
+      ];
+
+      const hoursList = document.getElementById('hoursList');
+      const holidaysList = document.getElementById('holidaysList');
+      const copyToAllBtn = document.getElementById('copyToAll');
+      const saveHours = document.getElementById('saveHours');
+      const saveHoursWrap = document.getElementById('saveHoursWrap');
+      const overrideCloseRange = document.getElementById('overrideCloseRange');
+      const overrideOpenRange = document.getElementById('overrideOpenRange');
+      const addClosedHours = document.getElementById('addClosedHours');
+      const addOpenHours = document.getElementById('addOpenHours');
+
+      function load(){ return JSON.parse(localStorage.getItem('myshop_hours')||'null') || null }
+      function save(payload){ localStorage.setItem('myshop_hours', JSON.stringify(payload)); }
+
+      const defaults = () => {
+        const d = { days: {}, holidays: {}, overrides: { closed: [], open: [] } };
+        daysDef.forEach((day, idx)=>{
+          // default: open Mon-Sat 10:00-18:00, Sunday closed
+          const open = day.key !== 'sunday';
+          d.days[day.key] = { open: open, start: open ? '10:00' : '09:00', end: open ? '18:00' : '17:00' };
+        });
+        holidaysDef.forEach(h => d.holidays[h.id] = false);
+        return d;
+      };
+
+      let state = load() || defaults();
+
+      function markDirtyHours(){ if(saveHours){ saveHours.disabled=false; saveHours.style.cursor='pointer'; saveHours.style.background='#ff6aa3'; saveHours.style.color='#fff'; saveHours.style.border='none'; } }
+
+      function renderHours(){
+        hoursList.innerHTML = '';
+        daysDef.forEach(d => {
+          const row = document.createElement('div'); row.style.display='flex'; row.style.gap='12px'; row.style.alignItems='center'; row.style.marginBottom='10px';
+          const toggleWrap = document.createElement('div'); toggleWrap.style.width='64px';
+          const toggle = document.createElement('input'); toggle.type='checkbox'; toggle.id = 'tog-'+d.key; toggle.checked = !!(state.days[d.key] && state.days[d.key].open);
+          toggle.addEventListener('change', function(){ const v = this.checked; state.days[d.key].open = v; renderHours(); markDirtyHours(); });
+          toggleWrap.appendChild(toggle);
+
+          const label = document.createElement('div'); label.style.width='110px'; label.style.fontWeight='600'; label.textContent = d.label;
+
+          const start = document.createElement('input'); start.type='time'; start.id = 'start-'+d.key; start.value = state.days[d.key].start || '10:00'; start.style.padding='8px'; start.style.border='1px solid #e6e9ee'; start.style.borderRadius='6px'; start.style.width='120px';
+          const dash = document.createElement('div'); dash.textContent=' - '; dash.style.width='12px'; dash.style.textAlign='center';
+          const end = document.createElement('input'); end.type='time'; end.id = 'end-'+d.key; end.value = state.days[d.key].end || '18:00'; end.style.padding='8px'; end.style.border='1px solid #e6e9ee'; end.style.borderRadius='6px'; end.style.width='120px';
+
+          if(!state.days[d.key].open){ start.disabled = true; end.disabled = true; start.style.opacity=0.6; end.style.opacity=0.6; }
+
+          start.addEventListener('input', function(){ state.days[d.key].start = this.value; markDirtyHours(); });
+          end.addEventListener('input', function(){ state.days[d.key].end = this.value; markDirtyHours(); });
+
+          row.appendChild(toggleWrap);
+          row.appendChild(label);
+          row.appendChild(start);
+          row.appendChild(dash);
+          row.appendChild(end);
+
+          hoursList.appendChild(row);
+        });
+      }
+
+      function renderHolidays(){ holidaysList.innerHTML=''; holidaysDef.forEach(h=>{
+        const wrap = document.createElement('div'); wrap.style.display='flex'; wrap.style.alignItems='center'; wrap.style.gap='10px'; wrap.style.padding='8px'; wrap.style.borderRadius='6px';
+        const chk = document.createElement('input'); chk.type='checkbox'; chk.id = 'hol-'+h.id; chk.checked = !!state.holidays[h.id]; chk.addEventListener('change', function(){ state.holidays[h.id] = this.checked; markDirtyHours(); });
+        const nm = document.createElement('div'); nm.style.fontWeight='600'; nm.textContent = h.name + ':';
+        const date = document.createElement('div'); date.style.color='var(--muted)'; date.textContent = h.date;
+        wrap.appendChild(chk); wrap.appendChild(nm); wrap.appendChild(date);
+        holidaysList.appendChild(wrap);
+      }); }
+
+      // overrides display containers
+      const closeContainer = document.createElement('div'); closeContainer.style.marginTop='8px';
+      const openContainer = document.createElement('div'); openContainer.style.marginTop='8px';
+      addClosedHours.parentNode.insertBefore(closeContainer, addClosedHours.nextSibling);
+      addOpenHours.parentNode.insertBefore(openContainer, addOpenHours.nextSibling);
+
+      function renderOverrides(){ closeContainer.innerHTML=''; openContainer.innerHTML='';
+        (state.overrides.closed||[]).forEach((r,idx)=>{ const el = document.createElement('div'); el.style.padding='6px 8px'; el.style.marginTop='6px'; el.style.background='#fff'; el.style.border='1px solid #eee'; el.style.borderRadius='6px'; el.textContent = r; const btn = document.createElement('button'); btn.textContent='Remove'; btn.className='small-btn'; btn.style.marginLeft='8px'; btn.addEventListener('click', ()=>{ state.overrides.closed.splice(idx,1); renderOverrides(); markDirtyHours(); }); el.appendChild(btn); closeContainer.appendChild(el); });
+        (state.overrides.open||[]).forEach((r,idx)=>{ const el = document.createElement('div'); el.style.padding='6px 8px'; el.style.marginTop='6px'; el.style.background='#fff'; el.style.border='1px solid #eee'; el.style.borderRadius='6px'; el.textContent = r; const btn = document.createElement('button'); btn.textContent='Remove'; btn.className='small-btn'; btn.style.marginLeft='8px'; btn.addEventListener('click', ()=>{ state.overrides.open.splice(idx,1); renderOverrides(); markDirtyHours(); }); el.appendChild(btn); openContainer.appendChild(el); });
+      }
+
+      copyToAllBtn.addEventListener('click', function(){ const src = state.days['monday']; if(!src) return; daysDef.forEach(d=>{ state.days[d.key].open = src.open; state.days[d.key].start = src.start; state.days[d.key].end = src.end; }); renderHours(); markDirtyHours(); });
+
+      addClosedHours.addEventListener('click', function(){ const v = overrideCloseRange.value.trim(); if(!v){ alert('Please enter a date range.'); return; } state.overrides.closed = state.overrides.closed || []; state.overrides.closed.push(v); renderOverrides(); overrideCloseRange.value=''; markDirtyHours(); });
+      addOpenHours.addEventListener('click', function(){ const v = overrideOpenRange.value.trim(); if(!v){ alert('Please enter a date range.'); return; } state.overrides.open = state.overrides.open || []; state.overrides.open.push(v); renderOverrides(); overrideOpenRange.value=''; markDirtyHours(); });
+
+      saveHours.addEventListener('click', function(){ save(state); alert('Shop hours saved.'); saveHours.disabled = true; saveHours.style.cursor='not-allowed'; saveHours.style.background='#fff'; saveHours.style.color='#999'; saveHours.style.border='1px solid #e6e9ee'; });
+
+      // initial render
+      renderHours(); renderHolidays(); renderOverrides();
+
+      // show/hide save wrapper based on current visible section (in case page loaded on hours)
+      setTimeout(()=>{
+        const hoursSection = document.getElementById('hours');
+        if(hoursSection && hoursSection.style.display==='block'){ if(saveHoursWrap) saveHoursWrap.style.display='block'; }
+      },200);
+    })();
+
+    // HyperTicket settings: render and persist
+    (function(){
+      const key = 'myshop_hyperticket';
+      const load = () => JSON.parse(localStorage.getItem(key) || '{}');
+      const save = (v) => localStorage.setItem(key, JSON.stringify(v));
+
+      const tpl = document.getElementById('hyperticketTemplate');
+      const htDelivery = document.getElementById('ht_delivery');
+      const htPickup = document.getElementById('ht_pickup');
+      const htInstore = document.getElementById('ht_instore');
+      const saveHyper = document.getElementById('saveHyper');
+      const saveHyperWrap = document.getElementById('saveHyperWrap');
+
+      function markDirty(){ if(saveHyper){ saveHyper.disabled=false; saveHyper.style.cursor='pointer'; saveHyper.style.background='#ff6aa3'; saveHyper.style.color='#fff'; saveHyper.style.border='none'; } }
+
+      // load existing
+      const d = load();
+      if(d.template) tpl.value = d.template;
+      htDelivery.checked = !!d.delivery;
+      htPickup.checked = !!d.pickup;
+      htInstore.checked = !!d.instore;
+
+      [tpl, htDelivery, htPickup, htInstore].forEach(el => el.addEventListener('change', markDirty));
+
+      saveHyper.addEventListener('click', function(){
+        const payload = { template: tpl.value, delivery: htDelivery.checked, pickup: htPickup.checked, instore: htInstore.checked };
+        save(payload);
+        alert('HyperTicket settings saved.');
+        saveHyper.disabled = true; saveHyper.style.cursor='not-allowed'; saveHyper.style.background='#fff'; saveHyper.style.color='#999'; saveHyper.style.border='1px solid #e6e9ee';
+      });
+
+      // ensure visibility if starting in hyper section
+      setTimeout(()=>{
+        const sec = document.getElementById('hyper');
+        if(sec && sec.style.display==='block'){ if(saveHyperWrap) saveHyperWrap.style.display='block'; }
+      },200);
+    })();
+
+    // Email / Retention Marketing preferences
+    (function(){
+      const key = 'myshop_marketing';
+      const load = () => JSON.parse(localStorage.getItem(key) || '{}');
+      const save = (v) => localStorage.setItem(key, JSON.stringify(v));
+
+      const ids = [
+        'mr_all','mr_holiday_all','mr_holidays','mr_micro','mr_allothers',
+        'mr_occasion','mr_birthday','mr_anniversary','mr_coupons','mr_10','mr_15','mr_20','mr_freedelivery',
+        'mr_lifecycle','mr_sms'
+      ];
+
+      function $(id){ return document.getElementById(id); }
+      const btn = $('updateMarketing');
+
+      // load
+      const state = load();
+      ids.forEach(id => { const el = $(id); if(!el) return; el.checked = !!state[id]; el.addEventListener('change', ()=>{ markDirty(); syncParentChild(id); }); });
+
+      function markDirty(){ btn.style.boxShadow='0 6px 18px rgba(12,166,120,0.18)'; btn.dataset.dirty = '1'; }
+
+      function syncParentChild(changedId){
+        // if all holiday selected, ensure subs checked; if subs all checked, set holiday_all
+        if(changedId === 'mr_holiday_all'){
+          const val = $('mr_holiday_all').checked;
+          ['mr_holidays','mr_micro','mr_allothers'].forEach(id=>{ const e = $(id); if(e) e.checked = val; });
+        }
+        if(['mr_holidays','mr_micro','mr_allothers'].includes(changedId)){
+          const all = ['mr_holidays','mr_micro','mr_allothers'].every(id=>$(id)&&$(id).checked);
+          if($( 'mr_holiday_all')) $( 'mr_holiday_all').checked = all;
+        }
+        // occasions
+        if(changedId === 'mr_occasion'){
+          const val = $('mr_occasion').checked;
+          ['mr_birthday','mr_anniversary'].forEach(id=>{ const e = $(id); if(e) e.checked = val; });
+        }
+        if(['mr_birthday','mr_anniversary'].includes(changedId)){
+          const all = ['mr_birthday','mr_anniversary'].every(id=>$(id)&&$(id).checked);
+          if($('mr_occasion')) $('mr_occasion').checked = all;
+        }
+        // coupons group
+        if(changedId === 'mr_coupons'){
+          const val = $('mr_coupons').checked;
+          ['mr_10','mr_15','mr_20','mr_freedelivery'].forEach(id=>{ const e = $(id); if(e) e.checked = val; });
+        }
+        if(['mr_10','mr_15','mr_20','mr_freedelivery'].includes(changedId)){
+          const all = ['mr_10','mr_15','mr_20','mr_freedelivery'].every(id=>$(id)&&$(id).checked);
+          if($('mr_coupons')) $('mr_coupons').checked = all;
+        }
+      }
+
+      // initial sync of parents
+      ['mr_holiday_all','mr_occasion','mr_coupons'].forEach(id=>syncParentChild(id));
+
+      btn.addEventListener('click', ()=>{
+        const payload = {};
+        ids.forEach(id=>{ const e = $(id); payload[id] = !!(e && e.checked); });
+        save(payload);
+        btn.dataset.dirty = '0'; btn.style.boxShadow='none';
+        alert('Marketing preferences updated.');
+      });
+
+      // expose save wrapper visibility
+      setTimeout(()=>{ const sec = document.getElementById('email'); const wrap = document.getElementById('saveEmailWrap'); if(sec && sec.style.display==='block' && wrap) wrap.style.display='block'; },200);
+    })();
+  </script>
+</body>
+</html>

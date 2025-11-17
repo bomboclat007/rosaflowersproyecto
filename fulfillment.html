@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fulfillment</title>
+  <style>
+    :root{ --sidebar:#313443; --muted:#9aa0a6; --bg:#f4f6f8 }
+    body{ margin:0;font-family:Inter, system-ui, Arial, Helvetica, sans-serif;background:var(--bg);color:#222 }
+    .layout{ display:flex; min-height:100vh }
+    .sidebar{ width:260px;background:var(--sidebar);color:#fff;padding:18px 12px;box-sizing:border-box }
+    .sidebar h3{ margin:0 0 12px;font-weight:600 }
+    .side-menu{ list-style:none;padding:0;margin:12px 0 }
+    .side-menu li{ padding:12px 10px;border-radius:4px;color:#e6e7ea;cursor:pointer }
+    .side-menu li:hover{ background:rgba(255,255,255,0.03) }
+    .side-menu li.active{ background:#232530 }
+    .main{ flex:1;padding:28px }
+    .card{ background:#fff;padding:18px;border-radius:8px;box-shadow:0 4px 20px rgba(16,24,40,0.04) }
+    .submenu{ background:#f7f8fa;padding:12px;border-radius:6px;margin-top:8px }
+    @media (max-width:880px){ .sidebar{ display:none } .layout{ flex-direction:column } .main{ padding:12px } }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <h3>Fulfillment</h3>
+      <ul class="side-menu" id="fulMenu">
+        <li data-key="delivery-settings">Delivery Settings</li>
+        <li data-key="delivery-zones">Delivery Zones</li>
+        <li data-key="pickup-settings">Pickup Settings</li>
+      </ul>
+    </aside>
+
+    <main class="main">
+      <div id="contentArea">
+        <div class="card">
+          <h2 id="panelTitle">Delivery Settings</h2>
+          <p style="color:var(--muted)" id="panelDesc">Configura zonas, tarifas y horarios de entrega.</p>
+
+          <div class="submenu" id="panelBody">
+            <p>Selecciona una opción en el menú lateral para ver y editar la configuración.</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function(){
+      const menu = document.getElementById('fulMenu');
+      const items = Array.from(menu.querySelectorAll('li'));
+      const title = document.getElementById('panelTitle');
+      const desc = document.getElementById('panelDesc');
+      const body = document.getElementById('panelBody');
+
+      function setActive(key){
+        items.forEach(i=> i.classList.toggle('active', i.getAttribute('data-key')===key));
+        if(key==='delivery-settings'){
+          title.textContent = 'Delivery Settings';
+          desc.textContent = 'Configura zonas, tarifas y horarios de entrega.';
+          body.innerHTML = `
+            <div style="display:flex;flex-direction:column;gap:18px">
+              <div style="background:#fff;border:1px solid #eee;padding:16px;border-radius:6px">
+                <h4 style="margin:0 0 8px">Delivery Disabled Dates</h4>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <input id="disabledStart" type="date" style="padding:8px;border:1px solid #e6e9ee;border-radius:6px" />
+                  <input id="disabledEnd" type="date" style="padding:8px;border:1px solid #e6e9ee;border-radius:6px" />
+                  <button id="addDisabled" style="background:#0b63d6;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer">Add</button>
+                </div>
+                <div id="disabledList" style="margin-top:12px"></div>
+              </div>
+
+              <div style="background:#fff;border:1px solid #eee;padding:16px;border-radius:6px">
+                <h4 style="margin:0 0 8px">Timed Delivery</h4>
+                <p style="color:var(--muted);margin:0 0 12px">Select the hours that timed delivery will be available:</p>
+                <table style="width:100%;border-collapse:collapse">
+                  <tbody id="timedBody">
+                  </tbody>
+                </table>
+                <div style="display:flex;gap:16px;align-items:center;margin-top:12px">
+                  <div>
+                    <label style="display:block;font-weight:600">Window Interval</label>
+                    <select id="windowInterval" style="padding:8px;border:1px solid #e6e9ee;border-radius:6px">
+                      <option value="15">15 minutes</option>
+                      <option value="30">30 minutes</option>
+                      <option value="60">1 hours</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="display:block;font-weight:600">Same Day Lead Time</label>
+                    <select id="leadTime" style="padding:8px;border:1px solid #e6e9ee;border-radius:6px">
+                      <option value="1">1 hour</option>
+                      <option value="2">2 hours</option>
+                      <option value="4">4 hours</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="display:block;font-weight:600">Same Day Start Time</label>
+                    <input id="sameDayStart" type="time" style="padding:8px;border:1px solid #e6e9ee;border-radius:6px" />
+                  </div>
+                </div>
+              </div>
+
+              <div style="background:#fff;border:1px solid #eee;padding:16px;border-radius:6px">
+                <h4 style="margin:0 0 8px">Delivery Route</h4>
+                <label style="display:flex;align-items:center;gap:10px"><input id="routeEdit" type="checkbox" /> Allow editing in-progress routes</label>
+              </div>
+
+              <div style="text-align:left"><button id="saveDelivery" style="background:#0b63d6;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer">Save Changes</button></div>
+            </div>
+          `;
+
+          // after DOM inserted, wire controls
+          const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+          const timedBody = document.getElementById('timedBody');
+          const settingsKey = 'delivery_settings';
+
+          function loadSettings(){
+            try{ return JSON.parse(localStorage.getItem(settingsKey)||'{}'); }catch(e){ return {}; }
+          }
+          function saveSettings(s){ localStorage.setItem(settingsKey, JSON.stringify(s)); }
+
+          // render timed rows
+          function renderTimed(){
+            const s = loadSettings();
+            timedBody.innerHTML = '';
+            DAYS.forEach(d=>{
+              const startVal = (s.timed && s.timed[d] && s.timed[d].start) || '';
+              const endVal = (s.timed && s.timed[d] && s.timed[d].end) || '';
+              const tr = document.createElement('tr');
+              tr.innerHTML = `<td style="padding:8px 10px;width:140px">${d}</td><td style="padding:8px 10px"><input type=\"time\" data-day=\"${d}\" data-side=\"start\" value=\"${startVal}\" style=\"padding:8px;border:1px solid #e6e9ee;border-radius:6px\" /> - <input type=\"time\" data-day=\"${d}\" data-side=\"end\" value=\"${endVal}\" style=\"padding:8px;border:1px solid #e6e9ee;border-radius:6px\" /></td>`;
+              timedBody.appendChild(tr);
+            });
+          }
+
+          // disabled dates list
+          function renderDisabled(){
+            const s = loadSettings();
+            const list = document.getElementById('disabledList');
+            list.innerHTML = '';
+            (s.disabledRanges||[]).forEach((r,idx)=>{
+              const div = document.createElement('div'); div.style.display='flex'; div.style.alignItems='center'; div.style.gap='12px'; div.style.marginTop='8px';
+              div.innerHTML = `<div style=\"flex:1;padding:8px;border:1px solid #eee;border-radius:6px;background:#fafafa\">${r.start} – ${r.end}</div><a href=\"#\" data-idx=\"${idx}\">Remove</a>`;
+              list.appendChild(div);
+              div.querySelector('a').addEventListener('click', function(e){ e.preventDefault(); const s2 = loadSettings(); s2.disabledRanges = s2.disabledRanges||[]; s2.disabledRanges.splice(idx,1); saveSettings(s2); renderDisabled(); });
+            });
+          }
+
+          // wire add disabled
+          document.getElementById('addDisabled').addEventListener('click', function(){
+            const st = document.getElementById('disabledStart').value;
+            const en = document.getElementById('disabledEnd').value;
+            if(!st || !en){ alert('Please select start and end date'); return; }
+            const s = loadSettings(); s.disabledRanges = s.disabledRanges||[]; s.disabledRanges.push({start:st,end:en}); saveSettings(s); renderDisabled(); document.getElementById('disabledStart').value=''; document.getElementById('disabledEnd').value='';
+          });
+
+          // on save changes
+          document.getElementById('saveDelivery').addEventListener('click', function(){
+            const s = loadSettings();
+            // read timed inputs
+            s.timed = s.timed||{};
+            timedBody.querySelectorAll('input[type="time"]').forEach(inp=>{
+              const day = inp.getAttribute('data-day'); const side = inp.getAttribute('data-side'); s.timed[day]=s.timed[day]||{}; s.timed[day][side]=inp.value;
+            });
+            s.windowInterval = document.getElementById('windowInterval').value;
+            s.leadTime = document.getElementById('leadTime').value;
+            s.sameDayStart = document.getElementById('sameDayStart').value;
+            s.routeEdit = document.getElementById('routeEdit').checked;
+            saveSettings(s); alert('Delivery settings saved.');
+          });
+
+          // init values
+          (function initVals(){
+            const s = loadSettings();
+            document.getElementById('windowInterval').value = s.windowInterval || '60';
+            document.getElementById('leadTime').value = s.leadTime || '2';
+            document.getElementById('sameDayStart').value = s.sameDayStart || '09:00';
+            document.getElementById('routeEdit').checked = !!s.routeEdit;
+            renderTimed(); renderDisabled();
+          })();
+        }
+        if(key==='delivery-zones'){
+          title.textContent = 'Delivery Zones';
+          desc.textContent = 'Ver y editar zonas de entrega en el mapa.';
+          body.innerHTML = `
+            <h3>Zonas</h3>
+            <p>Lista de zonas con tarifas asociadas.</p>
+            <ul>
+              <li>Zona 1 — $5.00</li>
+              <li>Zona 2 — $8.00</li>
+            </ul>
+          `;
+        }
+        if(key==='pickup-settings'){
+          title.textContent = 'Pickup Settings';
+          desc.textContent = 'Configura los puntos y horarios de recogida.';
+          body.innerHTML = `
+            <div style="display:flex;flex-direction:column;gap:18px">
+              <div style="background:#fff;border:1px solid #eee;padding:16px;border-radius:6px;display:flex;flex-direction:column;gap:12px">
+                <label style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                  <span style="font-weight:600">Enable Pickup</span>
+                  <input id="enablePickup" type="checkbox" />
+                </label>
+
+                <label style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                  <span style="font-weight:600">Enable Same-Day Pickup</span>
+                  <input id="enableSameDayPickup" type="checkbox" />
+                </label>
+              </div>
+
+              <div style="background:#fff;border:1px solid #eee;padding:16px;border-radius:6px">
+                <h4 style="margin:0 0 8px">Timed Pickup</h4>
+                <label style="display:flex;align-items:center;gap:12px;margin-top:8px">
+                  <input id="enableTimedPickup" type="checkbox" />
+                  <span>Enabled Timed Pickup</span>
+                </label>
+              </div>
+
+              <div style="text-align:left"><button id="savePickup" style="background:#0b63d6;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer">Save Changes</button></div>
+            </div>
+          `;
+
+          // wire pickup controls
+          const keyName = 'pickup_settings';
+          function loadPickup(){ try{ return JSON.parse(localStorage.getItem(keyName)||'{}'); }catch(e){ return {}; } }
+          function savePickup(v){ localStorage.setItem(keyName, JSON.stringify(v)); }
+
+          const chkEnable = document.getElementById('enablePickup');
+          const chkSame = document.getElementById('enableSameDayPickup');
+          const chkTimed = document.getElementById('enableTimedPickup');
+          const btnSave = document.getElementById('savePickup');
+
+          function init(){
+            const s = loadPickup();
+            chkEnable.checked = !!s.enabled;
+            chkSame.checked = !!s.sameDay;
+            chkTimed.checked = !!s.timed;
+          }
+
+          btnSave.addEventListener('click', function(){
+            const out = { enabled: !!chkEnable.checked, sameDay: !!chkSame.checked, timed: !!chkTimed.checked };
+            savePickup(out);
+            alert('Pickup settings saved.');
+          });
+
+          init();
+        }
+      }
+
+      items.forEach(li=> li.addEventListener('click', function(){
+        const key = this.getAttribute('data-key');
+        // Navigate to delivery system page when Delivery Zones is clicked
+        if(key === 'delivery-zones'){
+          window.location.href = 'deliverysystem.html';
+          return;
+        }
+        setActive(key);
+      }));
+
+      // default
+      setActive('delivery-settings');
+    })();
+  </script>
+</body>
+</html>

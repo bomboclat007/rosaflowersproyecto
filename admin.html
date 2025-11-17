@@ -17,10 +17,17 @@
 
   <main class="admin-main">
     <p class="intro">Bienvenido, administrador. Selecciona una opción:</p>
+    <!-- Fulfillment tile styled like the other white tiles -->
     <div class="tiles">
       <a class="tile" href="/deliverysystem.html" target="_self">
         <h2>Delivery System</h2>
         <p>Editar zonas de entrega y ver el mapa.</p>
+      </a>
+
+      <!-- Fulfillment tile inserted to match other tiles' size and style -->
+      <a id="adminFulfill" class="tile" href="fulfillment.html" target="_self">
+        <h2>fulliment</h2>
+        <p>Gestionar pedidos y fulfillment.</p>
       </a>
 
       <a class="tile" href="/pos.html" target="_self">
@@ -28,9 +35,29 @@
         <p>Abrir interfaz de ventas: seleccionar productos, añadir al carrito y cobrar.</p>
       </a>
 
-      <a class="tile" href="/events.html" target="_self">
+      <a class="tile" href="/event-admin.html" target="_self">
         <h2>Events</h2>
         <p>Ver y gestionar eventos (promociones, clases, reservas).</p>
+      </a>
+
+      <a class="tile" href="/reputation.html" target="_self">
+        <h2>Reputation</h2>
+        <p>Gestionar reseñas y reputación de clientes.</p>
+      </a>
+
+      <a class="tile" href="/myshop.html" target="_self">
+        <h2>My Shop</h2>
+        <p>Administrar tu tienda (productos, inventario y ajustes).</p>
+      </a>
+
+      <a class="tile" href="admin-orders.html" target="_self">
+        <h2>Orders</h2>
+        <p>Ver y gestionar pedidos (órdenes).</p>
+      </a>
+
+      <a class="tile" href="/mywebsite.html" target="_self">
+        <h2>My Website</h2>
+        <p>Administrar el sitio web: banners, anuncios, blog y más.</p>
       </a>
 
       <a class="tile" href="https://dashboard.stripe.com/" target="_blank" rel="noopener noreferrer">
@@ -53,6 +80,16 @@
     document.getElementById('adminPOS').addEventListener('click', function(){
       window.location.href = '/pos.html';
     });
+    // Fulfillment button
+    const fulfillBtn = document.getElementById('adminFulfill');
+    if(fulfillBtn){
+      fulfillBtn.addEventListener('click', function(e){
+        // ensure relative navigation works when opening files locally
+        e.preventDefault();
+        window.location.href = 'fulfillment.html';
+      });
+    }
+  // (Reputation is available as a tile in the admin grid)
   </script>
 </body>
 </html>

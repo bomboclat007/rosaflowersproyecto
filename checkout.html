@@ -3,25 +3,42 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Checkout — The Floral Cottage</title>
+    <title>Checkout — Rosa's Flowers</title>
     <link rel="stylesheet" href="assets/css/checkout-styles.css">
-    <script>
-      // Pequeño script para prefilar datos desde localStorage si existen
-      function getCart() { try { return JSON.parse(localStorage.getItem('stripe_cart')||'[]'); } catch(e){return [];} }
-      function prefillUser() {
-        // Intentamos leer algunos valores si ya existen
-        const cart = getCart();
-        // Aquí se podrían rellenar campos en base al carrito si se desea
-      }
-      document.addEventListener('DOMContentLoaded', function(){ prefillUser(); });
-    </script>
-      <script src='/assets/js/login.js' defer></script>
-</head>
+    <style>
+      /* Minimal stepper styles: collapsed vs expanded */
+      body{font-family:system-ui, Arial, sans-serif;color:#222}
+      .checkout-wrapper{max-width:1100px;margin:18px auto;padding:0 18px}
+      .section { margin-bottom: 18px; border-radius:8px; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.04); overflow:visible }
+      .section .section-header{ display:flex; align-items:center; gap:12px; cursor:pointer; padding:14px 18px; border-bottom:1px solid #f0f0f0 }
+      .section .section-header .step{ width:34px; height:34px; border-radius:50%; background:#eee; display:inline-flex; align-items:center; justify-content:center; font-weight:700 }
+      .section .section-header h2{ margin:0; font-size:16px; font-weight:600 }
+      .section .section-body{ transition: max-height 240ms ease, opacity 240ms ease; overflow:hidden; padding:16px }
+      .section.collapsed .section-body{ max-height:0 !important; opacity:0; padding:0 16px }
+      .section.expanded .section-body{ max-height:1200px; opacity:1; padding:16px }
+      .actions{ margin-top:12px }
+      .back-btn{ background:#f2f2f2; border:1px solid #ddd; padding:8px 12px; border-radius:6px; cursor:pointer; margin-right:8px }
+      .primary{ background:#b63f6d; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer }
+      .primary.big{ padding:12px 18px }
+      .fulfill-tabs{ display:flex; gap:8px; margin-bottom:12px }
+      .fulfill-tabs .tab{ padding:10px 14px; border:1px solid #ddd; border-radius:6px; background:#fafafa; cursor:pointer }
+      .fulfill-tabs .tab.active{ background:#fff; box-shadow:0 1px 0 rgba(0,0,0,0.03); border-color:#cfe0ff }
+      .pickup-options button{ display:block; width:100%; text-align:left; padding:12px; border:1px solid #eee; background:#fff; margin-bottom:8px; border-radius:6px; cursor:pointer }
+      .pickup-options button.selected{ border-color:#b63f6d; background:linear-gradient(180deg, #fff, #fff); color:#b63f6d }
+      .pickup-custom{ margin-top:8px; display:flex; gap:8px; align-items:center }
+      .pickup-custom input[type="date"]{ padding:8px; border:1px solid #ddd; border-radius:6px }
+      label{ display:block; margin-bottom:8px }
+      input[type="text"], input[type="email"], input[type="tel"], select, textarea{ width:100%; padding:8px; border:1px solid #ddd; border-radius:6px; box-sizing:border-box }
+      .row{ display:flex; gap:12px }
+      .row label{ flex:1 }
+      @media (max-width:720px){ .row{ flex-direction:column } }
+    </style>
+  </head>
   <body>
     <main class="checkout-wrapper">
       <h1>Checkout</h1>
 
-      <section class="section card info-section">
+      <section class="section card info-section" data-step="1">
         <div class="section-header"><span class="step">1</span><h2>Your Information</h2></div>
         <div class="section-body">
           <label>First Name<input type="text" id="firstName" placeholder="First Name"></label>
@@ -38,12 +55,12 @@
         </div>
       </section>
 
-      <section class="section card fulfill-section">
+      <section class="section card fulfill-section" data-step="2">
         <div class="section-header"><span class="step">2</span><h2>Fulfillment Information</h2></div>
         <div class="section-body">
           <div class="fulfill-tabs">
-            <button class="tab active" data-type="delivery">Delivery</button>
-            <button class="tab" data-type="pickup">Pickup</button>
+            <button class="tab active" data-type="delivery">🚚 Delivery</button>
+            <button class="tab" data-type="pickup">📦 Pickup</button>
           </div>
 
           <div class="fulfill-body">
@@ -53,26 +70,33 @@
               <label>Company (optional)<input type="text" id="company" placeholder="Company"></label>
               <div class="row">
                 <label>City<input type="text" id="city"></label>
-                <label>State<select id="state"><option>Select an option</option></select></label>
+                <label>State
+                  <select id="state">
+                    <!-- US states will be populated by JS -->
+                  </select>
+                </label>
                 <label>Postal Code<input type="text" id="postal"></label>
               </div>
-              <div class="actions"><button class="primary" id="confirmAddress">Confirm Delivery Address</button></div>
+              <div class="actions"><button class="back-btn" id="backToInfo">Back</button><button class="primary" id="confirmAddress">Confirm Delivery Address</button></div>
             </div>
 
             <div class="fulfill-pickup" style="display:none">
               <p class="pickup-location">8950 Krewstown Rd<br>Philadelphia PA 19115 US</p>
               <label>Select a pickup date</label>
-              <div class="pickup-options">
-                <button class="pickopt">Tomorrow <span class="date">31 de octubre</span></button>
-                <button class="pickopt">sábado <span class="date">1 de noviembre</span></button>
-                <button class="pickopt">lunes <span class="date">3 de noviembre</span></button>
+              <div class="pickup-options" id="pickup-options">
+                <!-- generated options -->
+              </div>
+
+              <div class="pickup-custom">
+                <input type="date" id="pickup-custom">
+                <button id="confirmPickup" class="primary">Save & Continue</button>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="section card recipient-section">
+      <section class="section card recipient-section" data-step="3">
         <div class="section-header"><span class="step">3</span><h2>Recipient Information</h2></div>
         <div class="section-body">
           <div class="recipient-grid">
@@ -85,8 +109,14 @@
 
           <label>Gift Message (optional)</label>
           <div class="gift-options">
-            <label class="gift"><input type="radio" name="giftmsg"> Card Message <span class="tag">Free</span></label>
-            <label class="gift"><input type="radio" name="giftmsg"> Video Message <span class="new">New</span></label>
+            <label class="gift"><input type="radio" name="giftmsg" value="card" id="gift-card"> Card Message <span class="tag">Free</span></label>
+          </div>
+
+          <!-- Card message textarea: hidden until Card Message is selected -->
+          <div id="cardMessageBox" style="display:none; margin-top:8px;">
+            <label>Card message (max 300 characters)
+              <textarea id="cardMessage" maxlength="300" placeholder="Write a short card message to the recipient (optional)" rows="4"></textarea>
+            </label>
           </div>
 
           <label>Notes for the florist / special instructions (optional)
@@ -94,6 +124,7 @@
           </label>
 
           <div class="actions bottom-actions">
+            <button class="back-btn" id="backToFulfill">Back</button>
             <button id="continueToPayment" class="primary big">Continue To Payment</button>
           </div>
         </div>
@@ -102,8 +133,111 @@
     </main>
 
     <script>
-      // Manejo simple de tabs Delivery / Pickup
-      document.addEventListener('DOMContentLoaded', function(){
+      // Helper: populate US states into #state
+      function populateStates(){
+        const states = [
+          'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','District of Columbia',
+          'Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland',
+          'Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey',
+          'New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina',
+          'South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming'
+        ];
+        const sel = document.getElementById('state');
+        if(!sel) return;
+        sel.innerHTML = '<option value="">Select a state</option>' + states.map(s=>'<option value="'+s+'">'+s+'</option>').join('');
+      }
+
+      // Helper: generate pickup date options (next 3 days starting tomorrow)
+      function populatePickupDates(){
+        const container = document.getElementById('pickup-options');
+        if(!container) return;
+        container.innerHTML = '';
+        const today = new Date();
+        for(let i=1;i<=3;i++){
+          const d = new Date(today);
+          d.setDate(d.getDate() + i);
+          const iso = d.toISOString().slice(0,10);
+          const label = d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'pickopt';
+          btn.dataset.date = iso;
+          btn.innerHTML = '<strong style="text-transform:capitalize">'+label.split(' ')[0]+'</strong> <span style="margin-left:8px; color:#666">'+label.replace(/^\w+\s*/,'')+'</span>';
+          btn.addEventListener('click', function(){
+            // mark selected
+            container.querySelectorAll('button').forEach(b=>b.classList.remove('selected'));
+            btn.classList.add('selected');
+            // set custom input to same date
+            const custom = document.getElementById('pickup-custom');
+            if(custom) custom.value = iso;
+          });
+          container.appendChild(btn);
+        }
+      }
+
+      // Helper: toggle card message textarea when Card Message is selected
+      function initGiftMessageToggle(){
+        const box = document.getElementById('cardMessageBox');
+        const radios = document.querySelectorAll('input[name="giftmsg"]');
+        if(!box || !radios || radios.length===0) return;
+        function update(){
+          const sel = document.querySelector('input[name="giftmsg"]:checked');
+          if(sel && sel.value === 'card') box.style.display = 'block';
+          else box.style.display = 'none';
+        }
+        radios.forEach(r=>r.addEventListener('change', update));
+        // initial
+        update();
+      }
+
+      // Stepper + validations
+      (function(){
+        const sections = Array.from(document.querySelectorAll('.section'));
+        const getByStep = n => document.querySelector('.section[data-step="'+n+'"]');
+        const completed = {};
+        function setState(step){
+          sections.forEach(s => { s.classList.remove('expanded'); s.classList.add('collapsed'); });
+          const el = getByStep(step);
+          if(el) el.classList.remove('collapsed'), el.classList.add('expanded');
+          try{ if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }catch(e){}
+        }
+
+        function validateStep1(){
+          const f = id => (document.getElementById(id) && document.getElementById(id).value||'').trim();
+          const first = f('firstName'), last = f('lastName'), email = f('email');
+          if(!first || !last || !email) return {ok:false, message:'Por favor completa nombre y correo.'};
+          if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return {ok:false, message:'Introduce un email válido.'};
+          return {ok:true};
+        }
+
+        function validateStep2Delivery(){
+          const address = (document.getElementById('address')||{}).value||'';
+          const city = (document.getElementById('city')||{}).value||'';
+          const postal = (document.getElementById('postal')||{}).value||'';
+          if(!address.trim() || !city.trim() || !postal.trim()) return {ok:false, message:'Completa la dirección, ciudad y código postal.'};
+          return {ok:true};
+        }
+
+        // init
+        document.addEventListener('DOMContentLoaded', function(){
+          populateStates();
+          populatePickupDates();
+          initGiftMessageToggle();
+          setState(1);
+        });
+
+        // header click: allow collapse/expand only to previous or current
+        document.querySelectorAll('.section .section-header').forEach(function(h){
+          h.addEventListener('click', function(){
+            const sec = h.closest('.section');
+            const step = Number(sec && sec.dataset && sec.dataset.step || 0);
+            if(!step) return;
+            if(step === 1 || completed[step-1]){ setState(step); }
+            else { alert('Completa los pasos previos antes de acceder a este paso.'); }
+          });
+        });
+
+        // Tabs
         document.querySelectorAll('.fulfill-tabs .tab').forEach(function(btn){
           btn.addEventListener('click', function(){
             document.querySelectorAll('.fulfill-tabs .tab').forEach(t=>t.classList.remove('active'));
@@ -112,6 +246,7 @@
             if(type==='pickup'){
               document.querySelector('.fulfill-delivery').style.display='none';
               document.querySelector('.fulfill-pickup').style.display='block';
+              populatePickupDates();
             } else {
               document.querySelector('.fulfill-delivery').style.display='block';
               document.querySelector('.fulfill-pickup').style.display='none';
@@ -119,12 +254,134 @@
           });
         });
 
-        // Continuar al pago -> puedes reemplazar la siguiente línea para integrar con la pasarela real
-        document.getElementById('continueToPayment').addEventListener('click', function(){
-          // Aquí podríamos validar y guardar los datos, luego redirigir a una pasarela
-          alert('Formulario guardado localmente. Implementa integración con pasarela según sea necesario.');
+        // Buttons
+        const saveContinue = document.getElementById('saveContinue');
+        if(saveContinue) saveContinue.addEventListener('click', function(){
+          const v = validateStep1(); if(!v.ok){ alert(v.message); return; }
+          completed[1]=true; setState(2);
         });
-      });
+
+        const backToInfo = document.getElementById('backToInfo');
+        if(backToInfo) backToInfo.addEventListener('click', function(){ setState(1); });
+
+        const confirmAddress = document.getElementById('confirmAddress');
+        if(confirmAddress) confirmAddress.addEventListener('click', function(){
+          const v = validateStep1(); if(!v.ok){ alert('Completa la información personal primero.'); setState(1); return; }
+          const vv = validateStep2Delivery(); if(!vv.ok){ alert(vv.message); return; }
+          completed[2]=true; setState(3);
+        });
+
+        const confirmPickup = document.getElementById('confirmPickup');
+        if(confirmPickup) confirmPickup.addEventListener('click', function(){
+          const custom = document.getElementById('pickup-custom');
+          const selectedBtn = document.querySelector('#pickup-options button.selected');
+          const chosen = (custom && custom.value) ? custom.value : (selectedBtn && selectedBtn.dataset && selectedBtn.dataset.date);
+          if(!chosen){ alert('Selecciona una fecha de recogida'); return; }
+          // basic validation: must be a date >= tomorrow
+          const chosenDate = new Date(chosen);
+          const today = new Date(); today.setHours(0,0,0,0);
+          const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
+          if(chosenDate < tomorrow){ alert('Selecciona una fecha válida (a partir de mañana)'); return; }
+          completed[2]=true; setState(3);
+        });
+
+        const backToFulfill = document.getElementById('backToFulfill');
+        if(backToFulfill) backToFulfill.addEventListener('click', function(){ setState(2); });
+
+        const continueToPayment = document.getElementById('continueToPayment');
+        if(continueToPayment) continueToPayment.addEventListener('click', async function(){
+          try{
+            if(!completed[2]){ alert('Completa la información de entrega o recogida antes de continuar.'); setState(2); return; }
+            // Build items from local cart stored by product cards
+            const rawCart = (function(){ try{ return JSON.parse(localStorage.getItem('stripe_cart')||'[]'); }catch(e){return [];} })();
+            if(!Array.isArray(rawCart) || rawCart.length === 0){ alert('Tu carrito está vacío. Añade al menos un producto.'); return; }
+
+            const items = rawCart.map(i=>({ price_id: i.priceId || i.price_id || i.priceId, quantity: i.quantity || 1 }));
+
+            // Gather customer & fulfillment info to attach as metadata/customer_email
+            const customer_email = (document.getElementById('email')||{}).value || '';
+            // Determine fulfillment type and details
+            const activeTab = document.querySelector('.fulfill-tabs .tab.active');
+            const fulfillment = activeTab ? activeTab.dataset.type : 'delivery';
+            const metadata = { fulfillment };
+            if(fulfillment === 'delivery'){
+              metadata.address = (document.getElementById('address')||{}).value || '';
+              metadata.city = (document.getElementById('city')||{}).value || '';
+              metadata.state = (document.getElementById('state')||{}).value || '';
+              metadata.postal = (document.getElementById('postal')||{}).value || '';
+            } else {
+              const custom = (document.getElementById('pickup-custom')||{}).value || '';
+              const sel = document.querySelector('#pickup-options button.selected');
+              metadata.pickup_date = custom || (sel && sel.dataset && sel.dataset.date) || '';
+              metadata.pickup_location = '8950 Krewstown Rd, Philadelphia PA 19115 US';
+            }
+
+            // Gift message selection: include type and card text (if any)
+            try{
+              const selectedGift = (document.querySelector('input[name="giftmsg"]:checked')||{}).value || '';
+              metadata.gift_type = selectedGift;
+              if(selectedGift === 'card'){
+                metadata.card_message = (document.getElementById('cardMessage')||{}).value || '';
+              }
+            }catch(e){ /* ignore */ }
+
+            // Include full customer & recipient form data so emails/notifications contain everything
+            try{
+              // Customer
+              metadata.customer_first = ((document.getElementById('firstName')||{}).value || '').slice(0,200);
+              metadata.customer_last = ((document.getElementById('lastName')||{}).value || '').slice(0,200);
+              const phoneCountry = (document.getElementById('phoneCountry')||{}).value || '';
+              const phone = (document.getElementById('phone')||{}).value || '';
+              metadata.customer_phone = (phoneCountry + ' ' + phone).trim();
+              metadata.sms_opt_in = ((document.getElementById('smsOpt')||{}).checked ? 'yes' : 'no');
+              metadata.company = ((document.getElementById('company')||{}).value || '').slice(0,200);
+              metadata.apt = ((document.getElementById('apt')||{}).value || '').slice(0,200);
+
+              // Recipient
+              metadata.recipient_first = ((document.getElementById('rFirst')||{}).value || '').slice(0,200);
+              metadata.recipient_last = ((document.getElementById('rLast')||{}).value || '').slice(0,200);
+              const rCountry = (document.getElementById('rCountry')||{}).value || '';
+              const rPhone = (document.getElementById('rPhone')||{}).value || '';
+              metadata.recipient_phone = (rCountry + ' ' + rPhone).trim();
+
+              // Notes (truncate to avoid too-long metadata)
+              metadata.notes = ((document.getElementById('notes')||{}).value || '').slice(0,1000);
+            }catch(e){ /* ignore */ }
+
+            // Disable button while creating session
+            continueToPayment.disabled = true;
+            const originalText = continueToPayment.textContent;
+            continueToPayment.textContent = 'Redirigiendo...';
+
+            // Try canonical endpoint first, fallback to .js if 404
+            const canonical = '/api/create-checkout-session';
+            const fallback = '/api/create-checkout-session.js';
+            let res = await fetch(canonical, {
+              method: 'POST', headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({ items: items, customer_email: customer_email, metadata: metadata })
+            });
+            if(res.status === 404){
+              res = await fetch(fallback, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ items: items, customer_email: customer_email, metadata: metadata })
+              });
+            }
+            if(!res.ok) {
+              const text = await res.text();
+              throw new Error('Error creando sesión de pago: ' + (text || res.status));
+            }
+            const j = await res.json();
+            if(j && j.url){ window.location = j.url; return; }
+            if(j && j.error) throw new Error(j.error);
+            throw new Error('Respuesta inesperada del servidor');
+          }catch(err){
+            console.error('Checkout error', err);
+            alert('No se pudo iniciar el pago: ' + (err.message || err));
+            try{ continueToPayment.disabled = false; continueToPayment.textContent = 'Continue To Payment'; }catch(e){}
+          }
+        });
+
+      })();
     </script>
   </body>
 </html>

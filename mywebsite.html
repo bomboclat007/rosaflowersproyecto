@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My Website — Admin</title>
+  <style>
+    :root{ --bg:#f4f6f8; --sidebar:#313443; --muted:#9aa0a6 }
+    body{ margin:0; font-family:Inter, system-ui, Arial, Helvetica, sans-serif; background:var(--bg); color:#222 }
+    .layout{ display:flex; min-height:100vh }
+    .sidebar{ width:260px; background:var(--sidebar); color:#fff; padding:18px 12px; box-sizing:border-box }
+    .sidebar h3{ color:#fff; font-weight:600; margin-top:0; margin-bottom:12px }
+    .side-nav{ margin:8px 0; padding:0; list-style:none }
+    .side-nav li{ padding:12px 14px; border-radius:6px; color:#e6e7ea; cursor:pointer; margin-bottom:6px }
+    .side-nav li:hover{ background:#3a3d4f }
+    .main{ flex:1; padding:28px }
+    .card{ background:#fff; padding:18px; border-radius:8px; box-shadow:0 4px 20px rgba(16,24,40,0.04) }
+    @media (max-width:880px){ .sidebar{ display:none } .layout{ flex-direction:column } .main{ padding:12px } }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <h3>Website Manager</h3>
+      <nav>
+        <ul class="side-nav">
+          <li>Banner Management</li>
+          <li>Site Announcements</li>
+          <li>Social Links</li>
+          <li>Blog</li>
+          <li>Photo Gallery</li>
+          <li style="border-top:1px solid rgba(255,255,255,0.06); margin-top:8px; padding-top:12px">Checkout Settings</li>
+          <li>Subscription Setup</li>
+          <li style="border-top:1px solid rgba(255,255,255,0.06); margin-top:8px; padding-top:12px">Coupons</li>
+          <li>Loyalty Program</li>
+          <li>Store Credit</li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="top">
+        <h1>Website Manager</h1>
+        <div style="color:var(--muted)">Administra el contenido de tu sitio</div>
+      </div>
+
+      <section style="margin-top:12px">
+        <div id="contentArea" class="card">
+          <h2 style="margin-top:0">Welcome to Website Manager</h2>
+          <p>Use the menu on the left to manage banners, announcements, social links, blog, and more. Clicking each item will open the corresponding editor.</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    // Make sidebar interactive and render Banner Management
+    (function(){
+      const navItems = document.querySelectorAll('.side-nav li');
+      const content = document.getElementById('contentArea');
+      function clearActive(){ navItems.forEach(i=>i.style.background=''); }
+      navItems.forEach(li=> li.addEventListener('click', function(){
+        clearActive(); this.style.background='#3a3d4f';
+        const txt = this.textContent.trim();
+  if(txt === 'Banner Management') return renderBannerManager();
+  if(txt === 'Site Announcements') return renderSiteAnnouncements();
+  if(txt === 'Social Links') return renderSocialLinks();
+      if(txt === 'Blog') return renderBlog();
+        // default placeholder
+        content.innerHTML = '<h2 style="margin-top:0">'+txt+'</h2><p>Editor not implemented yet.</p>';
+      }));
+
+      // Banner manager
+      function renderBannerManager(){
+        content.innerHTML = `
+          <h2 style="margin-top:0">Banner Management</h2>
+          <p style="color:var(--muted)">Upload banner images here. Set one as active to replace the homepage hero image.</p>
+          <div style="display:flex; gap:16px; align-items:flex-start; margin-top:12px">
+            <div style="flex:1; min-width:320px; background:#fafafa; padding:12px; border-radius:6px; border:1px solid #eee">
+              <label style="font-weight:600">Upload new banner</label>
+              <input id="bannerFile" type="file" accept="image/*" style="display:block; margin-top:8px" />
+              <input id="bannerName" placeholder="Optional name" style="width:100%; margin-top:8px; padding:8px; border:1px solid #e6e9ee; border-radius:6px" />
+              <div style="margin-top:8px"><button id="uploadBanner" class="small-btn">Upload</button></div>
+              <div id="previewArea" style="margin-top:12px"></div>
+            </div>
+            <div style="flex:1; min-width:320px; background:#fff; padding:12px; border-radius:6px; border:1px solid #eee">
+              <label style="font-weight:600">Existing banners</label>
+              <div id="bannersList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px; max-height:420px; overflow:auto"></div>
+            </div>
+          </div>
+        `;
+
+        // wire controls
+        const file = document.getElementById('bannerFile');
+        const name = document.getElementById('bannerName');
+        const upload = document.getElementById('uploadBanner');
+        const preview = document.getElementById('previewArea');
+        const list = document.getElementById('bannersList');
+
+        function loadBanners(){ try{ return JSON.parse(localStorage.getItem('website_banners')||'[]'); }catch(e){ return []; } }
+        function saveBanners(v){ localStorage.setItem('website_banners', JSON.stringify(v)); }
+
+        function renderList(){ const items = loadBanners(); list.innerHTML=''; if(!items.length) list.innerHTML='<div style="color:var(--muted)">No banners uploaded yet.</div>';
+          items.forEach((b,idx)=>{
+            const row = document.createElement('div'); row.style.display='flex'; row.style.alignItems='center'; row.style.gap='8px'; row.style.padding='8px'; row.style.border='1px solid #f0f0f0'; row.style.borderRadius='6px';
+            const thumb = document.createElement('img'); thumb.src = b.data; thumb.style.width='120px'; thumb.style.height='60px'; thumb.style.objectFit='cover'; thumb.style.borderRadius='4px';
+            const meta = document.createElement('div'); meta.style.flex='1'; meta.innerHTML = `<div style="font-weight:600">${b.name||'Banner '+(idx+1)}</div><div style="color:var(--muted);font-size:13px">${new Date(b.createdAt).toLocaleString()}</div>`;
+            const actions = document.createElement('div'); actions.style.display='flex'; actions.style.flexDirection='column'; actions.style.gap='6px';
+            const setBtn = document.createElement('button'); setBtn.textContent = b.active ? 'Active' : 'Set Active'; setBtn.className='small-btn'; setBtn.style.background = b.active ? '#0b63d6' : '';
+            setBtn.addEventListener('click', ()=>{ const items = loadBanners(); items.forEach(x=>x.active=false); items[idx].active=true; saveBanners(items); renderList(); alert('Banner set active. Open homepage to confirm.'); });
+            const delBtn = document.createElement('button'); delBtn.textContent='Delete'; delBtn.className='small-btn'; delBtn.addEventListener('click', ()=>{ if(!confirm('Delete this banner?')) return; const items = loadBanners(); items.splice(idx,1); saveBanners(items); renderList(); });
+            actions.appendChild(setBtn); actions.appendChild(delBtn);
+            row.appendChild(thumb); row.appendChild(meta); row.appendChild(actions); list.appendChild(row);
+          }); }
+
+        file.addEventListener('change', function(){ const f = this.files && this.files[0]; if(!f) return; const reader = new FileReader(); reader.onload = function(e){ preview.innerHTML = '<div style="width:100%;max-height:240px;overflow:hidden"><img src="'+e.target.result+'" style="width:100%;height:auto;object-fit:cover"/></div>'; }; reader.readAsDataURL(f); });
+
+        upload.addEventListener('click', function(){ const f = file.files && file.files[0]; if(!f){ alert('Please select an image first.'); return; } const reader = new FileReader(); reader.onload = function(e){ const items = loadBanners(); const obj = { id: 'b'+Date.now(), name: name.value || f.name, data: e.target.result, active: items.length===0 ? true : false, createdAt: Date.now() }; items.push(obj); saveBanners(items); renderList(); preview.innerHTML=''; file.value=''; name.value=''; alert('Banner uploaded.'); }; reader.readAsDataURL(f); });
+
+        renderList();
+      }
+
+      // Site Announcements editor
+      function renderSiteAnnouncements(){
+        const sections = [
+          { id: 'siteBanner', title: 'Site Banner', start:'', end:'', active:true, content: "<p style='text-align:center'><strong>Rosa's Flowers will be closed June 1-5</strong><br><small>while we celebrate Independence Day.<br/>Sorry for the inconvenience</small></p>" },
+          { id: 'homePage', title: 'Home Page', start:'', end:'', active:true, content: "<p style='text-align:center'><strong>Rosa's Flowers will be closed June 1-5</strong><br><small>while we celebrate Independence Day.<br/>Sorry for the inconvenience</small></p>" },
+          { id: 'productPages', title: 'Product Pages', start:'', end:'', active:true, content: "<p style='text-align:center'><strong>Rosa's Flowers will be closed June 1-5</strong><br><small>while we celebrate Independence Day.<br/>Sorry for the inconvenience</small></p>" },
+          { id: 'checkout', title: 'Checkout', start:'', end:'', active:true, content: "<p style='text-align:center'><strong>Rosa's Flowers will be closed June 1-5</strong><br><small>while we celebrate Independence Day.<br/>Sorry for the inconvenience</small></p>" },
+          { id: 'checkoutFulfillment', title: 'Checkout Fulfillment', start:'', end:'', active:false, content: '' }
+        ];
+
+        // load saved
+        try{ const saved = JSON.parse(localStorage.getItem('site_announcements')||'null'); if(saved && Array.isArray(saved)) saved.forEach(s=>{ const idx = sections.findIndex(x=>x.id===s.id); if(idx>-1) sections[idx]=Object.assign(sections[idx], s); }); }catch(e){}
+
+        let html = '<h2 style="margin-top:0">Site Announcements</h2>';
+        html += '<p style="color:var(--muted)">Manage timed site-wide announcement banners for different areas of the site.</p>';
+        html += '<div style="display:flex;flex-direction:column;gap:18px;margin-top:12px">';
+
+        sections.forEach(s=>{
+          html += `
+            <div class="card" style="padding:14px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <strong>${s.title}</strong>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <label style="font-size:13px;color:var(--muted)">Start Date</label>
+                  <input type="date" data-id="${s.id}-start" style="padding:6px;border:1px solid #e6e9ee;border-radius:6px" value="${s.start}" />
+                  <label style="font-size:13px;color:var(--muted)">End Date</label>
+                  <input type="date" data-id="${s.id}-end" style="padding:6px;border:1px solid #e6e9ee;border-radius:6px" value="${s.end}" />
+                  <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)"><input type="checkbox" data-id="${s.id}-active" ${s.active? 'checked':''}/> Active</label>
+                </div>
+              </div>
+              <div style="margin-top:12px">
+                <div contenteditable="true" data-id="${s.id}-content" class="rich-editor" style="min-height:80px;border:1px solid #e9ecef;padding:12px;border-radius:4px;background:#fafafa;overflow:auto">${s.content}</div>
+              </div>
+              <div style="margin-top:8px;text-align:right">
+                <button data-action="save" data-for="${s.id}" class="small-btn">Save</button>
+              </div>
+            </div>
+          `;
+        });
+
+        html += '</div>';
+        content.innerHTML = html;
+
+        // style small-btn if not present
+        document.querySelectorAll('.small-btn').forEach(b=>{ b.style.padding='8px 12px'; b.style.border='1px solid #dfe6ef'; b.style.borderRadius='6px'; b.style.background='#fff'; b.style.cursor='pointer'; });
+
+        // wire save actions
+        document.querySelectorAll('button[data-action="save"]').forEach(btn=>{
+          btn.addEventListener('click', function(){
+            const id = this.getAttribute('data-for');
+            const start = document.querySelector(`[data-id="${id}-start"]`).value;
+            const end = document.querySelector(`[data-id="${id}-end"]`).value;
+            const active = document.querySelector(`[data-id="${id}-active"]`).checked;
+            const contentHtml = document.querySelector(`[data-id="${id}-content"]`).innerHTML;
+            // persist
+            try{
+              const existing = JSON.parse(localStorage.getItem('site_announcements')||'[]');
+              const updated = existing.filter(x=>x.id!==id);
+              updated.push({ id, start, end, active, content: contentHtml });
+              localStorage.setItem('site_announcements', JSON.stringify(updated));
+              alert('Announcement saved for '+id);
+            }catch(e){ alert('Save failed'); }
+          });
+        });
+      }
+
+      // Social Links editor
+      function renderSocialLinks(){
+        const platforms = [
+          { key:'maps', title:'Google Maps', placeholder:'https://maps.google.com/...'},
+          { key:'yelp', title:'Yelp', placeholder:'https://www.yelp.com/...'},
+          { key:'facebook', title:'Facebook', placeholder:'https://www.facebook.com/...'},
+          { key:'instagram', title:'Instagram', placeholder:'https://www.instagram.com/...'},
+          { key:'pinterest', title:'Pinterest', placeholder:'https://www.pinterest.com/...'},
+          { key:'tiktok', title:'TikTok', placeholder:'@yourhandle'},
+          { key:'x', title:'X (Twitter)', placeholder:'https://x.com/... or @handle'},
+          { key:'youtube', title:'YouTube', placeholder:'https://www.youtube.com/...'}
+        ];
+
+        // load saved
+        let saved = {};
+        try{ saved = JSON.parse(localStorage.getItem('social_links')||'{}'); }catch(e){ saved = {}; }
+
+        let html = '<h2 style="margin-top:0">Social Links</h2>';
+        html += '<p style="color:var(--muted)">Enter your social/profile URLs or handles. Click Save to persist.</p>';
+        html += '<div style="margin-top:12px;display:flex;flex-direction:column;gap:12px">';
+
+        platforms.forEach(p=>{
+          const val = saved[p.key] || '';
+          html += `
+            <div class="card" style="padding:12px;display:flex;align-items:center;gap:12px">
+              <div style="width:44px;height:44px;flex:0 0 44px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:#fafafa;border:1px solid #eee;font-weight:700">${p.title.charAt(0)}</div>
+              <div style="flex:1">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                  <div style="font-weight:600">${p.title}</div>
+                  <div style="color:var(--muted);font-size:13px">${p.placeholder}</div>
+                </div>
+                <input data-key="${p.key}" value="${val.replace(/"/g,'&quot;')}" placeholder="${p.placeholder}" style="width:100%;margin-top:8px;padding:10px;border:1px solid #e6e9ee;border-radius:6px;background:#fff" />
+              </div>
+            </div>
+          `;
+        });
+
+        html += '<div style="display:flex;gap:10px;justify-content:flex-end"><button id="saveSocial" class="small-btn">Save All</button></div>';
+        html += '</div>';
+
+        content.innerHTML = html;
+        document.querySelectorAll('.small-btn').forEach(b=>{ b.style.padding='8px 12px'; b.style.border='1px solid #dfe6ef'; b.style.borderRadius='6px'; b.style.background='#fff'; b.style.cursor='pointer'; });
+
+        document.getElementById('saveSocial').addEventListener('click', function(){
+          const inputs = document.querySelectorAll('input[data-key]');
+          const out = {};
+          inputs.forEach(i=>{ const k = i.getAttribute('data-key'); out[k] = i.value.trim(); });
+          try{ localStorage.setItem('social_links', JSON.stringify(out)); alert('Social links saved.'); }catch(e){ alert('Save failed'); }
+        });
+      }
+
+      // Blog editor
+      function renderBlog(){
+        // load existing posts
+        let posts = [];
+        try{ posts = JSON.parse(localStorage.getItem('blog_posts')||'[]'); }catch(e){ posts = []; }
+
+        // if no posts exist, add a sample to match screenshot
+        if(posts.length===0){
+          posts.push({ id:'post_1', title:'Lencas, cultura de hermosos colores', status:'Enabled', excerpt:'', createdAt:'2023-10-16T06:57:57' });
+          localStorage.setItem('blog_posts', JSON.stringify(posts));
+        }
+
+        let html = '<h2 style="margin-top:0">Blog</h2>';
+        html += '<div style="color:var(--muted);margin-top:6px" id="countText">Showing '+posts.length+' blog post'+(posts.length===1?'':'s')+'</div>';
+        html += '<div style="margin-top:12px"><button id="addPostBtn" class="small-btn">Add a new post</button></div>';
+        html += '<table style="width:100%;border-collapse:collapse;margin-top:12px"><thead><tr><th>Title</th><th style="width:120px">Status</th><th style="width:180px">Date Created</th><th style="width:140px"></th></tr></thead><tbody id="postsTbody"></tbody></table>';
+
+        // modal markup container
+        html += `
+          <div id="blogModalBackdrop" style="display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:rgba(0,0,0,0.35);z-index:9999">
+            <div style="background:#fff;padding:18px;border-radius:6px;max-width:680px;margin:0 12px">
+              <h3 id="blogModalTitle">New Post</h3>
+              <div style="margin-top:8px"><label style="font-weight:600">Title</label><input id="blogTitle" style="width:100%;padding:8px;border:1px solid #e6e9ee;border-radius:6px"/></div>
+              <div style="margin-top:8px"><label style="font-weight:600">Status</label><select id="blogStatus" style="width:100%;padding:8px;border:1px solid #e6e9ee;border-radius:6px"><option>Enabled</option><option>Disabled</option></select></div>
+              <div style="margin-top:8px"><label style="font-weight:600">Content</label><textarea id="blogContent" rows="6" style="width:100%;padding:8px;border:1px solid #e6e9ee;border-radius:6px"></textarea></div>
+              <div style="margin-top:8px"><label style="font-weight:600">Image (optional)</label><input type="file" id="blogImage" accept="image/*"/><div id="blogImagePreview" style="margin-top:8px"></div></div>
+              <div style="margin-top:12px;text-align:right"><button id="blogCancel" class="small-btn">Cancel</button> <button id="blogSave" class="small-btn">Save</button></div>
+            </div>
+          </div>`;
+
+        content.innerHTML = html;
+
+        // small button style hook
+        document.querySelectorAll('.small-btn').forEach(b=>{ b.style.padding='8px 12px'; b.style.border='1px solid #dfe6ef'; b.style.borderRadius='6px'; b.style.background='#fff'; b.style.cursor='pointer'; });
+
+        // render table rows
+        function renderRows(){
+          const tbody = document.getElementById('postsTbody');
+          const stored = JSON.parse(localStorage.getItem('blog_posts')||'[]');
+          document.getElementById('countText').textContent = 'Showing '+stored.length+' blog post'+(stored.length===1?'':'s');
+          tbody.innerHTML = '';
+          stored.forEach(p=>{
+            const tr = document.createElement('tr');
+            tr.style.borderTop='1px solid #eee';
+            const tdTitle = document.createElement('td'); tdTitle.innerHTML = '<div style="font-weight:600">'+escapeHtml(p.title)+'</div><div style="color:var(--muted);font-size:13px">'+(p.excerpt||'')+'</div>';
+            const tdStatus = document.createElement('td'); tdStatus.textContent = p.status || 'Enabled';
+            const tdDate = document.createElement('td'); tdDate.textContent = new Date(p.createdAt).toLocaleString();
+            const tdActions = document.createElement('td'); tdActions.style.textAlign='right'; tdActions.style.padding='8px';
+            const editBtn = document.createElement('button'); editBtn.className='small-btn'; editBtn.textContent='✎'; editBtn.title='Edit'; editBtn.style.marginRight='8px'; editBtn.addEventListener('click', ()=> openEdit(p.id));
+            const delBtn = document.createElement('button'); delBtn.className='small-btn'; delBtn.textContent='🗑'; delBtn.title='Delete'; delBtn.addEventListener('click', ()=>{ if(!confirm('Delete post?')) return; const arr = stored.filter(x=>x.id!==p.id); localStorage.setItem('blog_posts', JSON.stringify(arr)); renderRows(); });
+            tdActions.appendChild(editBtn); tdActions.appendChild(delBtn);
+            tr.appendChild(tdTitle); tr.appendChild(tdStatus); tr.appendChild(tdDate); tr.appendChild(tdActions);
+            tbody.appendChild(tr);
+          });
+        }
+
+        function escapeHtml(t){ if(!t) return ''; return t.replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c] }) }
+
+  // modal helpers
+  let editingId = null;
+  let modalImageData = null;
+        function openNew(){
+          editingId = null;
+          modalImageData = null;
+          document.getElementById('blogModalTitle').textContent='New Post';
+          document.getElementById('blogTitle').value='';
+          document.getElementById('blogStatus').value='Enabled';
+          document.getElementById('blogContent').value='';
+          document.getElementById('blogImage').value='';
+          document.getElementById('blogImagePreview').innerHTML='';
+          document.getElementById('blogModalBackdrop').style.display='flex';
+        }
+
+        function openEdit(id){
+          const arr = JSON.parse(localStorage.getItem('blog_posts')||'[]');
+          const p = arr.find(x=>x.id===id); if(!p) return;
+          editingId = id; modalImageData = p.image || null;
+          document.getElementById('blogModalTitle').textContent='Edit Post';
+          document.getElementById('blogTitle').value=p.title;
+          document.getElementById('blogStatus').value=p.status||'Enabled';
+          document.getElementById('blogContent').value=p.excerpt||'';
+          document.getElementById('blogImage').value='';
+          document.getElementById('blogImagePreview').innerHTML = modalImageData ? '<img src="'+modalImageData+'" style="max-width:100%;max-height:160px;object-fit:cover" />' : '';
+          document.getElementById('blogModalBackdrop').style.display='flex';
+        }
+
+        document.getElementById('addPostBtn').addEventListener('click', openNew);
+        document.getElementById('blogCancel').addEventListener('click', ()=> document.getElementById('blogModalBackdrop').style.display='none');
+
+        document.getElementById('blogSave').addEventListener('click', ()=>{
+          const title = document.getElementById('blogTitle').value.trim(); if(!title){ alert('Please enter a title'); return; }
+          const status = document.getElementById('blogStatus').value; const contentVal = document.getElementById('blogContent').value;
+          const fileInput = document.getElementById('blogImage');
+          const arr = JSON.parse(localStorage.getItem('blog_posts')||'[]');
+
+          function finishSave(imageData){
+            if(editingId){ const p = arr.find(x=>x.id===editingId); if(p){ p.title = title; p.status = status; p.excerpt = contentVal; if(imageData!==undefined) p.image = imageData } }
+            else { arr.unshift({ id:'post_'+Date.now(), title, status, excerpt: contentVal, image: imageData||null, createdAt: new Date().toISOString() }); }
+            localStorage.setItem('blog_posts', JSON.stringify(arr)); document.getElementById('blogModalBackdrop').style.display='none'; renderRows();
+          }
+
+          if(fileInput && fileInput.files && fileInput.files[0]){
+            const fr = new FileReader(); fr.onload = e=> finishSave(e.target.result); fr.readAsDataURL(fileInput.files[0]);
+          } else {
+            finishSave(editingId ? modalImageData : null);
+          }
+        });
+
+        // click outside modal to close
+        document.getElementById('blogModalBackdrop').addEventListener('click', function(e){ if(e.target===this) this.style.display='none'; });
+
+        renderRows();
+      }
+
+      // initial: attach click to banner item if present
+      const bm = Array.from(document.querySelectorAll('.side-nav li')).find(x=>x.textContent.trim()==='Banner Management'); if(bm) bm.style.cursor='pointer';
+    })();
+  </script>
+</body>
+</html>

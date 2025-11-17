@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Blogs</title>
+  <style>
+    body{font-family: Arial, Helvetica, sans-serif; background:#f5f5f5; margin:0; padding:24px}
+    .container{max-width:1100px;margin:0 auto;background:#fff;padding:24px;border:1px solid #e6e6e6}
+    h1{margin:0 0 12px;font-weight:600}
+    .sub{color:#777;margin:8px 0 20px}
+    .btn-add{background:#5fb0e6;color:#fff;padding:10px 18px;border-radius:2px;border:none;cursor:pointer;font-weight:600}
+    table{width:100%;border-collapse:collapse;margin-top:14px}
+    th,td{padding:12px 10px;border:1px solid #e6e6e6;text-align:left;font-size:14px}
+    th{background:#fafafa;color:#333;font-weight:600}
+    .actions{display:flex;gap:8px;justify-content:flex-end}
+    .action-btn{border:none;padding:8px 10px;border-radius:2px;cursor:pointer}
+    .edit{background:#5fb0e6;color:#fff}
+    .delete{background:#e05b5b;color:#fff}
+    .small-muted{color:#999;font-size:13px}
+
+    /* Modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:9999}
+    .modal{background:#fff;padding:18px;border-radius:4px;max-width:640px;width:100%;box-shadow:0 8px 24px rgba(0,0,0,0.15)}
+    .modal h2{margin:0 0 12px}
+    .form-row{margin-bottom:10px}
+    .form-row label{display:block;font-weight:600;margin-bottom:6px}
+    .form-row input[type="text"], .form-row select, .form-row textarea{width:100%;padding:8px;border:1px solid #ddd;border-radius:3px}
+    .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+    .btn-secondary{background:#f1f1f1;border:1px solid #ddd;padding:8px 12px;border-radius:3px;cursor:pointer}
+    .btn-primary{background:#5fb0e6;color:#fff;padding:8px 12px;border:none;border-radius:3px;cursor:pointer}
+
+    @media (max-width:700px){.container{padding:12px} th,td{font-size:13px;padding:10px}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Blogs</h1>
+    <div class="sub" id="countText">Showing 0 blog posts</div>
+    <button class="btn-add" id="addBtn">Add a new post</button>
+
+    <table id="postsTable" aria-label="Blog posts table">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th style="width:120px">Status</th>
+          <th style="width:180px">Date Created</th>
+          <th style="width:140px"></th>
+        </tr>
+      </thead>
+      <tbody id="postsTbody">
+        <!-- rows inserted here -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Modal -->
+  <div id="modalBackdrop" style="display:none" class="modal-backdrop">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h2 id="modalTitle">New Post</h2>
+      <div class="form-row">
+        <label>Title</label>
+        <input type="text" id="postTitle" placeholder="Enter post title">
+      </div>
+      <div class="form-row">
+        <label>Status</label>
+        <select id="postStatus">
+          <option value="Enabled">Enabled</option>
+          <option value="Disabled">Disabled</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Content (optional)</label>
+        <textarea id="postContent" rows="6" placeholder="Write post content..."></textarea>
+      </div>
+      <div class="form-row">
+        <label>Image (optional)</label>
+        <input type="file" id="postImage" accept="image/*" />
+        <div id="postImagePreview" style="margin-top:8px"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="cancelBtn">Cancel</button>
+        <button class="btn-primary" id="saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const STORAGE_KEY = 'blog_posts'
+  let posts = []
+  let editingId = null
+  let modalImageData = null // holds dataURL preview when editing/creating
+
+      function loadPosts(){
+        try{
+          const raw = localStorage.getItem(STORAGE_KEY)
+          posts = raw ? JSON.parse(raw) : []
+        }catch(e){
+          console.error('Failed to parse blog_posts from localStorage', e)
+          posts = []
+        }
+      }
+
+      function savePosts(){
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(posts))
+      }
+
+      function formatDate(iso){
+        try{ const d = new Date(iso); return d.toLocaleString(); }catch(e){ return iso }
+      }
+
+      function renderCount(){
+        const countText = document.getElementById('countText')
+        countText.textContent = `Showing ${posts.length} blog post${posts.length===1? '':'s'}`
+      }
+
+      function createActionButton(className, title, svgPath, onClick){
+        const btn = document.createElement('button')
+        btn.className = `action-btn ${className}`
+        btn.title = title
+        btn.innerHTML = svgPath
+        btn.addEventListener('click', onClick)
+        return btn
+      }
+
+      function renderTable(){
+        const tbody = document.getElementById('postsTbody')
+        tbody.innerHTML = ''
+        posts.forEach(p => {
+          const tr = document.createElement('tr')
+          const tdTitle = document.createElement('td')
+          tdTitle.innerHTML = `<div>${escapeHtml(p.title||'Untitled')}</div><div class="small-muted">${(p.excerpt||'').slice(0,120)}</div>`
+
+          const tdStatus = document.createElement('td')
+          tdStatus.textContent = p.status || 'Enabled'
+
+          const tdDate = document.createElement('td')
+          tdDate.textContent = formatDate(p.createdAt)
+
+          const tdActions = document.createElement('td')
+          tdActions.className = 'actions'
+
+          const editSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>'
+          const delSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m5 0V4a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2"/></svg>'
+
+          const editBtn = createActionButton('edit', 'Edit', editSvg, ()=> openEdit(p.id))
+          editBtn.classList.add('edit')
+          const delBtn = createActionButton('delete', 'Delete', delSvg, ()=> removePost(p.id))
+          delBtn.classList.add('delete')
+
+          tdActions.appendChild(editBtn)
+          tdActions.appendChild(delBtn)
+
+          tr.appendChild(tdTitle)
+          tr.appendChild(tdStatus)
+          tr.appendChild(tdDate)
+          tr.appendChild(tdActions)
+
+          tbody.appendChild(tr)
+        })
+      }
+
+      function escapeHtml(text){
+        if(!text) return ''
+        return text.replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c] })
+      }
+
+      function openNew(){
+        editingId = null
+        modalImageData = null
+        document.getElementById('modalTitle').textContent = 'New Post'
+        document.getElementById('postTitle').value = ''
+        document.getElementById('postStatus').value = 'Enabled'
+        document.getElementById('postContent').value = ''
+        document.getElementById('postImage').value = ''
+        document.getElementById('postImagePreview').innerHTML = ''
+        showModal(true)
+      }
+
+      function openEdit(id){
+        const p = posts.find(x=>x.id===id)
+        if(!p) return
+        editingId = id
+        modalImageData = p.image || null
+        document.getElementById('modalTitle').textContent = 'Edit Post'
+        document.getElementById('postTitle').value = p.title || ''
+        document.getElementById('postStatus').value = p.status || 'Enabled'
+        document.getElementById('postContent').value = p.excerpt || ''
+        document.getElementById('postImage').value = ''
+        const prev = document.getElementById('postImagePreview')
+        prev.innerHTML = modalImageData ? '<img src="'+modalImageData+'" style="max-width:100%;max-height:160px;object-fit:cover" />' : ''
+        showModal(true)
+      }
+
+      function removePost(id){
+        if(!confirm('Delete this post?')) return
+        posts = posts.filter(p=>p.id!==id)
+        savePosts(); renderAll()
+      }
+
+      function showModal(visible){
+        const mb = document.getElementById('modalBackdrop')
+        mb.style.display = visible ? 'flex' : 'none'
+      }
+
+      function saveFromModal(){
+        const title = document.getElementById('postTitle').value.trim()
+        const status = document.getElementById('postStatus').value
+        const content = document.getElementById('postContent').value
+        const fileInput = document.getElementById('postImage')
+        if(!title){ alert('Please enter a title'); return }
+
+        // helper to finalize save once image (if any) is ready
+        function finalizeSave(imageData){
+          if(editingId){
+            const p = posts.find(x=>x.id===editingId)
+            if(p){ p.title = title; p.status = status; p.excerpt = content; if(imageData!==undefined) p.image = imageData }
+          } else {
+            const id = 'post_' + Date.now()
+            posts.unshift({id, title, status, excerpt: content, image: imageData||null, createdAt: new Date().toISOString()})
+          }
+          savePosts(); renderAll(); showModal(false)
+        }
+
+        // if a new file was selected, read it first
+        if(fileInput && fileInput.files && fileInput.files[0]){
+          const fr = new FileReader();
+          fr.onload = function(e){ finalizeSave(e.target.result) }
+          fr.readAsDataURL(fileInput.files[0])
+        } else {
+          // no new file selected: when editing, keep modalImageData; when creating, undefined => null
+          finalizeSave(editingId ? modalImageData : null)
+        }
+      }
+
+      function renderAll(){ renderCount(); renderTable() }
+
+      // wire up
+      document.getElementById('addBtn').addEventListener('click', openNew)
+      document.getElementById('cancelBtn').addEventListener('click', ()=> showModal(false))
+      document.getElementById('saveBtn').addEventListener('click', saveFromModal)
+
+      // click outside modal to close
+      document.getElementById('modalBackdrop').addEventListener('click', function(e){ if(e.target===this) showModal(false) })
+
+      // init
+      loadPosts()
+
+      // If there are no posts, create a sample post to match your screenshot (one post shown)
+      if(posts.length===0){
+        posts.push({id:'post_1', title:'Lencas, cultura de hermosos colores', status:'Enabled', excerpt:'', createdAt:'2023-10-16T06:57:57'})
+        savePosts()
+      }
+
+      renderAll()
+
+      // expose for console
+      window.blogAdmin = {loadPosts, savePosts, posts}
+    })()
+  </script>
+</body>
+</html>

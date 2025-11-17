@@ -5999,21 +5999,8 @@ Louisiana located between Baton Rouge and New Orleans." />
     </div>
   </div>
   <script src="/assets/js/login-modal.js" defer></script>
-  <!-- floating login button removed (was added as a fallback) -->
-  <script>
-    // Ensure header login button opens our modal (fallback in case the template overwrites onclick)
-    (function(){
-      function bindHeaderLogin(){
-        var headerBtn = document.getElementById('siteLoginBtn');
-        if(!headerBtn) return;
-  headerBtn.style.cursor = 'pointer';
-  // Remove any existing onclick attribute that might be overwritten by other scripts
-  try { headerBtn.removeAttribute('onclick'); } catch(e){}
-  headerBtn.addEventListener('click', function(e){ e.preventDefault(); var modal = document.getElementById('loginModal'); if(modal){ modal.style.display='block'; } else if(window.showLoginModal){ window.showLoginModal(); } else { alert('Login not ready yet'); } });
-      }
-      if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindHeaderLogin); else bindHeaderLogin();
-    })();
-  </script>
+  <!-- global login handler -->
+  <script src="/assets/js/site-login.js" defer></script>
   </body>
 
 

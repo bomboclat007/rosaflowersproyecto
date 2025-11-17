@@ -55,7 +55,10 @@ module.exports = async function handler(req, res) {
 
         // Delete any existing rows whose slug is NOT in the new list
         try {
-          const { error: delErr } = await supabase.from('featured_events').delete().not('slug', 'in', slugs);
+          // Supabase expects the `in` operator value as a parenthesized list of quoted values
+          // Build a safe in-clause string like: ( 'a.html','b.html' )
+          const inClause = '(' + slugs.map(s => "'" + String(s).replace(/'/g, "''") + "'").join(',') + ')';
+          const { error: delErr } = await supabase.from('featured_events').delete().not('slug', 'in', inClause);
           if (delErr) console.error('Supabase delete featured_events (not in) error:', delErr);
         } catch (e) {
           // best-effort delete; log and continue
