@@ -556,16 +556,6 @@
                 <label><input type="radio" name="payType" value="reader" /> Send to Card Reader <span class="muted right">Offline</span></label>
 
                 <label><input type="radio" name="payType" value="card" checked /> Credit or Debit Card</label>
-                <div id="panel-card" style="padding:12px 16px;border-bottom:1px solid var(--border)">
-                  <label style="display:block;margin-bottom:6px"><input type="checkbox" /> Same as Customer Name</label>
-                  <label>Card Label</label>
-                  <input type="text" />
-                  <label>Cardholder Name</label>
-                  <input type="text" />
-                  <label>Card Number</label>
-                  <div style="display:flex;gap:8px;align-items:center"><input type="text" placeholder="4242 4242 4242 4242" style="flex:1" /><button class="btn ghost">Usar link</button></div>
-                  <div style="display:flex;gap:12px;margin-top:8px"><div style="flex:1"><label>Expiration</label><input type="text" placeholder="MM/AA" /></div><div style="width:120px"><label>CVC</label><input type="text" placeholder="CVC" /></div></div>
-                </div>
 
                 <label><input type="radio" name="payType" value="cash" /> Cash</label>
                 <div id="panel-cash" style="display:none;padding:12px 16px;border-bottom:1px solid var(--border)">
@@ -667,7 +657,6 @@
         function updatePaymentPanels(){
           const panels = {
             'reader': 'panel-reader',
-            'card': 'panel-card',
             'cash': 'panel-cash',
             'check': 'panel-check',
             'gift': 'panel-gift',
