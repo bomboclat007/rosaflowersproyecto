@@ -717,10 +717,19 @@
             const cents = Math.round(total * 100);
 
             try{
+              // Build items from orderItems and send to server (unit_amount in cents)
+              const itemsPayload = (orderItems || []).map(it=>({
+                name: it.name,
+                quantity: Number(it.qty) || 1,
+                unit_amount: Math.round((Number(it.price) || 0) * 100),
+                // If your product objects include a Stripe price id, include as `price` here
+                // price: it.price_id || null
+              }));
+
               const res = await fetch('/api/create-checkout-session', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ amount: cents, currency: 'usd' })
+                body: JSON.stringify({ items: itemsPayload, currency: 'usd', customer_email: document.getElementById('recipient_email')?.value })
               });
 
               if(!res.ok){
