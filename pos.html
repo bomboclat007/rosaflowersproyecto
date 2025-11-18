@@ -761,8 +761,45 @@
             }
 
           } else {
-            // Fallback behaviour for other payment methods
-            alert('Processing payment method: ' + selected + '. Implement server-side handling as needed.');
+            // Server-side handling for non-card payment methods (cash, check, gift, paylater, etc.)
+            try{
+              const itemsPayload = (orderItems || []).map(it=>({
+                name: it.name,
+                quantity: Number(it.qty) || 1,
+                unit_amount: Math.round((Number(it.price) || 0) * 100)
+              }));
+
+              const totalText = document.getElementById('orderGrandTotal')?.innerText || '$0.00';
+              const totalCents = Math.round((Number(totalText.replace(/[^0-9.-]+/g,''))||0) * 100);
+
+              const resOrder = await fetch('/api/create-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items: itemsPayload, payment_method: selected, total_cents: totalCents, customer_email: document.getElementById('recipient_email')?.value })
+              });
+
+              if(!resOrder.ok){
+                const txt = await resOrder.text().catch(()=>'<no body>');
+                console.error('create-order error', resOrder.status, txt);
+                alert('Server error creating order: ' + resOrder.status + '\n' + txt);
+                return;
+              }
+
+              const orderData = await resOrder.json();
+              if(orderData && orderData.ok){
+                alert('Order created: ' + orderData.orderId + '\nTotal: $' + ((orderData.total||0)/100).toFixed(2));
+                // clear current order
+                orderItems = [];
+                renderOrderSummary();
+                document.getElementById('itemPreview') && (document.getElementById('itemPreview').style.display = 'none');
+              } else {
+                console.error('create-order failed', orderData);
+                alert('Unable to create order.');
+              }
+            }catch(err){
+              console.error(err);
+              alert('Error creating order: ' + (err.message||err));
+            }
           }
         });
       </script>
