@@ -8,7 +8,7 @@ module.exports = async (req, res) => {
   let body = req.body || {};
   try { if (!body || Object.keys(body).length === 0) body = JSON.parse(req.rawBody || '{}'); } catch(e){}
 
-  const { items, payment_method, customer_email, total_cents, metadata } = body;
+  const { items, payment_method, customer_email, total_cents, metadata, mode } = body;
 
   if (!Array.isArray(items) || items.length === 0) return res.status(400).json({ error: 'Missing items' });
   if (!payment_method) return res.status(400).json({ error: 'Missing payment_method' });
@@ -27,7 +27,7 @@ module.exports = async (req, res) => {
   const orderId = 'ord_' + Date.now() + '_' + crypto.randomBytes(3).toString('hex');
 
   // In this simple implementation we only log the order. Persist to DB in production.
-  console.log('New POS order:', { orderId, payment_method, customer_email, total, items, metadata });
+  console.log('New POS order:', { orderId, payment_method, customer_email, total, items, metadata, mode });
 
-  return res.status(200).json({ ok: true, orderId, total, message: 'Order recorded (non-persistent).' });
+  return res.status(200).json({ ok: true, orderId, total, mode: mode || 'delivery', message: 'Order recorded (non-persistent).' });
 };

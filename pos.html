@@ -635,6 +635,7 @@
 
       <script>
         // Mode switching
+        let currentPOSMode = 'delivery';
         function showMode(mode){
           document.querySelectorAll('.mode').forEach(el=>el.classList.remove('active'));
           document.getElementById('modeDelivery').classList.toggle('active', mode==='delivery');
@@ -646,6 +647,7 @@
           document.getElementById('pickup').style.display = mode==='pickup' ? 'block' : 'none';
           document.getElementById('instore').style.display = mode==='instore' ? 'block' : 'none';
           document.getElementById('quick').style.display = mode==='quick' ? 'block' : 'none';
+          currentPOSMode = mode;
         }
 
         document.getElementById('modeDelivery').addEventListener('click',()=>showMode('delivery'));
@@ -729,7 +731,7 @@
               const res = await fetch('/api/create-checkout-session', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ items: itemsPayload, currency: 'usd', customer_email: document.getElementById('recipient_email')?.value })
+                body: JSON.stringify({ items: itemsPayload, currency: 'usd', customer_email: document.getElementById('recipient_email')?.value, metadata: { mode: currentPOSMode } })
               });
 
               if(!res.ok){
