@@ -1,9 +1,9 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Reputation — Admin</title>
+    <title>Reputation â€” Admin</title>
     <style>
       :root{ --bg:#f7f7f8; --sidebar:#2f3640; --accent:#ff4d7a; --panel:#fff }
       body{ margin:0; font-family:system-ui,Arial,Helvetica,sans-serif; background:var(--bg); color:#222 }
@@ -35,7 +35,7 @@
 
     <div class="container">
       <aside class="sidebar panel">
-        <div class="brand">📣 <span>Reputation</span></div>
+        <div class="brand">ðŸ“£ <span>Reputation</span></div>
         <ul class="nav" id="repNav">
           <li><a href="#overview" data-section="overview" class="active">Overview</a></li>
           <li><a href="#connections" data-section="connections">Connections</a></li>
@@ -51,11 +51,11 @@
           <div id="connectModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); align-items:center; justify-content:center; z-index:1200">
             <div style="background:#fff; width:520px; max-width:96%; border-radius:8px; padding:18px; box-shadow:0 6px 24px rgba(0,0,0,0.2)">
               <h3 id="connectModalTitle">Connect</h3>
-              <div style="color:#666; font-size:13px; margin-bottom:8px">Introduce las credenciales para conectar este proveedor. Estas credenciales se guardarán localmente en tu navegador.</div>
+              <div style="color:#666; font-size:13px; margin-bottom:8px">Introduce las credenciales para conectar este proveedor. Estas credenciales se guardarÃ¡n localmente en tu navegador.</div>
               <div style="display:flex; flex-direction:column; gap:8px">
                 <div id="yelpFields">
                   <label style="font-weight:600">Yelp API Key</label>
-                  <input id="modalApiKey" type="text" style="padding:8px; border:1px solid #ddd; border-radius:6px" placeholder="sk-... o dejar vacío para usar variable de servidor" />
+                  <input id="modalApiKey" type="text" style="padding:8px; border:1px solid #ddd; border-radius:6px" placeholder="sk-... o dejar vacÃ­o para usar variable de servidor" />
                   <label style="font-weight:600">Business name</label>
                   <input id="modalBusinessName" type="text" style="padding:8px; border:1px solid #ddd; border-radius:6px" placeholder="Ej: Rosa's Flowers Events" />
                   <label style="font-weight:600">Location (city, state)</label>
@@ -83,7 +83,7 @@
           <div id="content">
             <section id="overview">
               <div class="section-title"><h2>Overview</h2></div>
-              <p style="color:#666">Resumen de la reputación: puntuaciones promedio, reseñas recientes, y métricas clave.</p>
+              <p style="color:#666">Resumen de la reputaciÃ³n: puntuaciones promedio, reseÃ±as recientes, y mÃ©tricas clave.</p>
 
               <!-- Platform cards -->
               <div class="grid" id="platformCards" style="margin-top:12px">
@@ -98,7 +98,7 @@
                       <line x1="60" y1="60" x2="60" y2="18" stroke="#444" stroke-width="4" transform="rotate(200 60 60)" style="transform-origin:60px 60px" />
                     </svg>
                   </div>
-                  <div style="margin-top:6px"><strong style="font-size:18px">5.0</strong> <span style="color:#f5c518">★★★★★</span> <small style="color:#666">(38)</small></div>
+                  <div style="margin-top:6px"><strong style="font-size:18px">5.0</strong> <span style="color:#f5c518">â˜…â˜…â˜…â˜…â˜…</span> <small style="color:#666">(38)</small></div>
                   <div style="margin-top:10px"><button class="small-btn">See Your Reviews</button></div>
                 </div>
 
@@ -111,7 +111,7 @@
                       <line x1="60" y1="60" x2="60" y2="18" stroke="#444" stroke-width="4" transform="rotate(200 60 60)" style="transform-origin:60px 60px" />
                     </svg>
                   </div>
-                  <div style="margin-top:6px"><strong style="font-size:18px">5.0</strong> <span style="color:#e74c3c">★★★★★</span> <small style="color:#666">(1)</small></div>
+                  <div style="margin-top:6px"><strong style="font-size:18px">5.0</strong> <span style="color:#e74c3c">â˜…â˜…â˜…â˜…â˜…</span> <small style="color:#666">(1)</small></div>
                   <div style="margin-top:10px"><button class="small-btn">See Your Reviews</button></div>
                 </div>
 
@@ -124,7 +124,7 @@
                       <line x1="60" y1="60" x2="60" y2="18" stroke="#444" stroke-width="4" transform="rotate(200 60 60)" style="transform-origin:60px 60px" />
                     </svg>
                   </div>
-                  <div style="margin-top:6px"><strong style="font-size:18px">5.0</strong> <span style="color:#f5c518">★★★★★</span> <small style="color:#666">(1)</small></div>
+                  <div style="margin-top:6px"><strong style="font-size:18px">5.0</strong> <span style="color:#f5c518">â˜…â˜…â˜…â˜…â˜…</span> <small style="color:#666">(1)</small></div>
                   <div style="margin-top:10px"><button class="small-btn">See Your Reviews</button></div>
                 </div>
               </div>
@@ -165,7 +165,7 @@
 
             <section id="connections" style="display:none; margin-top:12px">
               <h2>Connections</h2>
-              <p style="color:#666">Conecta tus cuentas externas para sincronizar reseñas y listados.</p>
+              <p style="color:#666">Conecta tus cuentas externas para sincronizar reseÃ±as y listados.</p>
 
               <div class="card" style="margin-top:12px">
                 <h3 style="margin-top:0">Manage Your Connections</h3>
@@ -196,7 +196,7 @@
 
             <section id="reviews" style="display:none; margin-top:12px">
               <h2>Reviews</h2>
-              <p style="color:#666">Ver y gestionar reseñas de clientes. Conecta cuentas en <strong>Connections</strong> y haz click en <em>Sync Now</em> para importar reseñas reales.</p>
+              <p style="color:#666">Ver y gestionar reseÃ±as de clientes. Conecta cuentas en <strong>Connections</strong> y haz click en <em>Sync Now</em> para importar reseÃ±as reales.</p>
 
               <div class="card" style="margin-top:12px">
                 <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center">
@@ -247,7 +247,7 @@
                 </div>
 
                 <div id="reviewsList" style="margin-top:18px"></div>
-                <div id="reviewsEmpty" style="color:#666; margin-top:12px; display:none">No reviews found. Conecta y sincroniza tus cuentas para importar reseñas.</div>
+                <div id="reviewsEmpty" style="color:#666; margin-top:12px; display:none">No reviews found. Conecta y sincroniza tus cuentas para importar reseÃ±as.</div>
               </div>
             </section>
 
@@ -420,7 +420,7 @@
       function initConnections(){
         const providers = [
           { id: 'google', name: 'Google', icon: 'G', required: false },
-          { id: 'yelp', name: 'Yelp', icon: '⭐', required: false },
+          { id: 'yelp', name: 'Yelp', icon: 'â­', required: false },
           { id: 'facebook', name: 'Facebook', icon: 'f', required: false }
         ];
 
@@ -448,9 +448,9 @@
           // show extra info about credentials (per-provider credential hint)
           if(s.connected){
             let credText = '';
-            if(s.apiKey) credText = ' — API key configured';
-            if(s.page_access_token) credText = ' — Page token configured';
-            if(s.place_id) credText = ' — Place ID configured';
+            if(s.apiKey) credText = ' â€” API key configured';
+            if(s.page_access_token) credText = ' â€” Page token configured';
+            if(s.place_id) credText = ' â€” Place ID configured';
             meta.textContent = 'Connected' + credText;
           } else {
             meta.textContent = 'Not connected';
@@ -641,11 +641,11 @@
 
       // --- Reviews UI: sample data, filters and rendering ---
       const sampleReviews = [
-        { id: 'r1', provider: 'google', date: '2025-10-26', author: 'Carol Turcios', rating: 5, text: 'I was having a hard time finding a Quinceañera dress but Rosita was great solving all my questions and issues. Very friendly and dress was delivered in a short time with no problem even though we are in Utah. Prices with Rosa\'s Flowers were fair enough! I totally recommend them.', replied: false },
+        { id: 'r1', provider: 'google', date: '2025-10-26', author: 'Carol Turcios', rating: 5, text: 'I was having a hard time finding a QuinceaÃ±era dress but Rosita was great solving all my questions and issues. Very friendly and dress was delivered in a short time with no problem even though we are in Utah. Prices with Rosa\'s Flowers were fair enough! I totally recommend them.', replied: false },
         { id: 'r2', provider: 'google', date: '2025-07-18', author: 'Glenda Gonzalez', rating: 5, text: 'Muy contenta con el arreglo de Rosas Flowers, lo hicieron muy bien, muy puntual y estoy muy agradecida.', replied: true },
         { id: 'r3', provider: 'google', date: '2025-06-13', author: 'Thomas Simon', rating: 5, text: 'Great place. Not too pricey. Rosa made me a last minute wreath for funeral at very low cost.', replied: false },
         { id: 'r4', provider: 'yelp', date: '2025-10-01', author: 'Trio Lash', rating: 5, text: 'Couldn\'t be happier. Thanks Rosa', replied: false },
-        { id: 'r5', provider: 'facebook', date: '2025-09-05', author: 'María López', rating: 4, text: 'Buen servicio, pero llegó un poco tarde.', replied: false }
+        { id: 'r5', provider: 'facebook', date: '2025-09-05', author: 'MarÃ­a LÃ³pez', rating: 4, text: 'Buen servicio, pero llegÃ³ un poco tarde.', replied: false }
       ];
 
       function parseDateISO(d){ return new Date(d+'T00:00:00'); }
@@ -719,7 +719,7 @@
                 </div>
               </div>
               <div style="text-align:right">
-                <div style="font-weight:700">${r.rating.toFixed(1)} <span style="color:#f5c518">★★★★★</span></div>
+                <div style="font-weight:700">${r.rating.toFixed(1)} <span style="color:#f5c518">â˜…â˜…â˜…â˜…â˜…</span></div>
               </div>
             </div>
             <div style="margin-top:10px;color:#333">${r.text}</div>
@@ -829,5 +829,6 @@
         document.getElementById('backToListings').addEventListener('click', function(e){ e.preventDefault(); document.getElementById('listingDetail').style.display='none'; document.getElementById('listingsList').scrollIntoView({behavior:'smooth'}); });
       }
     </script>
-  </body>
+  <script src="assets/js/footer-logo-replace.js" defer></script>`n</body>
 </html>
+

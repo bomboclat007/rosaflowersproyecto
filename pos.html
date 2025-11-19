@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es">
 <head>
   <!doctype html>
@@ -6,7 +6,7 @@
     <head>
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <title>POS — Local Delivery</title>
+      <title>POS â€” Local Delivery</title>
       <style>
         /* Basic reset and layout */
         :root{--muted:#9aa0a6;--border:#e6e6e6;--accent:#0b9d8b}
@@ -112,7 +112,7 @@
                   <label style="margin-bottom:6px;display:block">Search customer</label>
                   <div class="searchBox">
                     <input type="text" placeholder="Search by customer name, phone, email, house account, recipient name or additional contact" />
-                    <button class="btn ghost">🔍</button>
+                    <button class="btn ghost">ðŸ”</button>
                   </div>
                   <a href="#" style="display:inline-block;margin-top:8px;color:var(--accent);font-weight:600">+ Add a new customer</a>
                 </div>
@@ -153,7 +153,7 @@
                 </div>
                 <div>
                   <label>Address Type (Optional)</label>
-                  <select id="recipient_address_type"><option>—</option><option>Residential</option><option>Business</option></select>
+                  <select id="recipient_address_type"><option>â€”</option><option>Residential</option><option>Business</option></select>
                 </div>
               </div>
 
@@ -218,7 +218,7 @@
               <label style="margin-bottom:6px;display:block">Search customer</label>
               <div class="searchBox">
                 <input type="text" placeholder="Search by customer name, phone, email, house account, recipient name or additional contact" />
-                <button class="btn ghost">🔍</button>
+                <button class="btn ghost">ðŸ”</button>
               </div>
               <a href="#" style="display:inline-block;margin-top:8px;color:var(--accent);font-weight:600">+ Add a new customer</a>
             </div>
@@ -296,7 +296,7 @@
                                 if(v == null) continue;
                                 if(typeof v === 'string' && v.trim()!=="") return v;
                                 if(typeof v === 'number'){
-                                  // Stripe returns unit_amount in cents — convert to dollars
+                                  // Stripe returns unit_amount in cents â€” convert to dollars
                                   return (v/100).toFixed(2);
                                 }
                               }
@@ -587,7 +587,7 @@
                   <p class="muted">Payment will be collected at a later time.</p>
                   <div style="margin-top:8px;display:flex;align-items:center;gap:8px">
                     <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" checked /> Include Payment Link in Receipt</label>
-                    <span title="Include a secure payment link in the receipt sent to the customer." style="color:var(--muted);font-size:12px">ⓘ</span>
+                    <span title="Include a secure payment link in the receipt sent to the customer." style="color:var(--muted);font-size:12px">â“˜</span>
                   </div>
                 </div>
 
@@ -805,5 +805,6 @@
           }
         });
       </script>
-    </body>
+    <script src="assets/js/footer-logo-replace.js" defer></script>`n</body>
   </html>
+

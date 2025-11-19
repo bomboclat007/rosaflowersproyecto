@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -51,7 +51,7 @@
                         </ul>
                     </div>
                     <div style="margin-top:12px; font-size:0.9rem; color:#555;">
-                        Usa la herramienta de dibujo (polígono) en el mapa para crear una zona. Al crearla se te pedirá el precio.
+                        Usa la herramienta de dibujo (polÃ­gono) en el mapa para crear una zona. Al crearla se te pedirÃ¡ el precio.
                     </div>
                 </div>
             </div>
@@ -83,7 +83,7 @@
         const drawnItems = new L.FeatureGroup();
         map.addLayer(drawnItems);
 
-        // Control de dibujo - sólo polígonos
+        // Control de dibujo - sÃ³lo polÃ­gonos
         const drawControl = new L.Control.Draw({
             edit: { featureGroup: drawnItems },
             draw: {
@@ -116,7 +116,7 @@
             // Assign id and ask for price
             const id = generateId();
             // prompt price (you can replace with a nicer UI later)
-            let price = prompt('Precio de delivery para esta zona (número en USD):', '10');
+            let price = prompt('Precio de delivery para esta zona (nÃºmero en USD):', '10');
             if (price === null) price = '';
             price = price === '' ? '' : Number(price);
 
@@ -269,7 +269,7 @@
                     saveZones();
                     renderZonesList();
                     alert('Importado correctamente');
-                } catch (err) { alert('Archivo inválido'); }
+                } catch (err) { alert('Archivo invÃ¡lido'); }
             };
             reader.readAsText(f);
             ev.target.value = '';
@@ -279,5 +279,5 @@
         loadZones();
 
     </script>
-</body>
+<script src="assets/js/footer-logo-replace.js" defer></script>`n</body>
 </html>

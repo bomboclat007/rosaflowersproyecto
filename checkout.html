@@ -1,9 +1,9 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Checkout — Rosa's Flowers</title>
+    <title>Checkout â€” Rosa's Flowers</title>
     <link rel="stylesheet" href="assets/css/checkout-styles.css">
     <style>
       /* Minimal stepper styles: collapsed vs expanded */
@@ -59,8 +59,8 @@
         <div class="section-header"><span class="step">2</span><h2>Fulfillment Information</h2></div>
         <div class="section-body">
           <div class="fulfill-tabs">
-            <button class="tab active" data-type="delivery">🚚 Delivery</button>
-            <button class="tab" data-type="pickup">📦 Pickup</button>
+            <button class="tab active" data-type="delivery">ðŸšš Delivery</button>
+            <button class="tab" data-type="pickup">ðŸ“¦ Pickup</button>
           </div>
 
           <div class="fulfill-body">
@@ -206,7 +206,7 @@
           const f = id => (document.getElementById(id) && document.getElementById(id).value||'').trim();
           const first = f('firstName'), last = f('lastName'), email = f('email');
           if(!first || !last || !email) return {ok:false, message:'Por favor completa nombre y correo.'};
-          if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return {ok:false, message:'Introduce un email válido.'};
+          if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return {ok:false, message:'Introduce un email vÃ¡lido.'};
           return {ok:true};
         }
 
@@ -214,7 +214,7 @@
           const address = (document.getElementById('address')||{}).value||'';
           const city = (document.getElementById('city')||{}).value||'';
           const postal = (document.getElementById('postal')||{}).value||'';
-          if(!address.trim() || !city.trim() || !postal.trim()) return {ok:false, message:'Completa la dirección, ciudad y código postal.'};
+          if(!address.trim() || !city.trim() || !postal.trim()) return {ok:false, message:'Completa la direcciÃ³n, ciudad y cÃ³digo postal.'};
           return {ok:true};
         }
 
@@ -266,7 +266,7 @@
 
         const confirmAddress = document.getElementById('confirmAddress');
         if(confirmAddress) confirmAddress.addEventListener('click', function(){
-          const v = validateStep1(); if(!v.ok){ alert('Completa la información personal primero.'); setState(1); return; }
+          const v = validateStep1(); if(!v.ok){ alert('Completa la informaciÃ³n personal primero.'); setState(1); return; }
           const vv = validateStep2Delivery(); if(!vv.ok){ alert(vv.message); return; }
           completed[2]=true; setState(3);
         });
@@ -281,7 +281,7 @@
           const chosenDate = new Date(chosen);
           const today = new Date(); today.setHours(0,0,0,0);
           const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
-          if(chosenDate < tomorrow){ alert('Selecciona una fecha válida (a partir de mañana)'); return; }
+          if(chosenDate < tomorrow){ alert('Selecciona una fecha vÃ¡lida (a partir de maÃ±ana)'); return; }
           completed[2]=true; setState(3);
         });
 
@@ -291,10 +291,10 @@
         const continueToPayment = document.getElementById('continueToPayment');
         if(continueToPayment) continueToPayment.addEventListener('click', async function(){
           try{
-            if(!completed[2]){ alert('Completa la información de entrega o recogida antes de continuar.'); setState(2); return; }
+            if(!completed[2]){ alert('Completa la informaciÃ³n de entrega o recogida antes de continuar.'); setState(2); return; }
             // Build items from local cart stored by product cards
             const rawCart = (function(){ try{ return JSON.parse(localStorage.getItem('stripe_cart')||'[]'); }catch(e){return [];} })();
-            if(!Array.isArray(rawCart) || rawCart.length === 0){ alert('Tu carrito está vacío. Añade al menos un producto.'); return; }
+            if(!Array.isArray(rawCart) || rawCart.length === 0){ alert('Tu carrito estÃ¡ vacÃ­o. AÃ±ade al menos un producto.'); return; }
 
             const items = rawCart.map(i=>({ price_id: i.priceId || i.price_id || i.priceId, quantity: i.quantity || 1 }));
 
@@ -368,7 +368,7 @@
             }
             if(!res.ok) {
               const text = await res.text();
-              throw new Error('Error creando sesión de pago: ' + (text || res.status));
+              throw new Error('Error creando sesiÃ³n de pago: ' + (text || res.status));
             }
             const j = await res.json();
             if(j && j.url){ window.location = j.url; return; }
@@ -383,5 +383,6 @@
 
       })();
     </script>
-  </body>
+  <script src="assets/js/footer-logo-replace.js" defer></script>`n</body>
 </html>
+

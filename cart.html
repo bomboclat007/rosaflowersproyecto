@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html xmlns:og="http://opengraphprotocol.org/schema/" xmlns:fb="http://www.facebook.com/2008/fbml" lang="en-US"  >
   
 
@@ -2421,7 +2421,7 @@
 </div></div></div><div class="fe-block fe-block-dca8ebdd8ce8085c6339"><div class="sqs-block html-block sqs-block-html" data-blend-mode="NORMAL" data-block-type="2" data-border-radii="&#123;&quot;topLeft&quot;:&#123;&quot;unit&quot;:&quot;px&quot;,&quot;value&quot;:0.0&#125;,&quot;topRight&quot;:&#123;&quot;unit&quot;:&quot;px&quot;,&quot;value&quot;:0.0&#125;,&quot;bottomLeft&quot;:&#123;&quot;unit&quot;:&quot;px&quot;,&quot;value&quot;:0.0&#125;,&quot;bottomRight&quot;:&#123;&quot;unit&quot;:&quot;px&quot;,&quot;value&quot;:0.0&#125;&#125;" data-sqsp-block="text" id="block-dca8ebdd8ce8085c6339"><div class="sqs-block-content">
 
 <div class="sqs-html-content" data-sqsp-text-block-content>
-  <h4 style="text-align:center;white-space:pre-wrap;"><strong><br>Hours</strong>: <br>MONDay – Friday<br>9 a.m.– 5 p.m.</h4><p style="text-align:center;white-space:pre-wrap;" class="">*Fresh Flowers are available Tuesday-Friday. Call ahead to pre-order flowers for Monday. </p><p style="text-align:center;white-space:pre-wrap;" class="">*Wedding + Event consultations are by appointment only.</p>
+  <h4 style="text-align:center;white-space:pre-wrap;"><strong><br>Hours</strong>: <br>MONDay â€“ Friday<br>9 a.m.â€“ 5 p.m.</h4><p style="text-align:center;white-space:pre-wrap;" class="">*Fresh Flowers are available Tuesday-Friday. Call ahead to pre-order flowers for Monday. </p><p style="text-align:center;white-space:pre-wrap;" class="">*Wedding + Event consultations are by appointment only.</p>
 </div>
 
 
@@ -2551,7 +2551,7 @@
   (function(){
     function getCart(){ try{ return JSON.parse(localStorage.getItem('stripe_cart')||'[]'); }catch(e){return []} }
     function saveCart(cart){ localStorage.setItem('stripe_cart', JSON.stringify(cart)); renderCart(); }
-    function formatMoney(cents, currency){ try{ return (cents/100).toFixed(2) + ' ' + (currency||'USD').toUpperCase(); }catch(e){return '—';} }
+    function formatMoney(cents, currency){ try{ return (cents/100).toFixed(2) + ' ' + (currency||'USD').toUpperCase(); }catch(e){return 'â€”';} }
     function renderCart(){
       var header = document.getElementById('header');
       var root = document.getElementById('local-cart-root');
@@ -2574,7 +2574,7 @@
       root.innerHTML = '';
       var h1 = document.createElement('h1'); h1.textContent = 'Tu carrito'; root.appendChild(h1);
       if(!cart || cart.length===0){
-        var p = document.createElement('p'); p.textContent = 'Tu carrito está vacío.'; root.appendChild(p);
+        var p = document.createElement('p'); p.textContent = 'Tu carrito estÃ¡ vacÃ­o.'; root.appendChild(p);
         var shop = document.createElement('a'); shop.href='/'; shop.textContent='Seguir comprando'; shop.style.display='inline-block'; shop.style.marginTop='12px'; shop.style.color='#b63f6d'; root.appendChild(shop);
       } else {
         var table = document.createElement('table'); table.style.width='100%'; table.style.borderCollapse='collapse';
@@ -2620,7 +2620,7 @@
         checkoutBtn.addEventListener('click', function(){
           try{
             checkoutBtn.disabled = true; checkoutBtn.textContent='Redirigiendo...';
-            // El carrito ya está en localStorage (stripe_cart). Redirigimos al formulario (checkout) para completar datos antes del pago.
+            // El carrito ya estÃ¡ en localStorage (stripe_cart). Redirigimos al formulario (checkout) para completar datos antes del pago.
             window.location.href = '/checkout.html';
           }catch(err){ console.error('Checkout redirect error', err); alert('No se pudo iniciar el proceso: '+(err.message||err)); checkoutBtn.disabled=false; checkoutBtn.textContent='Pagar'; }
         });
@@ -2635,10 +2635,11 @@
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', renderCart); else renderCart();
   })();
 </script>
-</body>
+<script src="assets/js/footer-logo-replace.js" defer></script>`n</body>
 
 
 
 <!-- Mirrored from proyectooficial-j892d73v9-truenojf10-gmailcoms-projects.vercel.app/cart.html by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 30 Oct 2025 22:30:14 GMT -->
 </html>
+
 

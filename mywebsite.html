@@ -1,9 +1,9 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>My Website — Admin</title>
+  <title>My Website â€” Admin</title>
   <style>
     :root{ --bg:#f4f6f8; --sidebar:#313443; --muted:#9aa0a6 }
     body{ margin:0; font-family:Inter, system-ui, Arial, Helvetica, sans-serif; background:var(--bg); color:#222 }
@@ -24,10 +24,10 @@
       <h3>Website Manager</h3>
       <nav>
         <ul class="side-nav">
-          <li>Banner Management</li>
           <li>Site Announcements</li>
           <li>Social Links</li>
           <li>Blog</li>
+          <li>Banner Management</li>
           <li>Photo Gallery</li>
           <li style="border-top:1px solid rgba(255,255,255,0.06); margin-top:8px; padding-top:12px">Checkout Settings</li>
           <li>Subscription Setup</li>
@@ -55,7 +55,7 @@
   </div>
 
   <script>
-    // Make sidebar interactive and render Banner Management
+    // Make sidebar interactive
     (function(){
       const navItems = document.querySelectorAll('.side-nav li');
       const content = document.getElementById('contentArea');
@@ -63,62 +63,131 @@
       navItems.forEach(li=> li.addEventListener('click', function(){
         clearActive(); this.style.background='#3a3d4f';
         const txt = this.textContent.trim();
-  if(txt === 'Banner Management') return renderBannerManager();
-  if(txt === 'Site Announcements') return renderSiteAnnouncements();
-  if(txt === 'Social Links') return renderSocialLinks();
+        
+    if(txt === 'Site Announcements') return renderSiteAnnouncements();
+    if(txt === 'Social Links') return renderSocialLinks();
       if(txt === 'Blog') return renderBlog();
+    if(txt === 'Banner Management') return renderBannerManager();
         // default placeholder
         content.innerHTML = '<h2 style="margin-top:0">'+txt+'</h2><p>Editor not implemented yet.</p>';
       }));
 
-      // Banner manager
+      // Banner Management UI
+
       function renderBannerManager(){
-        content.innerHTML = `
-          <h2 style="margin-top:0">Banner Management</h2>
-          <p style="color:var(--muted)">Upload banner images here. Set one as active to replace the homepage hero image.</p>
-          <div style="display:flex; gap:16px; align-items:flex-start; margin-top:12px">
-            <div style="flex:1; min-width:320px; background:#fafafa; padding:12px; border-radius:6px; border:1px solid #eee">
-              <label style="font-weight:600">Upload new banner</label>
-              <input id="bannerFile" type="file" accept="image/*" style="display:block; margin-top:8px" />
-              <input id="bannerName" placeholder="Optional name" style="width:100%; margin-top:8px; padding:8px; border:1px solid #e6e9ee; border-radius:6px" />
-              <div style="margin-top:8px"><button id="uploadBanner" class="small-btn">Upload</button></div>
-              <div id="previewArea" style="margin-top:12px"></div>
+        let html = '<h2 style="margin-top:0">Banner Management</h2>';
+        html += '<p style="color:var(--muted)">Sube una imagen y dale un nombre. Los banners se guardan en tu navegador (localStorage).</p>';
+        html += `
+          <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px">
+            <div style="flex:1;min-width:280px">
+              <div class="card" style="padding:12px">
+                <label style="font-weight:600;display:block;margin-bottom:8px">Imagen</label>
+                <input type="file" id="bannerFile" accept="image/*" />
+                <div style="margin-top:10px"><img id="bannerPreview" style="max-width:100%;max-height:220px;display:none;border-radius:6px;border:1px solid #eee"/></div>
+                <label style="font-weight:600;display:block;margin-top:12px">Nombre</label>
+                <input id="bannerName" placeholder="Nombre del banner" style="width:100%;padding:8px;border:1px solid #e6e9ee;border-radius:6px" />
+                <div style="margin-top:12px;text-align:right"><label style="margin-right:10px"><input type="checkbox" id="bannerActivate" /> Activar</label><button id="bannerSaveBtn" class="small-btn">Guardar</button></div>
+              </div>
             </div>
-            <div style="flex:1; min-width:320px; background:#fff; padding:12px; border-radius:6px; border:1px solid #eee">
-              <label style="font-weight:600">Existing banners</label>
-              <div id="bannersList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px; max-height:420px; overflow:auto"></div>
+            <div style="flex:1;min-width:280px">
+              <div class="card" style="padding:12px">
+                <strong>Saved Banners</strong>
+                <div id="bannerList" style="margin-top:10px;display:flex;flex-direction:column;gap:10px"></div>
+              </div>
             </div>
-          </div>
-        `;
+          </div>`;
 
-        // wire controls
-        const file = document.getElementById('bannerFile');
-        const name = document.getElementById('bannerName');
-        const upload = document.getElementById('uploadBanner');
-        const preview = document.getElementById('previewArea');
-        const list = document.getElementById('bannersList');
+        content.innerHTML = html;
 
-        function loadBanners(){ try{ return JSON.parse(localStorage.getItem('website_banners')||'[]'); }catch(e){ return []; } }
-        function saveBanners(v){ localStorage.setItem('website_banners', JSON.stringify(v)); }
+        // button styles
+        document.querySelectorAll('.small-btn').forEach(b=>{ b.style.padding='8px 12px'; b.style.border='1px solid #dfe6ef'; b.style.borderRadius='6px'; b.style.background='#fff'; b.style.cursor='pointer'; });
 
-        function renderList(){ const items = loadBanners(); list.innerHTML=''; if(!items.length) list.innerHTML='<div style="color:var(--muted)">No banners uploaded yet.</div>';
-          items.forEach((b,idx)=>{
-            const row = document.createElement('div'); row.style.display='flex'; row.style.alignItems='center'; row.style.gap='8px'; row.style.padding='8px'; row.style.border='1px solid #f0f0f0'; row.style.borderRadius='6px';
-            const thumb = document.createElement('img'); thumb.src = b.data; thumb.style.width='120px'; thumb.style.height='60px'; thumb.style.objectFit='cover'; thumb.style.borderRadius='4px';
-            const meta = document.createElement('div'); meta.style.flex='1'; meta.innerHTML = `<div style="font-weight:600">${b.name||'Banner '+(idx+1)}</div><div style="color:var(--muted);font-size:13px">${new Date(b.createdAt).toLocaleString()}</div>`;
-            const actions = document.createElement('div'); actions.style.display='flex'; actions.style.flexDirection='column'; actions.style.gap='6px';
-            const setBtn = document.createElement('button'); setBtn.textContent = b.active ? 'Active' : 'Set Active'; setBtn.className='small-btn'; setBtn.style.background = b.active ? '#0b63d6' : '';
-            setBtn.addEventListener('click', ()=>{ const items = loadBanners(); items.forEach(x=>x.active=false); items[idx].active=true; saveBanners(items); renderList(); alert('Banner set active. Open homepage to confirm.'); });
-            const delBtn = document.createElement('button'); delBtn.textContent='Delete'; delBtn.className='small-btn'; delBtn.addEventListener('click', ()=>{ if(!confirm('Delete this banner?')) return; const items = loadBanners(); items.splice(idx,1); saveBanners(items); renderList(); });
-            actions.appendChild(setBtn); actions.appendChild(delBtn);
-            row.appendChild(thumb); row.appendChild(meta); row.appendChild(actions); list.appendChild(row);
-          }); }
+        const fileInput = document.getElementById('bannerFile');
+        const nameInput = document.getElementById('bannerName');
+        const preview = document.getElementById('bannerPreview');
+        const saveBtn = document.getElementById('bannerSaveBtn');
+        const listEl = document.getElementById('bannerList');
 
-        file.addEventListener('change', function(){ const f = this.files && this.files[0]; if(!f) return; const reader = new FileReader(); reader.onload = function(e){ preview.innerHTML = '<div style="width:100%;max-height:240px;overflow:hidden"><img src="'+e.target.result+'" style="width:100%;height:auto;object-fit:cover"/></div>'; }; reader.readAsDataURL(f); });
+        let currentDataUrl = null;
 
-        upload.addEventListener('click', function(){ const f = file.files && file.files[0]; if(!f){ alert('Please select an image first.'); return; } const reader = new FileReader(); reader.onload = function(e){ const items = loadBanners(); const obj = { id: 'b'+Date.now(), name: name.value || f.name, data: e.target.result, active: items.length===0 ? true : false, createdAt: Date.now() }; items.push(obj); saveBanners(items); renderList(); preview.innerHTML=''; file.value=''; name.value=''; alert('Banner uploaded.'); }; reader.readAsDataURL(f); });
+        function loadList(){
+          listEl.innerHTML = '';
+          let arr = [];
+          try{ arr = JSON.parse(localStorage.getItem('banners')||'[]'); }catch(e){ arr = []; }
+          if(!arr || arr.length===0){ listEl.innerHTML = '<div style="color:var(--muted)">No hay banners guardados.</div>'; return; }
+          arr.forEach((b, idx)=>{
+            const item = document.createElement('div'); item.style.display='flex'; item.style.gap='10px'; item.style.alignItems='center';
+            const img = document.createElement('img'); img.src = b.dataUrl; img.style.width='80px'; img.style.height='50px'; img.style.objectFit='cover'; img.style.borderRadius='4px'; img.alt=b.name;
+            const meta = document.createElement('div'); meta.style.flex='1'; meta.innerHTML = '<div style="font-weight:600">'+escapeHtml(b.name)+'</div><div style="color:var(--muted);font-size:12px">'+(new Date(b.createdAt)).toLocaleString()+'</div>';
+            const del = document.createElement('button'); del.textContent='Eliminar'; del.className='small-btn'; del.style.marginLeft='6px';
+            del.addEventListener('click', function(){ if(!confirm('Eliminar banner?')) return; arr.splice(idx,1); localStorage.setItem('banners', JSON.stringify(arr)); loadList(); });
+            item.appendChild(img); item.appendChild(meta); item.appendChild(del);
+            listEl.appendChild(item);
+          });
+        }
 
-        renderList();
+        function escapeHtml(t){ if(!t) return ''; return String(t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]; }); }
+
+        fileInput.addEventListener('change', function(){
+          const f = this.files && this.files[0];
+          if(!f) return; const reader = new FileReader(); reader.onload = function(e){ currentDataUrl = e.target.result; preview.src = currentDataUrl; preview.style.display='block'; }; reader.readAsDataURL(f);
+        });
+
+        saveBtn.addEventListener('click', function(){
+          const name = (nameInput.value||'').trim();
+          const activate = document.getElementById('bannerActivate') && document.getElementById('bannerActivate').checked;
+          if(!name){ alert('Escribe un nombre para el banner'); return; }
+          if(!currentDataUrl && !(fileInput.files && fileInput.files[0])){ alert('Selecciona una imagen primero'); return; }
+
+          // If user wants to activate globally, upload to server then call activate endpoint
+          (async function(){
+            try{
+              // prefer server upload when activation requested
+              if(activate){
+                // read file as base64
+                const f = fileInput.files && fileInput.files[0];
+                if(!f){ alert('Selecciona archivo para subir y activar'); return; }
+                const fr = new FileReader();
+                fr.onload = async function(e){
+                  try{
+                    const dataUrl = e.target.result;
+                    const comma = dataUrl.indexOf(',');
+                    const base64 = dataUrl.substring(comma+1);
+                    const payload = {
+                      invoice_id: 'banner-manager',
+                      file_name: (name.replace(/\s+/g,'-') || f.name),
+                      content_type: f.type || 'image/png',
+                      base64: base64,
+                      bucket: 'banners'
+                    };
+                    const up = await fetch('/api/upload-cover.js', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
+                    const j = await up.json();
+                    if(!up.ok){ alert('Error subiendo: '+(j && j.error ? j.error : up.statusText)); return; }
+                    // activate
+                    const actRes = await fetch('/api/activate-banner', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ name: j.path, bucket: 'banners' }) });
+                    const actJson = await actRes.json();
+                    if(!actRes.ok){ alert('Subido, pero fallo al activar: '+(actJson && actJson.error ? actJson.error : actRes.statusText)); return; }
+                    alert('Banner subido y activado público. URL: ' + (j.publicURL||j.path));
+                    // still save a local copy for admin convenience
+                    try{ const arr = JSON.parse(localStorage.getItem('banners')||'[]'); arr.push({ name: name, dataUrl: j.publicURL || ('/storage/'+j.path), createdAt: Date.now(), remotePath: j.path }); localStorage.setItem('banners', JSON.stringify(arr)); }catch(_){ }
+                    nameInput.value=''; currentDataUrl=null; preview.src=''; preview.style.display='none'; loadList();
+                  }catch(e){ console.error(e); alert('Error en subida: '+(e && e.message)); }
+                };
+                fr.readAsDataURL(f);
+                return;
+              }
+
+              // fallback: save locally only
+              const arr = JSON.parse(localStorage.getItem('banners')||'[]');
+              arr.push({ name: name, dataUrl: currentDataUrl, createdAt: Date.now() });
+              localStorage.setItem('banners', JSON.stringify(arr));
+              alert('Banner guardado en tu navegador');
+              nameInput.value=''; currentDataUrl=null; preview.src=''; preview.style.display='none'; loadList();
+            }catch(e){ console.error(e); alert('Error guardando banner'); }
+          })();
+        });
+
+        loadList();
       }
 
       // Site Announcements editor
@@ -286,8 +355,8 @@
             const tdStatus = document.createElement('td'); tdStatus.textContent = p.status || 'Enabled';
             const tdDate = document.createElement('td'); tdDate.textContent = new Date(p.createdAt).toLocaleString();
             const tdActions = document.createElement('td'); tdActions.style.textAlign='right'; tdActions.style.padding='8px';
-            const editBtn = document.createElement('button'); editBtn.className='small-btn'; editBtn.textContent='✎'; editBtn.title='Edit'; editBtn.style.marginRight='8px'; editBtn.addEventListener('click', ()=> openEdit(p.id));
-            const delBtn = document.createElement('button'); delBtn.className='small-btn'; delBtn.textContent='🗑'; delBtn.title='Delete'; delBtn.addEventListener('click', ()=>{ if(!confirm('Delete post?')) return; const arr = stored.filter(x=>x.id!==p.id); localStorage.setItem('blog_posts', JSON.stringify(arr)); renderRows(); });
+            const editBtn = document.createElement('button'); editBtn.className='small-btn'; editBtn.textContent='âœŽ'; editBtn.title='Edit'; editBtn.style.marginRight='8px'; editBtn.addEventListener('click', ()=> openEdit(p.id));
+            const delBtn = document.createElement('button'); delBtn.className='small-btn'; delBtn.textContent='ðŸ—‘'; delBtn.title='Delete'; delBtn.addEventListener('click', ()=>{ if(!confirm('Delete post?')) return; const arr = stored.filter(x=>x.id!==p.id); localStorage.setItem('blog_posts', JSON.stringify(arr)); renderRows(); });
             tdActions.appendChild(editBtn); tdActions.appendChild(delBtn);
             tr.appendChild(tdTitle); tr.appendChild(tdStatus); tr.appendChild(tdDate); tr.appendChild(tdActions);
             tbody.appendChild(tr);
@@ -352,9 +421,11 @@
         renderRows();
       }
 
-      // initial: attach click to banner item if present
-      const bm = Array.from(document.querySelectorAll('.side-nav li')).find(x=>x.textContent.trim()==='Banner Management'); if(bm) bm.style.cursor='pointer';
+      // initial: ensure menu items have pointer cursor
+      Array.from(document.querySelectorAll('.side-nav li')).forEach(x=> x.style.cursor='pointer');
     })();
   </script>
-</body>
+  <script src="assets/js/footer-logo-replace.js" defer></script>
+  </body>
 </html>
+

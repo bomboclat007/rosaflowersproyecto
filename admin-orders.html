@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
@@ -11,6 +11,34 @@
     table.orders th, table.orders td{padding:10px;border-bottom:1px solid #eee;text-align:left}
     .check{width:24px;text-align:center}
     .small-muted{color:#666;font-size:13px}
+    /* Status select styling to match admin UI */
+    .status-select{padding:6px 8px;border-radius:6px;border:1px solid #e6eef0;background:#fff;font-size:13px}
+    .status-badge{display:inline-block;padding:6px 10px;border-radius:14px;font-size:12px;color:#fff}
+    .st-new{background:#f0ad4e}
+    .st-accepted{background:#5bc0de}
+    .st-processing{background:#6f42c1}
+    .st-arrangement{background:#20c997}
+    .st-ready{background:#17a2b8}
+    .st-out{background:#fd7e14}
+    .st-completed{background:#28a745}
+    .st-attempted{background:#ffc107}
+    .st-cancelled{background:#6c757d}
+    /* Custom dropdown status styles */
+    .status-dropdown{position:relative;display:inline-block;min-width:180px}
+    .status-btn{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;border:1px solid #eef5f6;background:#fff;cursor:pointer;min-width:160px}
+    .status-btn .status-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+    .status-btn .status-current{flex:1;text-align:left;font-size:13px;color:#333}
+    .status-list{position:absolute;left:0;right:0;top:calc(100% + 6px);background:#fff;border:1px solid #eee;border-radius:8px;box-shadow:0 6px 20px rgba(20,40,50,0.08);z-index:40;max-height:320px;overflow:auto;padding:6px}
+    .status-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px;border-radius:6px;cursor:pointer}
+    .status-item .left{display:flex;align-items:center;gap:10px}
+    .status-item .status-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+    .status-item .status-label{font-size:13px;color:#333}
+    .status-item .mail-icon{font-size:14px;opacity:0.85}
+    .status-item:hover{background:#fafafa}
+    .status-item.selected{background:#f0fbfa;font-weight:600}
+    .status-item .checkmark{display:none;color:#0a9f7a;margin-left:8px;font-weight:700}
+    .status-item.selected .checkmark{display:inline-block}
+    .status-list.hidden{display:none}
   </style>
 </head>
 <body>
@@ -24,7 +52,7 @@
   </header>
 
   <div class="orders-container">
-    <p class="small-muted">Listado de órdenes registradas en Stripe (últimas 100). Marca la casilla cuando el pedido esté completado.</p>
+    <p class="small-muted">Listado de Ã³rdenes registradas en Stripe (Ãºltimas 100). Marca la casilla cuando el pedido estÃ© completado.</p>
     <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px">
       <label for="orderTypeFilter" class="small-muted">Filtrar por tipo:</label>
       <select id="orderTypeFilter">
@@ -33,7 +61,7 @@
         <option value="pickup">Pickup</option>
         <option value="delivery">Delivery</option>
       </select>
-      <div id="ordersStatus" style="margin-left:12px;color:#666">Cargando órdenes...</div>
+      <div id="ordersStatus" style="margin-left:12px;color:#666">Cargando Ã³rdenes...</div>
     </div>
     <div style="overflow:auto">
     <table class="orders" id="ordersTable">
@@ -70,6 +98,20 @@
 
     async function loadOrders(){
       const status = document.getElementById('ordersStatus');
+      // Global status palette used to render dropdowns and colors
+      const STATUS_LIST = [
+        {k:'New', v:'New', color:'#f0ad4e', mail:false},
+        {k:'Accepted', v:'Accepted', color:'#5bc0de', mail:false},
+        {k:'Processing', v:'Processing', color:'#6f42c1', mail:false},
+        {k:'Arrangement Created', v:'Arrangement Created', color:'#20c997', mail:false},
+        {k:'Ready for Delivery', v:'Ready for Delivery', color:'#17a2b8', mail:true},
+        {k:'Ready for Pickup', v:'Ready for Pickup', color:'#d16bf8', mail:true},
+        {k:'Out for Delivery', v:'Out for Delivery', color:'#fd7e14', mail:true},
+        {k:'Completed', v:'Completed', color:'#28a745', mail:true},
+        {k:'Delivery Attempted', v:'Delivery Attempted', color:'#ffc107', mail:true},
+        {k:'Canceled', v:'Canceled', color:'#6c757d', mail:false}
+      ];
+      const getColorFor = s => (STATUS_LIST.find(x=>x.k===s) || STATUS_LIST[0]).color;
       try{
         // Read filter
         const filter = document.getElementById('orderTypeFilter');
@@ -114,14 +156,14 @@
         });
         const data = { orders: Array.from(map.values()) };
         const tbody = document.querySelector('#ordersTable tbody'); tbody.innerHTML='';
-        if(!data.orders || data.orders.length===0){ status.textContent = 'No se encontraron órdenes.'; return; }
+        if(!data.orders || data.orders.length===0){ status.textContent = 'No se encontraron Ã³rdenes.'; return; }
         status.textContent = '';
         data.orders.forEach(o=>{
           try{
             const tr = document.createElement('tr');
           const completedKey = 'order_completed_' + o.id;
           const completed = localStorage.getItem(completedKey) === '1';
-          const itemsHtml = (o.line_items && o.line_items.length) ? o.line_items.map(i=>`${i.quantity}× ${esc(i.description||'')}`).join('<br>') : '';
+          const itemsHtml = (o.line_items && o.line_items.length) ? o.line_items.map(i=>`${i.quantity}Ã— ${esc(i.description||'')}`).join('<br>') : '';
             // Infer order type when not provided by backend: prefer explicit order_type, then metadata/payment heuristics
             function inferOrderType(order){
               if(!order) return '-';
@@ -192,12 +234,22 @@
             })() : '-';
             const designer = esc(o.designer) || '-';
           const bloomsnapHtml = o.bloomsnap ? `<a href="${esc(o.bloomsnap)}" target="_blank">Ver</a>` : '-';
-          const orderStatus = esc(o.order_status) || '-';
+            const orderStatus = esc(o.order_status) || '';
           const paymentMethod = esc(o.payment_method) || '-';
-          tr.innerHTML = `
+            // Build custom status dropdown HTML (with colored dots and optional mail icon)
+            const statuses = STATUS_LIST;
+            const storedStatus = localStorage.getItem('order_status_' + o.id) || (orderStatus || 'New');
+            const statusItemsHtml = statuses.map(s=> {
+              const selClass = (s.k===storedStatus) ? ' selected' : '';
+              const mail = s.mail ? '&#x2709;' : '';
+              return `<div class="status-item${selClass}" data-value="${s.k}" data-mail="${s.mail?1:0}"><div class="left"><span class="status-dot" style="background:${s.color}"></span><span class="status-label">${s.v}</span></div><span class="mail-icon">${mail}</span><span class="checkmark">âœ“</span></div>`;
+            }).join('');
+            const dropdownHtml = `<div class="status-dropdown" data-id="${esc(o.id)}"><button class="status-btn" type="button"><span class="status-dot" style="background:${getColorFor(storedStatus)}"></span><span class="status-current">${storedStatus}</span><span class="chev">â–¾</span></button><div class="status-list hidden">${statusItemsHtml}</div></div>`;
+
+            tr.innerHTML = `
             <td class='check'><input type='checkbox' data-id='${esc(o.id)}' ${completed? 'checked':''}></td>
             <td><strong>${esc(o.id)}</strong></td>
-            <td>${orderStatus}</td>
+            <td>${dropdownHtml}</td>
             <td>${esc(o.payment_status||'-')}</td>
             <td>${paymentMethod}</td>
             <td>${esc(o.customer_name||'-')}<br><small class='small-muted'>${esc(o.customer_email||'-')}</small></td>
@@ -218,10 +270,45 @@
             // continue with next order
           }
         });
-        // attach handlers
+        // attach handlers for completion checkbox
         document.querySelectorAll('#ordersTable input[type=checkbox]').forEach(ch=> ch.addEventListener('change', function(){ const id=this.dataset.id; const key='order_completed_'+id; if(this.checked) localStorage.setItem(key,'1'); else localStorage.removeItem(key); }));
+
+        // attach handlers for custom status dropdowns
+        document.querySelectorAll('.status-dropdown').forEach(dd=>{
+          const btn = dd.querySelector('.status-btn');
+          const list = dd.querySelector('.status-list');
+          const id = dd.dataset.id;
+          // open/close toggle
+          btn.addEventListener('click', function(e){ e.stopPropagation(); document.querySelectorAll('.status-list').forEach(l=>{ if(l!==list) l.classList.add('hidden'); }); list.classList.toggle('hidden'); });
+          // initialize current label color and mark selected item in list
+          const curLabel = btn.querySelector('.status-current');
+          const curDot = btn.querySelector('.status-dot');
+          const stored = localStorage.getItem('order_status_' + id) || (curLabel ? curLabel.textContent : 'New');
+          if(curLabel) curLabel.textContent = stored;
+          if(curDot) curDot.style.background = getColorFor(stored);
+          const selectedItemInit = list.querySelector(`.status-item[data-value="${stored}"]`);
+          if(selectedItemInit) selectedItemInit.classList.add('selected');
+          // item selection
+          list.querySelectorAll('.status-item').forEach(it=>{
+            it.addEventListener('click', function(ev){ ev.stopPropagation(); const val = this.dataset.value; localStorage.setItem('order_status_'+id, val);
+              // update selection visuals in list
+              list.querySelectorAll('.status-item').forEach(x=> x.classList.remove('selected'));
+              this.classList.add('selected');
+              // update button
+              if(curLabel) curLabel.textContent = val; if(curDot) curDot.style.background = getColorFor(val);
+              // mark completed checkbox when Completed
+              const cb = document.querySelector(`#ordersTable input[type=checkbox][data-id='${id}']`);
+              if(cb){ if(val==='Completed'){ cb.checked = true; localStorage.setItem('order_completed_'+id,'1'); } }
+              // close
+              list.classList.add('hidden');
+            });
+          });
+        });
+
+        // close dropdowns on outside click
+        document.addEventListener('click', function(){ document.querySelectorAll('.status-list').forEach(l=> l.classList.add('hidden')); });
       }catch(err){
-        document.getElementById('ordersStatus').textContent = 'Error cargando órdenes.';
+        document.getElementById('ordersStatus').textContent = 'Error cargando Ã³rdenes.';
         console.error(err);
       }
     }
@@ -231,5 +318,6 @@
     const filterEl = document.getElementById('orderTypeFilter');
     if (filterEl) filterEl.addEventListener('change', loadOrders);
   </script>
-</body>
+<script src="assets/js/footer-logo-replace.js" defer></script>`n</body>
 </html>
+

@@ -1,4 +1,4 @@
-<html lang="es"><head>
+﻿<html lang="es"><head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Events &amp; Invoices</title>
@@ -25,7 +25,7 @@
   <header class="admin-header">
     <h1>Events &amp; Invoices</h1>
     <div class="admin-actions">
-      <button id="adminLogout">Cerrar sesión</button>
+      <button id="adminLogout">Cerrar sesiÃ³n</button>
     </div>
   </header>
 
@@ -83,7 +83,7 @@
             <td></td>
             <td>24/11/2025</td>
             <td></td>
-            <td><a href="/create-event-invoice.html?id=6fad7016-7807-461d-819b-14ae7d64646f">Edit</a> • <a href="/event/6fad7016-7807-461d-819b-14ae7d64646f">View</a></td>
+            <td><a href="/create-event-invoice.html?id=6fad7016-7807-461d-819b-14ae7d64646f">Edit</a> â€¢ <a href="/event/6fad7016-7807-461d-819b-14ae7d64646f">View</a></td>
           </tr><tr>
             <td><input type="checkbox" class="featured-checkbox" data-id="c94a6415-943f-4205-b0fa-a213d67d282f" data-slug="titi.html" checked=""></td>
             <td>c94a6415-943f-4205-b0fa-a213d67d282f</td>
@@ -94,7 +94,7 @@
             <td></td>
             <td>10/11/2025</td>
             <td></td>
-            <td><a href="/create-event-invoice.html?id=c94a6415-943f-4205-b0fa-a213d67d282f">Edit</a> • <a href="/event/c94a6415-943f-4205-b0fa-a213d67d282f">View</a></td>
+            <td><a href="/create-event-invoice.html?id=c94a6415-943f-4205-b0fa-a213d67d282f">Edit</a> â€¢ <a href="/event/c94a6415-943f-4205-b0fa-a213d67d282f">View</a></td>
           </tr></tbody>
     </table>
 
@@ -179,7 +179,7 @@
         if (searchInput.value) q.set('search', searchInput.value);
         if (statusSelect.value) q.set('status', statusSelect.value);
 
-        tableBody.innerHTML = '<tr><td colspan="10"><div class="empty-placeholder">Loading…</div></td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="10"><div class="empty-placeholder">Loadingâ€¦</div></td></tr>';
         try {
           const r = await fetch('/api/event-invoice?' + q.toString());
           const j = await r.json();
@@ -219,7 +219,7 @@
             <td>${escapeHtml(customer)}</td>
             <td>${eventDate}</td>
             <td>${amount}</td>
-            <td><a href="/create-event-invoice.html?id=${r.id}">Edit</a> • <a href="/event/${r.id}">View</a></td>
+            <td><a href="/create-event-invoice.html?id=${r.id}">Edit</a> â€¢ <a href="/event/${r.id}">View</a></td>
           `;
           tableBody.appendChild(tr);
         });
@@ -284,7 +284,7 @@
                 const i1 = featured.indexOf(slug); if (i1 !== -1) featured.splice(i1, 1);
                 const i2 = featured.indexOf(id); if (i2 !== -1) featured.splice(i2, 1);
               }
-              alert('No se pudo guardar el cambio en el servidor. Intenta de nuevo o revisa la consola para más detalles.');
+              alert('No se pudo guardar el cambio en el servidor. Intenta de nuevo o revisa la consola para mÃ¡s detalles.');
             }
             checkbox.disabled = false;
           });
@@ -335,4 +335,5 @@
   </script>
 
 
-</body></html>
+<script src="assets/js/footer-logo-replace.js" defer></script>`n</body></html>
+
