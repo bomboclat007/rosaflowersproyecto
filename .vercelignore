@@ -1,17 +1,12 @@
-# Ignore specific serverless functions that are not needed in Hobby deploys
-api/event-invoice-file.js
+# Exclude deprecated API files so Vercel won't deploy them as serverless functions
+api/activate-banner.js
+api/active-banner.js
 
-# Ignore other non-essential or dev serverless functions to stay under the Hobby 12-function limit
-# Tweak this list to match what you actually need in production
-api/import-stripe-orders.js
-api/inspect-session.js
-api/mark-pos-by-heuristic.js
-api/create-stripe-customer.js
-api/create-stripe-customer-supabase.js
-api/test-email.js
+# Keep backups available in repo but exclude from deployment
+deprecated-api/
 
-# Ignore local node_modules and other artifacts
+# Ignore other non-production files
 node_modules/
-.env
-.env.*
+*.log
+/.env
 /.vercel

@@ -164,7 +164,7 @@
                     const j = await up.json();
                     if(!up.ok){ alert('Error subiendo: '+(j && j.error ? j.error : up.statusText)); return; }
                     // activate
-                    const actRes = await fetch('/api/activate-banner', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ name: j.path, bucket: 'banners' }) });
+                    const actRes = await fetch('/api/upload-cover.js', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ action: 'activate', path: j.path, bucket: 'banners' }) });
                     const actJson = await actRes.json();
                     if(!actRes.ok){ alert('Subido, pero fallo al activar: '+(actJson && actJson.error ? actJson.error : actRes.statusText)); return; }
                     alert('Banner subido y activado público. URL: ' + (j.publicURL||j.path));

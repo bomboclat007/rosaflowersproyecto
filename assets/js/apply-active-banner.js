@@ -1,7 +1,7 @@
 (function(){
   async function applyActiveBanner(){
     try{
-      const resp = await fetch('/api/active-banner');
+      const resp = await fetch('/api/upload-cover.js?action=active');
       if(!resp.ok) return;
       const j = await resp.json();
       if(!j || !j.active || !j.active.publicURL) return;
