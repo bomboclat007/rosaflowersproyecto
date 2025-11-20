@@ -75,7 +75,8 @@
         return false;
       }
 
-      const replaced = tryReplaceImg(container) || tryReplaceImg(targetEl);
+      // only try replacing an image inside the resolved container
+      const replaced = tryReplaceImg(container);
 
       if(!replaced){
         // fallback: apply background styles to the container
