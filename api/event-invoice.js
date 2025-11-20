@@ -38,6 +38,31 @@ module.exports = async function handler(req, res) {
         console.error('api/event-invoice GET error', error);
         return res.status(500).json({ error: 'Error fetching invoices' });
       }
+      // Augment invoices with a public URL for cover image when possible so
+      // frontend doesn't need SUPABASE_ANON_KEY present.
+      try{
+        const SUPABASE_URL = process.env.SUPABASE_URL || null;
+        const BUCKET = process.env.SUPABASE_BUCKET || 'invoices';
+        const base = SUPABASE_URL ? String(SUPABASE_URL).replace(/\/+$/,'') : null;
+        if (base && Array.isArray(data)){
+          data.forEach(inv => {
+            try{
+              const p = inv && (inv.cover_image_path || inv.cover_image_path === 0) ? String(inv.cover_image_path) : null;
+              const name = inv && inv.cover_image_name ? String(inv.cover_image_name) : null;
+              if (p){
+                // strip potential bucket prefix
+                let path = p.replace(/^\/+/, '');
+                const prefix = BUCKET + '/';
+                if (path.indexOf(prefix) === 0) path = path.slice(prefix.length);
+                inv.cover_image_public_url = base + '/storage/v1/object/public/' + BUCKET + '/' + encodeURI(path);
+              } else if (name){
+                inv.cover_image_public_url = base + '/storage/v1/object/public/' + BUCKET + '/' + encodeURI(String(inv.id) + '/' + name.replace(/^\/+/,''));
+              }
+            }catch(e){}
+          });
+        }
+      }catch(e){ /* ignore augmentation failures */ }
+
       return res.status(200).json({ invoices: data || [], count: count || 0, page, page_size });
     }
 
