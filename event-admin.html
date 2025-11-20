@@ -167,16 +167,36 @@
         featured = normalizeAndDedupe(featured);
         try { localStorage.setItem(FEATURED_KEY, JSON.stringify(featured)); } catch(e){}
         try {
+          // prepare items payload: prefer { id, slug } objects when available
+          const items = [];
+          featured.forEach(val => {
+            try{
+              if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(val))){
+                items.push({ id: String(val), slug: null });
+              } else {
+                // ensure slug form
+                let s = String(val).trim(); if (!s.endsWith('.html')) s = s;
+                items.push({ id: null, slug: s });
+              }
+            }catch(e){}
+          });
+
           const res = await fetch('/api/featured-events', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ slugs: featured })
+            body: JSON.stringify({ items })
           });
           if (res.ok){
             try {
               const j = await res.json();
-              if (Array.isArray(j.slugs)){
-                // trust the server canonical list (normalize/unique) to avoid races
+              // server may respond with items and/or slugs, prefer items
+              if (Array.isArray(j.items) && j.items.length){
+                // convert items to mixed array of ids and slugs for internal use
+                const next = [];
+                j.items.forEach(it => { try{ if (it.id) next.push(String(it.id)); if (it.slug) next.push(String(it.slug)); }catch(e){} });
+                featured = normalizeAndDedupe(next);
+                try { localStorage.setItem(FEATURED_KEY, JSON.stringify(featured)); } catch(e){}
+              } else if (Array.isArray(j.slugs)){
                 featured = normalizeAndDedupe(j.slugs);
                 try { localStorage.setItem(FEATURED_KEY, JSON.stringify(featured)); } catch(e){}
               }
