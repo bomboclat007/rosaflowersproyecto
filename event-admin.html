@@ -116,6 +116,31 @@
       let featured = [];
 
       async function loadFeatured(){
+        // If there are pending local changes that previously failed to sync,
+        // prefer those (and attempt to flush them). This prevents a temporary
+        // server error from clobbering the user's recent actions.
+        try{
+          const pending = localStorage.getItem(FEATURED_KEY + ':pending');
+          if (pending){
+            try{ featured = normalizeAndDedupe(JSON.parse(pending)); }catch(e){ featured = []; }
+            // try to flush pending changes to server in background
+            (async ()=>{
+              try{
+                const res = await fetch('/api/featured-events', {
+                  method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ slugs: featured })
+                });
+                if (res.ok){
+                  try{ const j = await res.json(); if (Array.isArray(j.slugs)) featured = normalizeAndDedupe(j.slugs); }catch(e){}
+                  localStorage.removeItem(FEATURED_KEY + ':pending');
+                  try { localStorage.setItem(FEATURED_KEY, JSON.stringify(featured)); }catch(e){}
+                  try { window.dispatchEvent(new Event('featured-updated')); }catch(e){}
+                }
+              }catch(e){ /* still pending, leave for next load */ }
+            })();
+            return;
+          }
+        }catch(e){ /* ignore */ }
+
         // try server first, fall back to localStorage
         try {
           const r = await fetch('/api/featured-events');
@@ -156,15 +181,20 @@
                 try { localStorage.setItem(FEATURED_KEY, JSON.stringify(featured)); } catch(e){}
               }
             } catch(e){}
-            // notify other parts of the site (homepage) that featured list changed
+            // on success, clear any pending marker
+            try { localStorage.removeItem(FEATURED_KEY + ':pending'); } catch(e){}
             try { window.dispatchEvent(new Event('featured-updated')); } catch(e){}
             return true;
           } else {
+            // mark pending so reload will prefer local changes and retry
+            try { localStorage.setItem(FEATURED_KEY + ':pending', JSON.stringify(featured)); } catch(e){}
             console.warn('Could not save featured to server, saved locally only');
             try { window.dispatchEvent(new Event('featured-updated')); } catch(e){}
             return false;
           }
         } catch (err) {
+          // network error: mark as pending for retry on next load
+          try { localStorage.setItem(FEATURED_KEY + ':pending', JSON.stringify(featured)); } catch(e){}
           console.warn('Could not save featured to server, saved locally only');
           try { window.dispatchEvent(new Event('featured-updated')); } catch(e){}
           return false;
@@ -197,6 +227,10 @@
           return;
         }
         tableBody.innerHTML = '';
+        // read pending list so UI can reflect unsynced local changes
+        let pendingLocal = [];
+        try{ const rawPending = localStorage.getItem(FEATURED_KEY + ':pending'); pendingLocal = rawPending ? normalizeAndDedupe(JSON.parse(rawPending)) : []; }catch(e){ pendingLocal = []; }
+
         rows.forEach(r => {
           const tr = document.createElement('tr');
           const created = r.created_at ? new Date(r.created_at).toLocaleString() : '';
@@ -208,7 +242,9 @@
           const titleSlug = slugify(r.title || '');
           const lastSegment = titleSlug ? (titleSlug + '.html') : String(r.id);
           // whether this row is currently featured: allow either previously-stored ids or the new slug
-          const checked = (Array.isArray(featured) && (featured.indexOf(String(r.id)) !== -1 || featured.indexOf(lastSegment) !== -1 || featured.indexOf(normalizeSlug(lastSegment)) !== -1)) ? 'checked' : '';
+          const inFeatured = Array.isArray(featured) && (featured.indexOf(String(r.id)) !== -1 || featured.indexOf(lastSegment) !== -1 || featured.indexOf(normalizeSlug(lastSegment)) !== -1);
+          const inPending = Array.isArray(pendingLocal) && (pendingLocal.indexOf(String(r.id)) !== -1 || pendingLocal.indexOf(lastSegment) !== -1 || pendingLocal.indexOf(normalizeSlug(lastSegment)) !== -1);
+          const checked = (inFeatured || inPending) ? 'checked' : '';
           tr.innerHTML = `
             <td><input type="checkbox" class="featured-checkbox" data-id="${r.id}" data-slug="${lastSegment}" ${checked}></td>
             <td>${r.id}</td>
@@ -219,7 +255,11 @@
             <td>${escapeHtml(customer)}</td>
             <td>${eventDate}</td>
             <td>${amount}</td>
-            <td><a href="/create-event-invoice.html?id=${r.id}">Edit</a> â€¢ <a href="/event/${r.id}">View</a></td>
+            <td>
+              <a href="/create-event-invoice.html?id=${r.id}">Edit</a> â€¢
+              <a href="/event/${r.id}">View</a> â€¢
+              <button class="delete-event" data-id="${r.id}" style="background:transparent;border:none;color:#d00;cursor:pointer;padding:0;margin:0">Delete</button>
+            </td>
           `;
           tableBody.appendChild(tr);
         });
@@ -287,6 +327,33 @@
               alert('No se pudo guardar el cambio en el servidor. Intenta de nuevo o revisa la consola para mÃ¡s detalles.');
             }
             checkbox.disabled = false;
+          });
+        });
+
+        // wire delete buttons
+        tableBody.querySelectorAll('.delete-event').forEach(btn => {
+          btn.addEventListener('click', async function(e){
+            const id = String(btn.getAttribute('data-id'));
+            if (!confirm('¿Eliminar este evento? Esta acción no se puede deshacer.')) return;
+            btn.disabled = true;
+            try{
+              const r = await fetch('/api/event-invoice?id=' + encodeURIComponent(id), { method: 'DELETE' });
+              if (r.ok){
+                // remove row from DOM
+                const row = btn.closest('tr'); if (row) row.remove();
+                // remove from featured list if present
+                const idx = featured.indexOf(id);
+                if (idx !== -1){ featured.splice(idx,1); await saveFeatured(); }
+                try { window.dispatchEvent(new Event('featured-updated')); }catch(e){}
+                return;
+              } else {
+                const j = await r.json().catch(()=>({}));
+                alert('No se pudo eliminar el evento: ' + (j.error || r.statusText));
+              }
+            }catch(err){
+              console.error('Delete error', err);
+              alert('Error eliminando evento. Revisa la consola.');
+            } finally { btn.disabled = false; }
           });
         });
       }

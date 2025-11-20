@@ -2,7 +2,7 @@ const { createClient } = require('@supabase/supabase-js');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, DELETE');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(204).end();
 
@@ -88,6 +88,27 @@ module.exports = async function handler(req, res) {
       }
       return res.status(201).json({ invoice: data });
     }
+
+      if (req.method === 'DELETE') {
+        // support DELETE /api/event-invoice?id=<id>
+        const q = req.query || {};
+        let id = q.id || null;
+        // also accept JSON body with id
+        if (!id) {
+          try {
+            const body = req.body || JSON.parse(req.rawBody || '{}');
+            id = body && body.id ? body.id : null;
+          } catch(e) { id = null; }
+        }
+        if (!id) return res.status(400).json({ error: 'Missing id for delete' });
+        // delete the invoice row
+        const { data, error } = await supabase.from('event_invoices').delete().eq('id', id).select().single();
+        if (error) {
+          console.error('api/event-invoice DELETE error', error);
+          return res.status(500).json({ error: 'Error deleting invoice' });
+        }
+        return res.status(200).json({ ok: true, invoice: data });
+      }
 
     res.setHeader('Allow', ['GET','POST','OPTIONS']);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
