@@ -8,11 +8,10 @@
   // Also allow the page to force test mode by setting `window.STRIPE_FORCE_TEST = true`.
   const urlHasTest = (typeof window !== 'undefined') && (window.location.search.indexOf('stripe_test=1') !== -1);
   const forceTest = (typeof window !== 'undefined') && !!window.STRIPE_FORCE_TEST;
-  // Auto-enable test mode for the dailyflowers page (so /dailyflowers.html shows Stripe products)
-  const isDailyFlowersPath = (typeof window !== 'undefined' && window.location && typeof window.location.pathname === 'string')
-    ? /dailyflowers(?:\.html)?$/.test(window.location.pathname)
-    : false;
-  const isTest = !!(urlHasTest || forceTest || isDailyFlowersPath);
+  // Determine test mode only from URL param or explicit page override.
+  // (Do NOT auto-enable test mode based on the path — that caused dailyflowers
+  // to request the test Stripe key even when not configured in production.)
+  const isTest = !!(urlHasTest || forceTest);
   // Allow overriding the API base URL from the page (useful if the API is deployed
   // at a different host). Set `window.STRIPE_API_BASE = 'https://...';` in the page.
   const apiBase = (typeof window !== 'undefined' && window.STRIPE_API_BASE) ? window.STRIPE_API_BASE.replace(/\/$/, '') : '';
