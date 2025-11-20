@@ -1,0 +1,67 @@
+const { createClient } = require('@supabase/supabase-js');
+
+module.exports = async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.status(204).end();
+
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    return res.status(500).json({ error: 'Server misconfigured: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY missing in env' });
+  }
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    global: { headers: { 'x-from-api': 'event-invoice' } }
+  });
+
+  try {
+    if (req.method === 'GET') {
+      const q = req.query || {};
+      const page = Math.max(1, parseInt(q.page || '1', 10));
+      const page_size = Math.min(200, Math.max(1, parseInt(q.page_size || '20', 10)));
+      const from = (page - 1) * page_size;
+      const to = from + page_size - 1;
+
+      let query = supabase.from('event_invoices').select('*', { count: 'exact' }).order('created_at', { ascending: false }).range(from, to);
+
+      if (q.status) query = query.eq('status', q.status);
+      if (q.search) {
+        const s = String(q.search).trim();
+        // search title or po_number
+        query = query.or(`title.ilike.%${s}%,po_number.ilike.%${s}%`);
+      }
+
+      const { data, error, count } = await query;
+      if (error) {
+        console.error('api/event-invoice GET error', error);
+        return res.status(500).json({ error: 'Error fetching invoices' });
+      }
+      return res.status(200).json({ invoices: data || [], count: count || 0, page, page_size });
+    }
+
+    if (req.method === 'POST') {
+      let body = req.body || {};
+      try { if (!body || Object.keys(body).length === 0) body = JSON.parse(req.rawBody || '{}'); } catch(e){}
+
+      // ensure minimal required fields
+      const payload = Object.assign({}, body);
+      if (!payload.title) payload.title = payload.po_number || 'Untitled Event';
+      payload.created_at = new Date().toISOString();
+
+      const { data, error } = await supabase.from('event_invoices').insert([payload]).select().single();
+      if (error) {
+        console.error('api/event-invoice POST error', error);
+        return res.status(500).json({ error: 'Error creating invoice' });
+      }
+      return res.status(201).json({ invoice: data });
+    }
+
+    res.setHeader('Allow', ['GET','POST','OPTIONS']);
+    return res.status(405).end(`Method ${req.method} Not Allowed`);
+  } catch (err) {
+    console.error('api/event-invoice unexpected error', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
