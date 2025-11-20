@@ -6157,9 +6157,20 @@ Louisiana located between Baton Rouge and New Orleans." />
                       }
                     }
                   }catch(e){ /* ignore */ }
-
                   if (p){
                     if (/^https?:\/\//i.test(p)) return p;
+                    // construct Supabase public URL when SUPABASE_URL is available
+                    try{
+                      const SUP_URL_FALL = window.SUPABASE_URL;
+                      const BUCKET_FALL = window.SUPABASE_BUCKET || 'invoices';
+                      let path = String(p).replace(/^\/+/, '');
+                      // if path already contains the bucket prefix, strip it
+                      const prefix = BUCKET_FALL + '/';
+                      if (path.indexOf(prefix) === 0) path = path.slice(prefix.length);
+                      if (SUP_URL_FALL){
+                        return SUP_URL_FALL.replace(/\/+$/,'') + '/storage/v1/object/public/' + BUCKET_FALL + '/' + encodeURI(path);
+                      }
+                    }catch(e){}
                     return (window.location.origin || '') + '/' + p.replace(/^\/+/, '');
                   }
                   if (name){
