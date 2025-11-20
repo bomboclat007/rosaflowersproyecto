@@ -65,7 +65,7 @@ module.exports = async (req, res) => {
         hours: (bdata && bdata.hours && bdata.hours[0] && bdata.hours[0].open) ? bdata.hours[0].open.map(o=>`${o.day}:${o.start}-${o.end}`) : [],
         serviceAreas: (bdata && bdata.service_area) ? bdata.service_area : [],
         attributes: [],
-        profile: { name: bdata?.name || '', address: bdata && bdata.location ? (bdata.location.display_address || []).join('\n') : '', phone: bdata?.phone || '', website: bdata?.url || '' }
+        profile: { name: bdata?.name || '', address: bdata?.location ? (bdata.location.display_address || []).join('\n') : '', phone: bdata?.phone || '', website: bdata?.url || '' }
       };
 
       return res.json({ provider: 'yelp', reviews: mappedReviews, listing: listing, lastSynced: Date.now() });
@@ -196,3 +196,25 @@ module.exports = async (req, res) => {
         text: rv.text || '',
         replied: false
       }));
+
+      const listing = {
+        id: placeId,
+        name: result.name || '',
+        website: result.website || '',
+        address: result.formatted_address || '',
+        phone: result.international_phone_number || (result.formatted_phone_number || ''),
+        hours: (result.opening_hours && result.opening_hours.weekday_text) ? result.opening_hours.weekday_text : [],
+        serviceAreas: [],
+        attributes: [],
+        profile: { name: result.name || '', address: result.formatted_address || '', phone: result.international_phone_number || '', website: result.website || '' }
+      };
+
+      return res.json({ provider: 'google', reviews: mapped, listing, lastSynced: Date.now() });
+    }
+
+    return res.status(400).json({ error: 'Unsupported provider or missing provider parameter' });
+  } catch (err) {
+    console.error('reputation-sync error', err);
+    res.status(500).json({ error: 'Internal server error', details: String(err) });
+  }
+};
