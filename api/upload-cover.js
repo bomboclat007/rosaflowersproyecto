@@ -29,7 +29,16 @@ module.exports = async function handler(req, res) {
         if (probeName.indexOf(bucketDefault + '/') === 0) probeName = probeName.slice(bucketDefault.length + 1);
         if (probeName.indexOf('/') === 0) probeName = probeName.slice(1);
         const downProbe = await supabase.storage.from(bucketDefault).download(probeName);
-        if (downProbe.error) return res.status(200).json({ found: false, error: downProbe.error.message || downProbe.error });
+        if (downProbe.error) {
+          // Try listing the prefix folder for debugging (e.g. 'banner-manager')
+          try{
+            const prefixFolder = (probeName.split('/')[0]) || probeName;
+            const listing = await supabase.storage.from(bucketDefault).list(prefixFolder, { limit: 100 });
+            return res.status(200).json({ found: false, error: downProbe.error.message || downProbe.error, listing });
+          }catch(e){
+            return res.status(200).json({ found: false, error: downProbe.error.message || downProbe.error });
+          }
+        }
         return res.status(200).json({ found: true, name: probeName });
       }
 
