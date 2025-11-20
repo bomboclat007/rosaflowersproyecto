@@ -8,7 +8,8 @@
       const url = j.active.publicURL;
 
       // Try a few common hero selectors first for better compatibility
-      const selectorCandidates = ['#hero', '.hero', '.site-hero', '.masthead', '.hero-container', '.page-hero', '.home-hero'];
+      // include Squarespace dynamic containers like .fluid-engine and data-fluid-engine
+      const selectorCandidates = ['[data-fluid-engine="true"]', '.fluid-engine', '#hero', '.hero', '.site-hero', '.masthead', '.hero-container', '.page-hero', '.home-hero'];
       let container = null;
       for(const sel of selectorCandidates){
         const el = document.querySelector(sel);
@@ -51,11 +52,18 @@
         // search descendants first
         let img = el.querySelector('img[data-sqsp-image-block-image], img.sqs-image, img');
         if(!img){
-          // look for a previous sibling image block (common in composed sections)
+          // look for a previous or next sibling image block (common in composed sections)
           let sib = el.previousElementSibling;
           for(let i=0;i<6 && sib;i++, sib = sib.previousElementSibling){
             img = sib.querySelector && sib.querySelector('img[data-sqsp-image-block-image], img.sqs-image, img');
             if(img) break;
+          }
+          if(!img){
+            sib = el.nextElementSibling;
+            for(let i=0;i<6 && sib;i++, sib = sib.nextElementSibling){
+              img = sib.querySelector && sib.querySelector('img[data-sqsp-image-block-image], img.sqs-image, img');
+              if(img) break;
+            }
           }
         }
         if(img){
