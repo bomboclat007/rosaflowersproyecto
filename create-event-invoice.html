@@ -543,7 +543,11 @@
 
     async function uploadCoverToStorage(file, invoiceId){
       const supabase = await ensureSupabaseClient();
-      if (!supabase) throw new Error('Supabase client not available');
+      if (!supabase) {
+        console.warn('Supabase client not available, falling back to server upload');
+        const bucket = window.SUPABASE_BUCKET || 'invoices';
+        return await uploadCoverToServerFallback(file, invoiceId, bucket);
+      }
       const bucket = window.SUPABASE_BUCKET || 'invoices';
       const safeName = file.name.replace(/[^a-z0-9\.\-_]/ig,'');
       const path = `${bucket}/${invoiceId}/${Date.now()}-${safeName}`;
@@ -616,8 +620,6 @@
     }
 
     async function applyCoverMetadata(invoiceId, path, file){
-      const supabase = await ensureSupabaseClient();
-      if (!supabase) throw new Error('Supabase client not available');
       // send cover metadata to server to update invoice and insert attachment (server uses service role key)
       console.log('applyCoverMetadata: sending metadata to server', { invoiceId, path, fileName: file.name });
       try{

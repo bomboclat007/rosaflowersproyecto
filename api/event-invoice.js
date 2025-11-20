@@ -45,11 +45,42 @@ module.exports = async function handler(req, res) {
       let body = req.body || {};
       try { if (!body || Object.keys(body).length === 0) body = JSON.parse(req.rawBody || '{}'); } catch(e){}
 
-      // ensure minimal required fields
+      // If this is a file metadata action, update the invoice with file info
+      if (body.action === 'file' && body.invoice_id) {
+        const invoiceId = body.invoice_id;
+        const update = {
+          cover_image_path: body.cover_image_path || body.storage_path || null,
+          cover_image_name: body.cover_image_name || body.file_name || null,
+          cover_image_content_type: body.cover_image_content_type || body.content_type || null,
+          cover_image_size: body.cover_image_size || body.size || null,
+          updated_at: new Date().toISOString()
+        };
+        const { data, error } = await supabase.from('event_invoices').update(update).eq('id', invoiceId).select().single();
+        if (error) {
+          console.error('api/event-invoice file update error', error);
+          return res.status(500).json({ error: 'Error updating invoice with file metadata' });
+        }
+        return res.status(200).json({ ok: true, invoice: data });
+      }
+
+      // Normal create or update flow: if id present -> update, else insert
       const payload = Object.assign({}, body);
       if (!payload.title) payload.title = payload.po_number || 'Untitled Event';
-      payload.created_at = new Date().toISOString();
+      payload.updated_at = new Date().toISOString();
 
+      if (payload.id) {
+        const id = payload.id;
+        delete payload.id;
+        const { data, error } = await supabase.from('event_invoices').update(payload).eq('id', id).select().single();
+        if (error) {
+          console.error('api/event-invoice update error', error);
+          return res.status(500).json({ error: 'Error updating invoice' });
+        }
+        return res.status(200).json({ invoice: data });
+      }
+
+      // create new invoice
+      payload.created_at = new Date().toISOString();
       const { data, error } = await supabase.from('event_invoices').insert([payload]).select().single();
       if (error) {
         console.error('api/event-invoice POST error', error);
