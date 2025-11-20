@@ -2518,9 +2518,10 @@ data-product-list-layout="grid"data-meta-text-alignment="center"data-meta-vertic
           // Updated to the latest deployment that exposes the /api endpoints
           // use a relative API base so the frontend calls the same origin (avoids CORS)
           window.STRIPE_API_BASE = '/';
-          // Force the loader to treat this page as test-mode by default.
-          // This makes `/dailyflowers.html` behave like `/dailyflowers.html?stripe_test=1`.
-          window.STRIPE_FORCE_TEST = true;
+          // Do not force test-mode by default on production—use the live Stripe key.
+          // If you need test-mode, open the page with `?stripe_test=1` or set
+          // `STRIPE_FORCE_TEST = true` in development only.
+          window.STRIPE_FORCE_TEST = false;
           // Ensure the Stripe product loader only requests the dailyflowers collection
           // when on the Daily Flowers page. This prevents Dresses items appearing here.
           try { window.STRIPE_COLLECTION = window.STRIPE_COLLECTION || 'dailyflowers'; } catch (e) { }
