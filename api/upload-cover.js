@@ -57,6 +57,18 @@ module.exports = async function handler(req, res) {
         publicURL = `${SUPABASE_URL.replace(/\/$/,'')}/storage/v1/object/public/${bucketDefault}/${encodeURIComponent(storedName)}`;
       }
 
+      // Legacy fallback: some earlier uploads accidentally included the bucket
+      // name in the object key (e.g. 'banners/banner-manager/...'). If the
+      // object isn't present under the normalized key, probe the alt key and
+      // return a publicURL that points to the actual stored object if found.
+      try{
+        const altKey = `${bucketDefault}/${storedName}`;
+        const probe = await supabase.storage.from(bucketDefault).download(altKey);
+        if (!probe.error) {
+          publicURL = `${SUPABASE_URL.replace(/\/$/,'')}/storage/v1/object/public/${bucketDefault}/${encodeURIComponent(altKey)}`;
+        }
+      }catch(e){ /* ignore */ }
+
       return res.status(200).json({ active: { name: storedName, publicURL } });
     } catch (err) {
       console.error('api/upload-cover GET error', err);
@@ -96,7 +108,8 @@ module.exports = async function handler(req, res) {
       }
 
       const safeName = file_name.replace(/[^a-z0-9\.\-_]/ig, '');
-      const path = `${bucket}/${invoice_id}/${Date.now()}-${safeName}`;
+      // store path relative to the bucket (don't prefix with the bucket name)
+      const path = `${invoice_id}/${Date.now()}-${safeName}`;
 
       const buffer = Buffer.from(base64, 'base64');
 
