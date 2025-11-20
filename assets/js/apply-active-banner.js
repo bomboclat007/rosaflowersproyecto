@@ -7,27 +7,42 @@
       if(!j || !j.active || !j.active.publicURL) return;
       const url = j.active.publicURL;
 
-      // find the element that contains the hero text
-      const candidates = Array.from(document.querySelectorAll('h1, h2, p, div'));
-      let targetEl = null;
-      for(const el of candidates){
-        try{
-          const txt = (el.textContent||'').trim();
-          if(!txt) continue;
-          if(txt.indexOf('Unique, Whimsical, Cottage') !== -1 || txt.indexOf('Unique, Whimsical, Cottage Florals') !== -1){ targetEl = el; break; }
-        }catch(e){ }
+      // Try a few common hero selectors first for better compatibility
+      const selectorCandidates = ['#hero', '.hero', '.site-hero', '.masthead', '.hero-container', '.page-hero', '.home-hero'];
+      let container = null;
+      for(const sel of selectorCandidates){
+        const el = document.querySelector(sel);
+        if(el){ container = el; break; }
       }
-      if(!targetEl) return;
 
-      // climb up to find a container with size we can set background on
-      let container = targetEl;
-      for(let i=0;i<8;i++){
-        if(!container) break;
-        const rect = container.getBoundingClientRect();
-        if(rect.width > 200 && rect.height > 100) break;
-        container = container.parentElement;
+      // If not found, try to locate a large heading (heuristic)
+      if(!container){
+        const headers = Array.from(document.querySelectorAll('h1, h2'));
+        // choose the header with the largest computed font size / area
+        let best = null; let bestScore = 0;
+        for(const h of headers){
+          try{
+            const rect = h.getBoundingClientRect();
+            const style = window.getComputedStyle(h);
+            const fontSize = parseFloat(style.fontSize||0);
+            const score = (rect.width * rect.height) + fontSize * 100;
+            if(score > bestScore){ bestScore = score; best = h; }
+          }catch(e){ }
+        }
+        if(best){
+          // climb up until we find a container with reasonable size
+          let c = best;
+          for(let i=0;i<8;i++){
+            if(!c) break;
+            const r = c.getBoundingClientRect();
+            if(r.width > 300 && r.height > 120){ container = c; break; }
+            c = c.parentElement;
+          }
+          if(!container) container = best.parentElement || document.body;
+        }
       }
-      if(!container) container = targetEl.parentElement || document.body;
+
+      if(!container) return;
 
       // apply background styles
       container.style.backgroundImage = 'url("' + url + '")';
@@ -35,18 +50,19 @@
       container.style.backgroundPosition = 'center center';
       container.style.backgroundRepeat = 'no-repeat';
 
-      // optionally add an overlay for text readability
+      // ensure container can position overlay
+      const pos = window.getComputedStyle(container).position;
+      if(pos === 'static') container.style.position = 'relative';
+
+      // add a subtle overlay to improve text readability if not present
       const overlayId = 'active-banner-overlay';
       if(!document.getElementById(overlayId)){
         const o = document.createElement('div');
         o.id = overlayId;
         o.style.position = 'absolute';
-        o.style.inset = '0';
-        o.style.background = 'rgba(255,255,255,0.25)';
+        o.style.left = '0'; o.style.top = '0'; o.style.right = '0'; o.style.bottom = '0';
+        o.style.background = 'rgba(255,255,255,0.22)';
         o.style.pointerEvents = 'none';
-        // ensure container is positioned
-        const pos = window.getComputedStyle(container).position;
-        if(pos === 'static') container.style.position = 'relative';
         container.insertBefore(o, container.firstChild);
       }
     }catch(e){ console.warn('applyActiveBanner failed', e); }
