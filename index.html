@@ -6234,7 +6234,18 @@ Louisiana located between Baton Rouge and New Orleans." />
     }
     // run on load (ensures images/blocks are parsed) and retry internally if tiles appear later
     window.addEventListener('load', ()=> apply(0));
+    // custom event from admin UI in same tab
     window.addEventListener('featured-updated', apply);
+    // listen for storage events so changes from another tab (admin) refresh the homepage
+    window.addEventListener('storage', function(e){
+      try{
+        if (!e || !e.key) return;
+        if (e.key === KEY || e.key === (KEY + ':pending') || e.key === (KEY + ':updated')){
+          // run apply in next tick to allow storage value to settle
+          setTimeout(()=> apply(0), 50);
+        }
+      }catch(err){ }
+    });
   }catch(e){ console.error('featured events init error', e); }
 })();
 </script>

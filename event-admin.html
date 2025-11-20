@@ -201,13 +201,15 @@
                 try { localStorage.setItem(FEATURED_KEY, JSON.stringify(featured)); } catch(e){}
               }
             } catch(e){}
-            // on success, clear any pending marker
+            // on success, clear any pending marker and mark updated timestamp
             try { localStorage.removeItem(FEATURED_KEY + ':pending'); } catch(e){}
+            try { localStorage.setItem(FEATURED_KEY + ':updated', String(Date.now())); } catch(e){}
             try { window.dispatchEvent(new Event('featured-updated')); } catch(e){}
             return true;
           } else {
             // mark pending so reload will prefer local changes and retry
             try { localStorage.setItem(FEATURED_KEY + ':pending', JSON.stringify(featured)); } catch(e){}
+            try { localStorage.setItem(FEATURED_KEY + ':updated', String(Date.now())); } catch(e){}
             console.warn('Could not save featured to server, saved locally only');
             try { window.dispatchEvent(new Event('featured-updated')); } catch(e){}
             return false;
@@ -215,6 +217,7 @@
         } catch (err) {
           // network error: mark as pending for retry on next load
           try { localStorage.setItem(FEATURED_KEY + ':pending', JSON.stringify(featured)); } catch(e){}
+          try { localStorage.setItem(FEATURED_KEY + ':updated', String(Date.now())); } catch(e){}
           console.warn('Could not save featured to server, saved locally only');
           try { window.dispatchEvent(new Event('featured-updated')); } catch(e){}
           return false;
