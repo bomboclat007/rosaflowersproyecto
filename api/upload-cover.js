@@ -29,18 +29,23 @@ module.exports = async function handler(req, res) {
       const meta = JSON.parse(txt || '{}');
       if (!meta || !meta.name) return res.status(200).json({ active: null });
 
+      // Normalize stored name: strip bucket prefix if present so it's relative to the bucket
+      let storedName = String(meta.name || '');
+      if (storedName.indexOf(bucketDefault + '/') === 0) storedName = storedName.slice(bucketDefault.length + 1);
+      if (storedName.indexOf('/') === 0) storedName = storedName.slice(1);
+
       let publicURL = null;
       try{
-        const pub = supabase.storage.from(bucketDefault).getPublicUrl(meta.name);
+        const pub = supabase.storage.from(bucketDefault).getPublicUrl(storedName);
         publicURL = pub && (pub.publicURL || (pub.data && pub.data.publicUrl)) || null;
         if(publicURL && publicURL.data && publicURL.data.publicUrl) publicURL = publicURL.data.publicUrl;
       }catch(e){ publicURL = null; }
 
-      if(!publicURL && meta.name){
-        publicURL = `${SUPABASE_URL.replace(/\/$/,'')}/storage/v1/object/public/${bucketDefault}/${encodeURIComponent(meta.name)}`;
+      if(!publicURL && storedName){
+        publicURL = `${SUPABASE_URL.replace(/\/$/,'')}/storage/v1/object/public/${bucketDefault}/${encodeURIComponent(storedName)}`;
       }
 
-      return res.status(200).json({ active: { name: meta.name, publicURL } });
+      return res.status(200).json({ active: { name: storedName, publicURL } });
     } catch (err) {
       console.error('api/upload-cover GET error', err);
       return res.status(500).json({ error: 'Internal server error' });
@@ -55,11 +60,16 @@ module.exports = async function handler(req, res) {
       // activation request: { action: 'activate', path: 'bucket/...', bucket: 'banners' }
       if (body.action === 'activate' && body.path) {
         const bucket = body.bucket || bucketDefault;
-        const meta = { name: body.path };
+        // Normalize provided path: remove bucket prefix if present so we store a path relative to the bucket
+        let provided = String(body.path || '');
+        if (provided.indexOf(bucket + '/') === 0) provided = provided.slice(bucket.length + 1);
+        if (provided.indexOf('/') === 0) provided = provided.slice(1);
+
+        const meta = { name: provided };
         const blob = Buffer.from(JSON.stringify(meta));
         const { data, error } = await supabase.storage.from(bucket).upload('active-banner.json', blob, { upsert: true });
         if (error) { console.error('activate upload error', error); return res.status(500).json({ error: 'Failed to write active-banner.json', details: error }); }
-        return res.status(200).json({ ok: true, name: body.path });
+        return res.status(200).json({ ok: true, name: provided });
       }
 
       // upload request (legacy): expects invoice_id, file_name, base64
