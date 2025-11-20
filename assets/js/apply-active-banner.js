@@ -44,26 +44,61 @@
 
       if(!container) return;
 
-      // apply background styles
-      container.style.backgroundImage = 'url("' + url + '")';
-      container.style.backgroundSize = 'cover';
-      container.style.backgroundPosition = 'center center';
-      container.style.backgroundRepeat = 'no-repeat';
+      // First: if this section uses an <img> (Squarespace-style), replace its src
+      // Look for an img inside the nearest image block sibling or descendant
+      function tryReplaceImg(el){
+        if(!el) return false;
+        // search descendants first
+        let img = el.querySelector('img[data-sqsp-image-block-image], img.sqs-image, img');
+        if(!img){
+          // look for a previous sibling image block (common in composed sections)
+          let sib = el.previousElementSibling;
+          for(let i=0;i<6 && sib;i++, sib = sib.previousElementSibling){
+            img = sib.querySelector && sib.querySelector('img[data-sqsp-image-block-image], img.sqs-image, img');
+            if(img) break;
+          }
+        }
+        if(img){
+          try{
+            img.src = url;
+            img.removeAttribute('srcset');
+            img.removeAttribute('sizes');
+            img.style.objectFit = 'cover';
+            img.style.width = '100%';
+            img.style.height = '100%';
+            // ensure parent container clips and positions correctly
+            const p = img.parentElement;
+            if(p){ p.style.overflow = 'hidden'; }
+            return true;
+          }catch(e){ /* ignore image replacement errors */ }
+        }
+        return false;
+      }
 
-      // ensure container can position overlay
-      const pos = window.getComputedStyle(container).position;
-      if(pos === 'static') container.style.position = 'relative';
+      const replaced = tryReplaceImg(container) || tryReplaceImg(targetEl);
 
-      // add a subtle overlay to improve text readability if not present
-      const overlayId = 'active-banner-overlay';
-      if(!document.getElementById(overlayId)){
-        const o = document.createElement('div');
-        o.id = overlayId;
-        o.style.position = 'absolute';
-        o.style.left = '0'; o.style.top = '0'; o.style.right = '0'; o.style.bottom = '0';
-        o.style.background = 'rgba(255,255,255,0.22)';
-        o.style.pointerEvents = 'none';
-        container.insertBefore(o, container.firstChild);
+      if(!replaced){
+        // fallback: apply background styles to the container
+        container.style.backgroundImage = 'url("' + url + '")';
+        container.style.backgroundSize = 'cover';
+        container.style.backgroundPosition = 'center center';
+        container.style.backgroundRepeat = 'no-repeat';
+
+        // ensure container can position overlay
+        const pos = window.getComputedStyle(container).position;
+        if(pos === 'static') container.style.position = 'relative';
+
+        // add a subtle overlay to improve text readability if not present
+        const overlayId = 'active-banner-overlay';
+        if(!document.getElementById(overlayId)){
+          const o = document.createElement('div');
+          o.id = overlayId;
+          o.style.position = 'absolute';
+          o.style.left = '0'; o.style.top = '0'; o.style.right = '0'; o.style.bottom = '0';
+          o.style.background = 'rgba(255,255,255,0.22)';
+          o.style.pointerEvents = 'none';
+          container.insertBefore(o, container.firstChild);
+        }
       }
     }catch(e){ console.warn('applyActiveBanner failed', e); }
   }
