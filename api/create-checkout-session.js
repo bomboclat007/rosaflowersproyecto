@@ -60,7 +60,9 @@ module.exports = async function handler(req, res) {
       payment_method_types: ['card'],
       line_items,
       mode: 'payment',
-      success_url: `${origin}/pos.html?session_id={CHECKOUT_SESSION_ID}`,
+      // Redirect to the public success page after successful payment
+      success_url: `${origin}/success.html?session_id={CHECKOUT_SESSION_ID}`,
+      // Keep cancel redirect to pos in case the user cancels
       cancel_url: `${origin}/pos.html?canceled=1`,
     };
 
