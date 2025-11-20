@@ -22,7 +22,7 @@ module.exports = async function handler(req, res) {
       const urlStr = req.url || '';
       const action = (req.query && req.query.action) || (urlStr.indexOf('?')>-1 && new URL('http://x'+urlStr).searchParams.get('action'));
       if (action === 'probe') {
-        const name = (req.query && req.query.name) || (urlStr.indexOf('?')>-1 && new URL('http://x'+urlStr).searchParams.get('name');
+        const name = (req.query && req.query.name) || (urlStr.indexOf('?')>-1 && new URL('http://x'+urlStr).searchParams.get('name'));
         if (!name) return res.status(400).json({ error: 'Missing name for probe' });
         // normalize
         let probeName = String(name || '');
