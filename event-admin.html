@@ -300,10 +300,14 @@
             checkbox.disabled = true;
             const previouslyChecked = !checkbox.checked; // before change, checked state was inverse
             if (checkbox.checked){
-              // remove any old id entry and add slug (store slugs for homepage compatibility)
+              // remove any old id-only entry and add both slug and id so
+              // subsequent renders (which may match either) will keep it checked
               const byId = featured.indexOf(id);
               if (byId !== -1) featured.splice(byId, 1);
+              // add normalized slug
               if (featured.indexOf(slug) === -1) featured.push(slug);
+              // also add the id to maximize match robustness
+              if (featured.indexOf(id) === -1) featured.push(id);
             } else {
               // remove slug and id if present
               const i1 = featured.indexOf(slug);
