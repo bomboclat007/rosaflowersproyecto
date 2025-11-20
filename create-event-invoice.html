@@ -596,6 +596,10 @@
     }
 
     async function uploadCoverToServerFallback(file, invoiceId, bucket){
+      const MAX_SERVER_UPLOAD = 4 * 1024 * 1024; // 4 MB - Vercel serverless body limits vary; keep conservative
+      if (file && file.size && file.size > MAX_SERVER_UPLOAD){
+        throw new Error(`File too large for server upload (>${Math.round(MAX_SERVER_UPLOAD/1024/1024)} MB). Please resize or compress the image, or configure client-side uploads.`);
+      }
       try{
         const base64 = await readFileAsBase64(file);
         const payload = {
@@ -609,7 +613,7 @@
         const j = await r.json().catch(()=>null);
         if (!r.ok) {
           console.error('uploadCoverToServerFallback failed', r.status, j);
-          throw new Error((j && (j.error || j.details)) || 'Server upload failed');
+          throw new Error((j && (j.error || j.details)) || `Server upload failed (status ${r.status})`);
         }
         console.log('uploadCoverToServerFallback success', j);
         return { path: j.path, publicURL: j.publicURL };
