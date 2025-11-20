@@ -21,6 +21,18 @@ module.exports = async function handler(req, res) {
     try {
       const urlStr = req.url || '';
       const action = (req.query && req.query.action) || (urlStr.indexOf('?')>-1 && new URL('http://x'+urlStr).searchParams.get('action'));
+      if (action === 'probe') {
+        const name = (req.query && req.query.name) || (urlStr.indexOf('?')>-1 && new URL('http://x'+urlStr).searchParams.get('name');
+        if (!name) return res.status(400).json({ error: 'Missing name for probe' });
+        // normalize
+        let probeName = String(name || '');
+        if (probeName.indexOf(bucketDefault + '/') === 0) probeName = probeName.slice(bucketDefault.length + 1);
+        if (probeName.indexOf('/') === 0) probeName = probeName.slice(1);
+        const downProbe = await supabase.storage.from(bucketDefault).download(probeName);
+        if (downProbe.error) return res.status(200).json({ found: false, error: downProbe.error.message || downProbe.error });
+        return res.status(200).json({ found: true, name: probeName });
+      }
+
       if (action !== 'active') return res.status(400).json({ error: 'Unsupported GET action' });
 
       const down = await supabase.storage.from(bucketDefault).download('active-banner.json');
