@@ -47,26 +47,23 @@
       setText(['.site-email','a[href^="mailto:"]','.footer-email','[data-contact="email"], .contact-email'], '<a href="mailto:'+EMAIL+'">'+EMAIL+'</a>');
       setText(['.site-phone','a[href^="tel:"]','.footer-phone','[data-contact="phone"], .contact-phone'], '<a href="tel:'+PHONE.replace(/[^0-9+]/g,'')+'">'+PHONE+'</a>');
 
-      // Add floating contact bar (if not already present)
-      if(!document.getElementById('site-contact-bar')){
-        var bar = document.createElement('div');
-        bar.id = 'site-contact-bar';
-        bar.style.position = 'fixed';
-        bar.style.right = '18px';
-        bar.style.bottom = '18px';
-        bar.style.background = 'rgba(255,255,255,0.95)';
-        bar.style.border = '1px solid rgba(0,0,0,0.06)';
-        bar.style.padding = '10px 14px';
-        bar.style.borderRadius = '8px';
-        bar.style.boxShadow = '0 6px 18px rgba(0,0,0,0.08)';
-        bar.style.zIndex = 9999;
-        bar.style.fontFamily = 'sans-serif';
-        bar.style.fontSize = '13px';
-        bar.innerHTML = '<div style="text-align:right"><strong>Contact</strong></div>'+
-                        '<div style="margin-top:6px">'+ADDRESS.replace(/\n/g,'<br/>')+'</div>'+
-                        '<div style="margin-top:6px"><a href="mailto:'+EMAIL+'">'+EMAIL+'</a> · <a href="tel:'+PHONE.replace(/[^0-9+]/g,'')+'">'+PHONE+'</a></div>';
-        document.body.appendChild(bar);
-      }
+      // Replace known legacy contact blocks that were copied from the original
+      // Squarespace export so the index contact matches across all pages.
+      try{
+        var legacyRegex = /38480|Prairieville|thefloralcottageflorist@gmail.com|\(225\)|LA-42|Prairieville, LA/ig;
+        var contactHtml = '<strong>The Floral Cottage</strong><br/>' + ADDRESS.replace(/\n/g,'<br/>') + '<br/><br/>' + '<a href="mailto:'+EMAIL+'">'+EMAIL+'</a><br/>' + '<a href="tel:'+PHONE.replace(/[^0-9+]/g,'')+'">'+PHONE+'</a>';
+        document.querySelectorAll('p,div,span,li').forEach(function(el){
+          try{
+            if(el && el.textContent && legacyRegex.test(el.textContent)){
+              el.innerHTML = contactHtml;
+            }
+          }catch(e){}
+        });
+
+        // Fix mailto/tel anchors that still point to old addresses/numbers
+        document.querySelectorAll('a[href^="mailto:"]').forEach(function(a){ try{ if(/thefloralcottageflorist@gmail.com/i.test(a.href)) { a.href = 'mailto:'+EMAIL; a.textContent = EMAIL; } }catch(e){} });
+        document.querySelectorAll('a[href^="tel:"]').forEach(function(a){ try{ if(/225/.test(a.getAttribute('href'))) { a.href = 'tel:'+PHONE.replace(/[^0-9+]/g,''); a.textContent = PHONE; } }catch(e){} });
+      }catch(e){}
     }catch(e){}
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', replaceFooterLogo); else replaceFooterLogo();
