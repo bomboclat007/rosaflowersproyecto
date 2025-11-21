@@ -27,44 +27,41 @@
         });
       }catch(e){}
     }catch(e){}
-    // Inject site-wide contact information and a small floating contact bar
-    try{
-      var ADDRESS = '8950 Krewstown Rd,\nPhiladelphia, PA 19115';
-      var EMAIL = 'rosasflowers.events@gmail.com';
-      var PHONE = '(215) 552-5113';
-
-      // Helper to set text/html safely
-      function setText(selArr, html) {
-        selArr.forEach(function(sel){
-          document.querySelectorAll(sel).forEach(function(el){
-            try{ el.innerHTML = html; }catch(e){}
-          });
-        });
-      }
-
-      // Common selectors where contact info may appear
-      setText(['.site-address','.address','.footer-address','[data-contact="address"], .contact-address'], ADDRESS.replace(/\n/g,'<br/>'));
-      setText(['.site-email','a[href^="mailto:"]','.footer-email','[data-contact="email"], .contact-email'], '<a href="mailto:'+EMAIL+'">'+EMAIL+'</a>');
-      setText(['.site-phone','a[href^="tel:"]','.footer-phone','[data-contact="phone"], .contact-phone'], '<a href="tel:'+PHONE.replace(/[^0-9+]/g,'')+'">'+PHONE+'</a>');
-
-      // Replace known legacy contact blocks that were copied from the original
-      // Squarespace export so the index contact matches across all pages.
-      try{
-        var legacyRegex = /38480|Prairieville|thefloralcottageflorist@gmail.com|\(225\)|LA-42|Prairieville, LA/ig;
-        var contactHtml = '<strong>The Floral Cottage</strong><br/>' + ADDRESS.replace(/\n/g,'<br/>') + '<br/><br/>' + '<a href="mailto:'+EMAIL+'">'+EMAIL+'</a><br/>' + '<a href="tel:'+PHONE.replace(/[^0-9+]/g,'')+'">'+PHONE+'</a>';
-        document.querySelectorAll('p,div,span,li').forEach(function(el){
-          try{
-            if(el && el.textContent && legacyRegex.test(el.textContent)){
-              el.innerHTML = contactHtml;
-            }
-          }catch(e){}
-        });
-
-        // Fix mailto/tel anchors that still point to old addresses/numbers
-        document.querySelectorAll('a[href^="mailto:"]').forEach(function(a){ try{ if(/thefloralcottageflorist@gmail.com/i.test(a.href)) { a.href = 'mailto:'+EMAIL; a.textContent = EMAIL; } }catch(e){} });
-        document.querySelectorAll('a[href^="tel:"]').forEach(function(a){ try{ if(/225/.test(a.getAttribute('href'))) { a.href = 'tel:'+PHONE.replace(/[^0-9+]/g,''); a.textContent = PHONE; } }catch(e){} });
-      }catch(e){}
-    }catch(e){}
   }
+    // Replace footer contact block that contains the old business info
+    try{
+      var newContactHTML = '8950 Krewstown Rd<br>Philadelphia, PA 19115<br><br><a href="mailto:rosasflowers.events@gmail.com" target="_blank">rosasflowers.events@gmail.com</a><br><a href="tel:2155525113" target="_blank">(215) 552-5113</a>';
+      document.querySelectorAll('p').forEach(function(p){
+        try{
+          var txt = (p.textContent || '').trim();
+          if(!txt) return;
+          if(txt.indexOf('The Floral Cottage Florist') !== -1 || txt.indexOf('thefloralcottageflorist@gmail.com') !== -1 || txt.indexOf('(225) 677-2600') !== -1){
+            p.innerHTML = newContactHTML;
+            p.style.textAlign = 'center';
+            p.style.whiteSpace = 'pre-wrap';
+          }
+        }catch(e){}
+      });
+
+      // Also update any mailto/tel anchors site-wide that reference the old contact
+      document.querySelectorAll('a[href^="mailto:"]').forEach(function(a){
+        try{
+          var href = a.getAttribute('href') || '';
+          if(href.indexOf('thefloralcottageflorist') !== -1){
+            a.setAttribute('href', 'mailto:rosasflowers.events@gmail.com');
+            if(!a.textContent || a.textContent.indexOf('thefloralcottage') !== -1) a.textContent = 'rosasflowers.events@gmail.com';
+          }
+        }catch(e){}
+      });
+      document.querySelectorAll('a[href^="tel:"]').forEach(function(a){
+        try{
+          var href = a.getAttribute('href') || '';
+          if(href.indexOf('2256772600') !== -1 || href.indexOf('225') !== -1){
+            a.setAttribute('href', 'tel:2155525113');
+            if(!a.textContent || a.textContent.indexOf('(225)') !== -1) a.textContent = '(215) 552-5113';
+          }
+        }catch(e){}
+      });
+    }catch(e){}
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', replaceFooterLogo); else replaceFooterLogo();
 })();
